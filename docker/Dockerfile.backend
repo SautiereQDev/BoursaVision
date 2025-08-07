@@ -1,0 +1,74 @@
+# Backend Dockerfile - Multi-stage build for production
+FROM python:3.11-slim AS base
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install system dependencies and Poetry
+RUN apt-get update && apt-get install -y \
+    curl \
+    g++ \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install poetry
+
+# Configure Poetry
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VENV_IN_PROJECT=1 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache \
+    VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:$PATH"
+
+WORKDIR /app
+
+# Copy Poetry files
+COPY pyproject.toml poetry.lock ./
+
+# Development stage
+FROM base AS development
+
+# Copy source code first
+COPY . .
+
+# Install dependencies (including dev dependencies) and install package in editable mode
+RUN poetry config virtualenvs.in-project true && \
+    poetry install --with dev && \
+    poetry run pip install -e . && \
+    rm -rf "$POETRY_CACHE_DIR"
+
+# Create non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 8000
+
+# Use direct path to uvicorn
+CMD ["/app/.venv/bin/uvicorn", "src.infrastructure.web.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+# Production stage
+FROM base AS production
+
+# Copy source code
+COPY src ./src
+COPY alembic.ini ./
+
+# Install only production dependencies
+RUN poetry config virtualenvs.in-project true && \
+    poetry install --only=main && \
+    rm -rf "$POETRY_CACHE_DIR"
+
+# Create non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["poetry", "run", "uvicorn", "src.infrastructure.web.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
