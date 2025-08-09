@@ -8,12 +8,11 @@ Simple FastAPI application for Boursa Vision.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-
 # Create FastAPI app
 app = FastAPI(
     title="Boursa Vision API",
     description="Investment portfolio management platform",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # CORS Configuration
