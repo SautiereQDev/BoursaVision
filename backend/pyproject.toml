@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "Trading Platform Backend - Clean Architecture with FastAPI"
 authors = ["Quentin Sautiere <quentin@example.com>"]
 readme = "README.md"
-packages = [{ include = "src" }]
+packages = [{ include = "*", from = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -67,3 +67,23 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --cov=src --cov-report=term-missing"
 asyncio_mode = "auto"
+
+[tool.pylint.MASTER]
+# Specify paths to analyze
+init-hook = "import sys; sys.path.append('src')"
+# Ignore specific files/patterns
+ignore = ["__pycache__", ".git", ".pytest_cache", ".coverage"]
+# Only analyze these directories
+source-roots = ["src"]
+
+[tool.pylint.FORMAT]
+max-line-length = 88
+
+[tool.pylint.'MESSAGES CONTROL']
+# Disable specific warnings that are not relevant
+disable = [
+    "C0103", # invalid-name
+    "C0114", # missing-module-docstring
+    "R0903", # too-few-public-methods
+    "W0613", # unused-argument
+]
