@@ -19,7 +19,10 @@ from typing import List
 
 @dataclass(kw_only=True)
 class DomainEvent:
-    """Base class for domain events"""
+    """Base class for domain events
+
+    :no-index:
+    """
 
     occurred_at: datetime = field(default_factory=datetime.now)
 

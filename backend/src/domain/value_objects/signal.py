@@ -147,14 +147,20 @@ class ConfidenceScore:
         return self.format()
 
 
+# Predefined confidence thresholds
+ConfidenceScore.LOW = ConfidenceScore(Decimal("0.3"))
+ConfidenceScore.MEDIUM = ConfidenceScore(Decimal("0.6"))
+ConfidenceScore.HIGH = ConfidenceScore(Decimal("0.8"))
+
+
 @dataclass(frozen=True)
 # pylint: disable=too-many-instance-attributes
 class Signal:
     """
     Value Object representing an investment signal.
 
-    Combines action, confidence, target prices, and rationale
-    for a complete recommendation.
+    Combines action, confidence, target prices, reasoning,
+    and analysis scores for a complete recommendation.
     """
 
     symbol: str
@@ -163,7 +169,7 @@ class Signal:
     generated_at: datetime
     price_target: Optional[Price] = None
     stop_loss: Optional[Price] = None
-    rationale: Optional[str] = None
+    reasoning: Optional[str] = None
     technical_score: Optional[Decimal] = None
     fundamental_score: Optional[Decimal] = None
     market_context_score: Optional[Decimal] = None
@@ -175,59 +181,52 @@ class Signal:
         """Validate the signal"""
         if not self.symbol:
             raise ValueError("Symbol is required")
-
         # Validate price consistency
         if self.price_target and self.stop_loss:
-            self._validate_price_consistency()
-
+            if (
+                self.action == SignalAction.BUY
+                and self.price_target.value <= self.stop_loss.value
+            ):
+                raise ValueError("For BUY signal: price_target must be > stop_loss")
+            if (
+                self.action == SignalAction.SELL
+                and self.stop_loss.value <= self.price_target.value
+            ):
+                raise ValueError("For SELL signal: stop_loss must be > price_target")
         # Validate expiration
         if self.expires_at and self.expires_at <= self.generated_at:
             raise ValueError("Expiry date must be after generation date")
-
-        # Initialize empty metadata if None
-        self._initialize_metadata()
-
-    def _validate_price_consistency(self):
-        """Helper to validate price consistency"""
-        if self.action == SignalAction.BUY:
-            # For a buy: price_target > stop_loss
-            if self.price_target.value <= self.stop_loss.value:
-                raise ValueError("For BUY signal: price_target must be > stop_loss")
-        elif self.action == SignalAction.SELL:
-            # For a sell: stop_loss > price_target
-            if self.stop_loss.value <= self.price_target.value:
-                raise ValueError("For SELL signal: stop_loss must be > price_target")
-
-    def _initialize_metadata(self):
-        """Helper to initialize metadata and indicators"""
+        # Initialize defaults
         if self.metadata is None:
             object.__setattr__(self, "metadata", {})
-
         if self.indicators_used is None:
             object.__setattr__(self, "indicators_used", [])
 
     @property
+    def confidence(self) -> ConfidenceScore:
+        """Alias for confidence_score to support legacy attribute name"""
+        return self.confidence_score
+
+    @property
+    def target_price(self) -> Optional[Price]:
+        """Alias for price_target to support legacy attribute name"""
+        return self.price_target
+
+    @property
     def strength(self) -> SignalStrength:
-        """Signal strength based on confidence score"""
+        """Signal strength based on confidence"""
         return self.confidence_score.strength
 
     @property
     def composite_score(self) -> Decimal:
         """Composite score calculated from sub-scores"""
         if not any(
-            [
-                self.technical_score,
-                self.fundamental_score,
-                self.market_context_score,
-            ]
+            [self.technical_score, self.fundamental_score, self.market_context_score]
         ):
             return self.confidence_score.value
-
-        # Weighting: technical 40%, fundamental 40%, context 20%
         technical = self.technical_score or Decimal("0")
         fundamental = self.fundamental_score or Decimal("0")
         context = self.market_context_score or Decimal("0")
-
         return (
             technical * Decimal("0.4")
             + fundamental * Decimal("0.4")
@@ -238,7 +237,6 @@ class Signal:
         """Check if the signal is still valid"""
         if self.expires_at is None:
             return True
-
         return datetime.now() < self.expires_at
 
     def is_actionable(self) -> bool:
@@ -249,126 +247,109 @@ class Signal:
         """Calculate the risk/reward ratio"""
         if not (self.price_target and self.stop_loss):
             return None
-
         if self.action == SignalAction.BUY:
-            potential_gain = self.price_target.value - current_price.value
-            potential_loss = current_price.value - self.stop_loss.value
+            gain = self.price_target.value - current_price.value
+            loss = current_price.value - self.stop_loss.value
         elif self.action == SignalAction.SELL:
-            potential_gain = current_price.value - self.price_target.value
-            potential_loss = self.stop_loss.value - current_price.value
+            gain = current_price.value - self.price_target.value
+            loss = self.stop_loss.value - current_price.value
         else:
             return None
-
-        if potential_loss <= 0:
+        if loss <= 0:
             return None
-
-        return potential_gain / potential_loss
+        return gain / loss
 
     def get_potential_return_percentage(
         self, current_price: Price
     ) -> Optional[Decimal]:
-        """Calculate the potential return percentage"""
+        """Potential return percentage"""
         if not self.price_target or current_price.value == 0:
             return None
-
         if self.action == SignalAction.BUY:
             return (
-                (self.price_target.value - current_price.value) / current_price.value
-            ) * 100
+                (self.price_target.value - current_price.value)
+                / current_price.value
+                * 100
+            )
         if self.action == SignalAction.SELL:
             return (
-                (current_price.value - self.price_target.value) / current_price.value
-            ) * 100
-
+                (current_price.value - self.price_target.value)
+                / current_price.value
+                * 100
+            )
         return None
 
     def add_metadata(self, key: str, value) -> "Signal":
         """Add metadata (returns new signal)"""
-        new_metadata = dict(self.metadata or {})
-        new_metadata[key] = value
-
-        return replace(self, metadata=new_metadata)
+        new_meta = dict(self.metadata)
+        new_meta[key] = value
+        return replace(self, metadata=new_meta)
 
     def to_dict(self) -> Dict:
         """Serialization for storage/API"""
         return {
             "symbol": self.symbol,
             "action": self.action.value,
-            "confidence_score": str(self.confidence_score.value),
+            "confidence": str(self.confidence_score.value),
             "strength": self.strength.value,
             "generated_at": self.generated_at.isoformat(),
-            "price_target": (
-                str(self.price_target.value) if self.price_target else None
-            ),
-            "stop_loss": (str(self.stop_loss.value) if self.stop_loss else None),
-            "rationale": self.rationale,
-            "technical_score": (
-                str(self.technical_score) if self.technical_score else None
-            ),
-            "fundamental_score": (
-                str(self.fundamental_score) if self.fundamental_score else None
-            ),
-            "market_context_score": (
-                str(self.market_context_score) if self.market_context_score else None
-            ),
+            "price_target": str(self.price_target.value) if self.price_target else None,
+            "stop_loss": str(self.stop_loss.value) if self.stop_loss else None,
+            "reasoning": self.reasoning,
+            "technical_score": str(self.technical_score)
+            if self.technical_score
+            else None,
+            "fundamental_score": str(self.fundamental_score)
+            if self.fundamental_score
+            else None,
+            "market_context_score": str(self.market_context_score)
+            if self.market_context_score
+            else None,
             "indicators_used": self.indicators_used,
             "metadata": self.metadata,
-            "expires_at": (self.expires_at.isoformat() if self.expires_at else None),
+            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
         }
 
     @classmethod
     def from_dict(cls, data: Dict) -> "Signal":
-        """Deserialization from a dictionary"""
+        """Deserialization from a dict"""
         return cls(
             symbol=data["symbol"],
             action=SignalAction(data["action"]),
-            confidence_score=ConfidenceScore(Decimal(data["confidence_score"])),
+            confidence_score=ConfidenceScore(Decimal(data["confidence"])),
             generated_at=datetime.fromisoformat(data["generated_at"]),
-            price_target=(
-                Price(Decimal(data["price_target"]), Currency.USD)
-                if data.get("price_target")
-                else None
-            ),
-            stop_loss=(
-                Price(Decimal(data["stop_loss"]), Currency.USD)
-                if data.get("stop_loss")
-                else None
-            ),
-            rationale=data.get("rationale"),
-            technical_score=(
-                Decimal(data["technical_score"])
-                if data.get("technical_score")
-                else None
-            ),
-            fundamental_score=(
-                Decimal(data["fundamental_score"])
-                if data.get("fundamental_score")
-                else None
-            ),
-            market_context_score=(
-                Decimal(data["market_context_score"])
-                if data.get("market_context_score")
-                else None
-            ),
+            price_target=Price(Decimal(data["price_target"]), Currency.USD)
+            if data.get("price_target")
+            else None,
+            stop_loss=Price(Decimal(data["stop_loss"]), Currency.USD)
+            if data.get("stop_loss")
+            else None,
+            reasoning=data.get("reasoning"),
+            technical_score=Decimal(data.get("technical_score"))
+            if data.get("technical_score")
+            else None,
+            fundamental_score=Decimal(data.get("fundamental_score"))
+            if data.get("fundamental_score")
+            else None,
+            market_context_score=Decimal(data.get("market_context_score"))
+            if data.get("market_context_score")
+            else None,
             indicators_used=data.get("indicators_used", []),
             metadata=data.get("metadata", {}),
-            expires_at=(
-                datetime.fromisoformat(data["expires_at"])
-                if data.get("expires_at")
-                else None
-            ),
+            expires_at=datetime.fromisoformat(data["expires_at"])
+            if data.get("expires_at")
+            else None,
         )
 
     def __str__(self) -> str:
-        """String representation of the signal"""
-        confidence_pct = f"{self.confidence_score.percentage:.0f}%"
-        target_info = f" -> {self.price_target.value}" if self.price_target else ""
-        return f"{self.action.value} {self.symbol} " f"({confidence_pct}){target_info}"
+        """String representation"""
+        pct = f"{self.confidence.percentage:.0f}%"
+        info = f" -> {self.price_target.value}" if self.price_target else ""
+        return f"{self.action.value} {self.symbol} ({pct}){info}"
 
     def __repr__(self) -> str:
-        """Debug representation of the signal"""
+        """Debug repr"""
         return (
             f"Signal(symbol='{self.symbol}', action={self.action}, "
-            f"confidence={self.confidence_score.value}, "
-            f"strength={self.strength})"
+            f"confidence={self.confidence.value})"
         )

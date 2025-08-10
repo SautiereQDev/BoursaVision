@@ -6,14 +6,14 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import infrastructure.persistence.models  # Ensure all model modules are loaded
+import src.infrastructure.persistence.models  # Ensure all model modules are loaded
 
 # Import Base after loading models
-from infrastructure.persistence.models import Base
-from infrastructure.persistence.models.instruments import Instrument
-from infrastructure.persistence.models.portfolios import Portfolio
-from infrastructure.persistence.models.transactions import Transaction
-from infrastructure.persistence.models.users import User
+from src.infrastructure.persistence.models import Base
+from src.infrastructure.persistence.models.instruments import Instrument
+from src.infrastructure.persistence.models.portfolios import Portfolio
+from src.infrastructure.persistence.models.transactions import Transaction
+from src.infrastructure.persistence.models.users import User
 
 # Configuration de la base de données de test
 

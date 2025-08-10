@@ -1,6 +1,6 @@
 import pytest
 
-from infrastructure.persistence.models.instruments import Instrument
+from src.infrastructure.persistence.models.instruments import Instrument
 
 
 def test_instruments_example():

@@ -25,3 +25,15 @@ dev-dist
 *.sw?
 
 **/__pycache__/**
+
+# Ignore Python generated files
+*.pyc
+*.pyo
+.coverage
+_build/
+
+# Ignore alembic generated files
+alembic/versions/*.py
+
+# Ignore Sphinx build files
+docs/_build/

@@ -1,6 +1,6 @@
 import pytest
 
-from infrastructure.persistence.models.portfolios import Portfolio
+from src.infrastructure.persistence.models.portfolios import Portfolio
 
 
 def test_portfolios_example():

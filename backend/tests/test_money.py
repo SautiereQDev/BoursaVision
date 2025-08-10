@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from domain.value_objects.money import Currency, Money
+from src.domain.value_objects.money import Currency, Money
 
 
 def test_currency_properties():
@@ -73,3 +73,20 @@ def test_money_convert_to():
     assert same == m
     with pytest.raises(ValueError):
         _ = m.convert_to(Currency.EUR, Decimal("0"))
+
+
+def test_money_zero_and_is_zero():
+    m = Money.zero(Currency.USD)
+    assert m.amount == 0
+    assert m.is_zero()
+    m2 = Money(Decimal("1"), Currency.USD)
+    assert not m2.is_zero()
+
+
+def test_money_from_float_and_from_string():
+    m = Money.from_float(1.23, Currency.EUR)
+    assert m.amount == Decimal("1.23")
+    m2 = Money.from_string("1,234.56", Currency.USD)
+    assert m2.amount == Decimal("1234.56")
+    with pytest.raises(ValueError):
+        Money.from_string("-42", Currency.GBP)

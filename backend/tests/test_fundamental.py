@@ -1,6 +1,6 @@
 import pytest
 
-from infrastructure.persistence.models.fundamental import FundamentalData
+from src.infrastructure.persistence.models.fundamental import FundamentalData
 
 
 def test_fundamental_example():

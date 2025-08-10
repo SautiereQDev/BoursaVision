@@ -94,7 +94,7 @@ dev: ## Start development environment with Docker
 		echo "$(RED)❌ .env file not found! Run 'make setup' first$(NC)"; \
 		exit 1; \
 	fi
-	@export $$(cat .env | grep -v '^#' | xargs) && docker-compose -f $(DOCKER_COMPOSE_DEV) up -d
+	@export $$(cat .env | grep -v '^#' | xargs) && docker-compose -f $(DOCKER_COMPOSE_DEV) up -d --force-recreate --renew-anon-volumes
 	@echo "$(GREEN)Development environment started!$(NC)"
 	@echo "$(BLUE)Frontend: http://localhost:3000$(NC)"
 	@echo "$(BLUE)Backend API: http://localhost:8000$(NC)"
@@ -152,10 +152,10 @@ run-celery-beat: ## Run Celery beat scheduler locally
 # ========================================
 
 .PHONY: db-upgrade
-db-upgrade: ## Run database migrations
-	@echo "$(YELLOW)Running database migrations...$(NC)"
-	@cd $(BACKEND_DIR) && poetry run alembic upgrade head
-	@echo "$(GREEN)Database migrations completed$(NC)"
+db-upgrade: ## Run database migrations inside Docker backend
+	@echo "$(YELLOW)Running migrations inside boursa-backend container...$(NC)"
+	@docker-compose -f $(DOCKER_COMPOSE_DEV) exec backend poetry run alembic upgrade head
+	@echo "$(GREEN)Database migrations completed inside container$(NC)"
 
 .PHONY: db-downgrade
 db-downgrade: ## Rollback last database migration
@@ -164,10 +164,13 @@ db-downgrade: ## Rollback last database migration
 	@echo "$(GREEN)Migration rollback completed$(NC)"
 
 .PHONY: db-revision
-db-revision: ## Create new database migration
-	@read -p "Migration message: " msg; \
-	cd $(BACKEND_DIR) && poetry run alembic revision --autogenerate -m "$$msg"
-	@echo "$(GREEN)New migration created$(NC)"
+db-revision: ## Create new database migration (use MSG="..." to skip prompt)
+	@msg="$(MSG)"; \
+	if [ -z "$$msg" ]; then \
+	  read -p "Migration message: " msg; \
+	fi; \
+	docker-compose -f $(DOCKER_COMPOSE_DEV) exec backend poetry run alembic revision --autogenerate -m "$$msg" && \
+	echo "$(GREEN)New migration created$(NC)"
 
 .PHONY: db-history
 db-history: ## Show database migration history

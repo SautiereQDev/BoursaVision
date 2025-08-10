@@ -1,3 +1,7 @@
+
+"""
+SQLAlchemy models for performance metrics (TimescaleDB).
+"""
 # ================================================================
 # PLATEFORME TRADING - MODELES PERFORMANCE
 # Modèles SQLAlchemy pour les métriques de performance (TimescaleDB)

@@ -1,3 +1,7 @@
+
+"""
+Enumerations used in SQLAlchemy models.
+"""
 # ================================================================
 # PLATEFORME TRADING - ENUMERATIONS
 # Enums utilisés dans les modèles SQLAlchemy

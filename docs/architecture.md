@@ -1,4 +1,9 @@
+
 # Architecture Complète PWA + Backend - Plateforme Trading
+
+Pour les standards de développement, voir : [Guide de développement](development.md)
+
+Pour la définition des termes techniques, voir : [Glossaire](glossaire.md)
 
 ## Vue d'ensemble de l'architecture
 
@@ -8,7 +13,7 @@ Cette architecture suit les principes de **Clean Architecture**, **Domain-Driven
 
 ### Principe de Clean Architecture (Uncle Bob)
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                    FRAMEWORKS & DRIVERS                 │
 │  ┌─────────────────────────────────────────────────────┐│
@@ -49,13 +54,14 @@ Cette architecture suit les principes de **Clean Architecture**, **Domain-Driven
 ```
 
 ### Règles de dépendance
+
 1. **Règle d'inversion** : Les dépendances pointent toujours vers l'intérieur
 2. **Isolation métier** : La logique business ne dépend d'aucune technologie
 3. **Ports et adapters** : Interfaces abstraites pour tous les accès externes
 
 ## 2. Architecture globale du système
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │                              PWA CLIENT                             │
 │                                                                     │
@@ -116,9 +122,71 @@ Cette architecture suit les principes de **Clean Architecture**, **Domain-Driven
 
 ## 3. Design Patterns utilisés avec schémas
 
-### 3.1 Repository Pattern + Unit of Work
+.. tabs::
+   
+  .. tab:: Diagramme UML (PlantUML)
+      
+    .. uml::
+      :caption: Repository Pattern (PlantUML)
 
-```
+      @startuml
+      interface IRepository {
+        +add(entity)
+        +remove(entity)
+        +find_by_id(id)
+      }
+      class PortfolioRepository implements IRepository
+      class UnitOfWork {
+        +commit()
+        +rollback()
+      }
+      PortfolioRepository --> IRepository
+      PortfolioRepository --> UnitOfWork
+      @enduml
+
+  .. tab:: Diagramme Mermaid
+      
+    .. mermaid::
+      :caption: Repository Pattern (Mermaid)
+
+      classDiagram
+        class IRepository {
+         +add(entity)
+         +remove(entity)
+         +find_by_id(id)
+        }
+        class PortfolioRepository {
+         +commit()
+         +rollback()
+        }
+        IRepository <|-- PortfolioRepository
+
+  .. tab:: Vidéo explicative
+      
+    .. video:: https://www.youtube.com/watch?v=Pb3opFOnp2g
+      :width: 600
+      :height: 340
+      :align: center
+
+.. grid:: 2
+  :gutter: 2
+
+  .. card:: :emoji:`rocket` Performance
+    :shadow: md
+    :link: https://fastapi.tiangolo.com/
+    :link-type: url
+
+    FastAPI propulse l'API backend avec une latence < 100ms.
+
+  .. card:: :emoji:`bar_chart` Monitoring
+    :shadow: md
+
+    Logs structurés, alertes Prometheus, dashboards Grafana.
+
+.. bibliography::
+  :filter: docname in docnames
+
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                    REPOSITORY PATTERN                   │
 │                                                         │
@@ -168,7 +236,7 @@ Cette architecture suit les principes de **Clean Architecture**, **Domain-Driven
 
 ### 3.2 Strategy Pattern pour indicateurs techniques
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                    STRATEGY PATTERN                     │
 │                                                         │
@@ -213,7 +281,7 @@ Cette architecture suit les principes de **Clean Architecture**, **Domain-Driven
 
 ### 3.3 Observer Pattern pour notifications temps réel
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                    OBSERVER PATTERN                     │
 │                                                         │
@@ -255,7 +323,7 @@ Cette architecture suit les principes de **Clean Architecture**, **Domain-Driven
 
 ### 3.4 CQRS (Command Query Responsibility Segregation)
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                      CQRS PATTERN                       │
 │                                                         │
@@ -307,7 +375,7 @@ Cette architecture suit les principes de **Clean Architecture**, **Domain-Driven
 
 ## 4. Structure complète du projet
 
-```
+```text
 trading_platform/
 ├── 📁 frontend/                     # PWA React Application
 │   ├── public/

@@ -119,6 +119,11 @@ class Portfolio(AggregateRoot):
         default_factory=list
     )  # Fix for missing attribute
 
+    def __post_init__(self):
+        """Initialize aggregate root functionality"""
+        # Don't call super().__init__() since _domain_events is already a field
+        # No operation needed
+
     @classmethod
     def create(
         cls, user_id: UUID, name: str, base_currency: str, initial_cash: Money
@@ -260,7 +265,7 @@ class Portfolio(AggregateRoot):
                             if symbol in current_prices
                             else None
                         ),
-                        rationale=(
+                        reasoning=(
                             "Rebalancing: current "
                             f"{current_pct:.1f}% vs target "
                             f"{target_pct:.1f}%"

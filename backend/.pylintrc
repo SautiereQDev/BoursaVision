@@ -1,0 +1,18 @@
+[MASTER]
+
+[MESSAGES CONTROL]
+disable=missing-module-docstring,missing-class-docstring,missing-function-docstring,too-few-public-methods
+
+[DESIGN]
+max-args=10
+max-attributes=15
+max-locals=20
+max-positional-arguments=8
+
+[FORMAT]
+max-line-length=120
+
+[REPORTS]
+output-format=text
+reports=no
+score=yes

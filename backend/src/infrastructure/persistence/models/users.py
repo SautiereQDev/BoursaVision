@@ -1,3 +1,7 @@
+
+"""
+SQLAlchemy models for user management.
+"""
 # ================================================================
 # TRADING PLATFORM - USER MODELS
 # SQLAlchemy models for user management
@@ -123,7 +127,6 @@ class UserSession(Base, DatabaseMixin):
         TIMESTAMP(timezone=True),
         default=lambda: datetime.now(timezone.utc),
     )
-
 
     user = relationship("User", back_populates="sessions")
     __table_args__ = (

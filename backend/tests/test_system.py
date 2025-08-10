@@ -1,6 +1,6 @@
 import pytest
 
-from infrastructure.persistence.models.system import SystemConfig
+from src.infrastructure.persistence.models.system import SystemConfig
 
 
 def test_system_example():

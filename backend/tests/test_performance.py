@@ -1,4 +1,4 @@
-from infrastructure.persistence.models.performance import Performance
+from src.infrastructure.persistence.models.performance import Performance
 
 
 def test_performance_example():

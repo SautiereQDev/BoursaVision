@@ -1,3 +1,8 @@
+
+"""
+SQLAlchemy models package for the trading platform.
+Compatible with Clean Architecture + FastAPI.
+"""
 # ================================================================
 # PLATEFORME TRADING - MODELES SQLALCHEMY
 # Compatible avec l'architecture Clean Architecture + FastAPI

@@ -1,6 +1,6 @@
 import pytest
 
-from infrastructure.persistence.models.users import User
+from src.infrastructure.persistence.models.users import User
 
 
 def test_users_example():

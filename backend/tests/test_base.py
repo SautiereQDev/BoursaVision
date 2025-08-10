@@ -1,6 +1,6 @@
 import pytest
 
-from infrastructure.persistence.models.base import Base
+from src.infrastructure.persistence.models.base import Base
 
 
 def test_base_example():

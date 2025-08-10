@@ -1,6 +1,6 @@
 import pytest
 
-from infrastructure.persistence.models.alerts import Alert
+from src.infrastructure.persistence.models.alerts import Alert
 
 
 def test_alerts_example():

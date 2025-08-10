@@ -1,3 +1,7 @@
+
+"""
+SQLAlchemy models for system audit and configuration.
+"""
 # ================================================================
 # PLATEFORME TRADING - MODELES SYSTEME
 # Modèles SQLAlchemy pour l'audit et la configuration système

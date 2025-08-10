@@ -1,3 +1,7 @@
+
+"""
+SQLAlchemy models for financial transactions.
+"""
 # ================================================================
 # PLATEFORME TRADING - MODELES TRANSACTIONS
 # Modèles SQLAlchemy pour les transactions financières

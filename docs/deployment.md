@@ -1,10 +1,17 @@
+
 # Déploiement Boursa Vision
 
 Guide complet pour déployer la plateforme de trading Boursa Vision en production.
 
+Pour une vue d'ensemble de l'architecture, voir : [Architecture Complète](architecture.md)
+
+Pour les standards de développement, voir : [Guide de développement](development.md)
+
+Pour la définition des termes techniques, voir : [Glossaire](glossaire.md)
+
 ## Architecture de Déploiement
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                    PRODUCTION STACK                     │
 │                                                         │
@@ -28,6 +35,7 @@ Guide complet pour déployer la plateforme de trading Boursa Vision en productio
 ## Prérequis
 
 ### Serveur VPS
+
 - **OS**: Ubuntu 20.04+ LTS
 - **RAM**: Minimum 2GB (recommandé 4GB+)
 - **Stockage**: Minimum 20GB SSD (recommandé 50GB+)
@@ -35,6 +43,7 @@ Guide complet pour déployer la plateforme de trading Boursa Vision en productio
 - **Réseau**: IPv4 publique
 
 ### Domaine
+
 - Nom de domaine configuré (ex: votre-domaine.com)
 - Accès aux DNS pour configuration
 
@@ -251,12 +260,14 @@ tail -f /var/log/boursa-monitor.log
 ### 1. Problèmes Courants
 
 **Container ne démarre pas**:
+
 ```bash
 docker-compose -f docker/docker-compose.prod.yml logs [service-name]
 docker inspect [container-id]
 ```
 
 **Problème de base de données**:
+
 ```bash
 # Vérifiez la connectivité
 docker exec boursa-postgres-prod psql -U $POSTGRES_USER -d $POSTGRES_DB -c "SELECT 1;"
@@ -266,6 +277,7 @@ docker-compose -f docker/docker-compose.prod.yml exec backend poetry run alembic
 ```
 
 **Problème SSL**:
+
 ```bash
 # Renouvelez le certificat
 sudo certbot renew
@@ -275,6 +287,7 @@ sudo systemctl reload nginx
 ### 2. Performance
 
 **Optimisation mémoire**:
+
 ```bash
 # Limitez la mémoire Redis
 echo 'maxmemory 512mb' | docker exec -i boursa-redis-prod redis-cli
@@ -284,6 +297,7 @@ docker stats --no-stream
 ```
 
 **Optimisation base de données**:
+
 ```bash
 # Analysez les performances
 docker exec boursa-postgres-prod psql -U $POSTGRES_USER -d $POSTGRES_DB -c "SELECT * FROM pg_stat_activity;"
@@ -345,6 +359,6 @@ docker-compose -f docker/docker-compose.prod.yml up -d --scale celery-worker=3
 
 - **Documentation**: [docs/](../docs/)
 - **Issues**: GitHub Issues
-- **Email**: support@votre-domaine.com
+- **Email**: <support@votre-domaine.com>
 
 **Note**: Remplacez `votre-domaine.com` et `votre-repo` par vos valeurs réelles.

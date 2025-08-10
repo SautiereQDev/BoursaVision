@@ -1,3 +1,7 @@
+
+"""
+SQLAlchemy models for alerts and notifications.
+"""
 # ================================================================
 # TRADING PLATFORM - ALERTS AND NOTIFICATIONS MODELS
 # SQLAlchemy models for the alerts system
