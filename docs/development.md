@@ -1,6 +1,11 @@
+
 # Guide de Développement Boursa Vision
 
 Guide pour les développeurs travaillant sur la plateforme de trading Boursa Vision.
+
+Pour une vue d'ensemble de l'architecture, voir : [Architecture Complète](architecture.md)
+
+Pour la définition des termes techniques, voir : [Glossaire](glossaire.md)
 
 ## Architecture du Projet
 
@@ -120,11 +125,11 @@ poetry run celery -A src.infrastructure.tasks.celery_app worker -l info
 
 ### 2. URLs de Développement
 
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **Adminer**: http://localhost:8080
+- **Frontend**: <http://localhost:5173>
+- **Backend API**: <http://localhost:8000>
+- **API Docs**: <http://localhost:8000/docs>
+- **ReDoc**: <http://localhost:8000/redoc>
+- **Adminer**: <http://localhost:8080>
 
 ### 3. Tests
 
