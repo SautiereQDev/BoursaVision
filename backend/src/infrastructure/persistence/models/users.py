@@ -124,7 +124,6 @@ class UserSession(Base, DatabaseMixin):
         default=lambda: datetime.now(timezone.utc),
     )
 
-
     user = relationship("User", back_populates="sessions")
     __table_args__ = (
         Index("idx_user_sessions_user", "user_id"),
