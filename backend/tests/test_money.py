@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from domain.value_objects.money import Currency, Money
+from src.domain.value_objects.money import Currency, Money
 
 
 def test_currency_properties():

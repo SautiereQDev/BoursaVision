@@ -147,9 +147,6 @@ class ConfidenceScore:
         return self.format()
 
 
-# Add predefined ConfidenceScore constants for tests
-from decimal import Decimal
-
 # Predefined confidence thresholds
 ConfidenceScore.LOW = ConfidenceScore(Decimal("0.3"))
 ConfidenceScore.MEDIUM = ConfidenceScore(Decimal("0.6"))
@@ -352,4 +349,7 @@ class Signal:
 
     def __repr__(self) -> str:
         """Debug repr"""
-        return f"Signal(symbol='{self.symbol}', action={self.action}, confidence={self.confidence.value})"
+        return (
+            f"Signal(symbol='{self.symbol}', action={self.action}, "
+            f"confidence={self.confidence.value})"
+        )

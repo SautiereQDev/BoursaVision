@@ -1,3 +1,7 @@
+
+"""
+SQLAlchemy models for financial instruments.
+"""
 # ================================================================
 # PLATEFORME TRADING - MODELES INSTRUMENTS
 # Modèles SQLAlchemy pour les instruments financiers

@@ -4,13 +4,13 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from domain.entities import (
+from src.domain.entities import (
     InsufficientFundsException,
     Portfolio,
     PositionLimitExceededException,
 )
-from domain.events import InvestmentAddedEvent, PortfolioCreatedEvent
-from domain.value_objects import Currency, Money
+from src.domain.events import InvestmentAddedEvent, PortfolioCreatedEvent
+from src.domain.value_objects import Currency, Money
 
 
 def test_portfolio_create_and_event():

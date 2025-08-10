@@ -99,12 +99,15 @@ class Price:
 
 @dataclass(frozen=True)
 class PricePoint:
+
+    """
+    Point de données OHLCV (Open, High, Low, Close, Volume)
+    """
+
     @property
     def currency(self) -> Currency:
         """Return the currency (all prices are validated to be the same)."""
         return self.open_price.currency
-
-    """Point de données OHLCV (Open, High, Low, Close, Volume)"""
 
     timestamp: datetime
     open_price: Price
@@ -133,13 +136,11 @@ class PricePoint:
             raise ValueError("All prices must be in the same currency")
 
     def _validate_ohlc_logic(self) -> None:
-        if not (self.low_price.value <= self.open_price.value <= self.high_price.value):
-            raise ValueError("Invalid OHLC: open price not between" "high and low")
+        if not self.low_price.value <= self.open_price.value <= self.high_price.value:
+            raise ValueError("Invalid OHLC: open price not between high and low")
 
-        if not (
-            self.low_price.value <= self.close_price.value <= self.high_price.value
-        ):
-            raise ValueError("Invalid OHLC: close price not between" "high and low")
+        if not self.low_price.value <= self.close_price.value <= self.high_price.value:
+            raise ValueError("Invalid OHLC: close price not between high and low")
 
     def _validate_volume(self) -> None:
         if self.volume < 0:

@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import pytest
 
-from domain.value_objects import (
+from src.domain.value_objects import (
     ConfidenceScore,
     Currency,
     Price,

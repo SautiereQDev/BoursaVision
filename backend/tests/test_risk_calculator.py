@@ -17,6 +17,7 @@ from src.domain.entities.investment import (
     MarketCap,
     TechnicalData,
 )
+from src.domain.entities.investment import InvestmentCreateParams
 from src.domain.entities.portfolio import Portfolio, Position, RiskLimits
 from src.domain.services.risk_calculator import RiskCalculatorService
 from src.domain.value_objects.money import Currency, Money
@@ -39,23 +40,27 @@ class TestRiskCalculatorService:
 
         # Create test investments
         self.apple_investment = Investment.create(
-            symbol="AAPL",
-            name="Apple Inc.",
-            investment_type=InvestmentType.STOCK,
-            sector=InvestmentSector.TECHNOLOGY,
-            market_cap=MarketCap.MEGA,
-            currency=Currency.USD,
-            exchange="NASDAQ",
+            InvestmentCreateParams(
+                symbol="AAPL",
+                name="Apple Inc.",
+                investment_type=InvestmentType.STOCK,
+                sector=InvestmentSector.TECHNOLOGY,
+                market_cap=MarketCap.MEGA,
+                currency=Currency.USD,
+                exchange="NASDAQ",
+            )
         )
 
         self.coca_cola_investment = Investment.create(
-            symbol="KO",
-            name="Coca-Cola",
-            investment_type=InvestmentType.STOCK,
-            sector=InvestmentSector.CONSUMER_STAPLES,
-            market_cap=MarketCap.LARGE,
-            currency=Currency.USD,
-            exchange="NYSE",
+            InvestmentCreateParams(
+                symbol="KO",
+                name="Coca-Cola",
+                investment_type=InvestmentType.STOCK,
+                sector=InvestmentSector.CONSUMER_STAPLES,
+                market_cap=MarketCap.LARGE,
+                currency=Currency.USD,
+                exchange="NYSE",
+            )
         )
 
         # Create test positions
@@ -213,13 +218,15 @@ class TestRiskCalculatorService:
             "KO": [0.005, -0.01, 0.008, -0.005, 0.01] * 50,
         }
 
-        risk_metrics = self.risk_calculator.calculate_portfolio_risk_metrics(
-            self.portfolio,
-            self.positions,
-            self.investments,
-            self.current_prices,
-            historical_returns,
+        from src.domain.services.risk_calculator import PortfolioRiskInput
+        risk_input = PortfolioRiskInput(
+            portfolio=self.portfolio,
+            positions=self.positions,
+            investments=self.investments,
+            current_prices=self.current_prices,
+            historical_returns=historical_returns,
         )
+        risk_metrics = self.risk_calculator.calculate_portfolio_risk_metrics(risk_input)
 
         # Check all metrics are calculated
         assert risk_metrics.value_at_risk_95.amount >= 0
@@ -244,23 +251,27 @@ class TestRiskCalculatorService:
         # Test different market caps using public interface
         # through position risk
         mega_investment = Investment.create(
-            symbol="MEGA",
-            name="Mega Cap",
-            investment_type=InvestmentType.STOCK,
-            sector=InvestmentSector.UTILITIES,
-            market_cap=MarketCap.MEGA,
-            currency=Currency.USD,
-            exchange="NYSE",
+            InvestmentCreateParams(
+                symbol="MEGA",
+                name="Mega Cap",
+                investment_type=InvestmentType.STOCK,
+                sector=InvestmentSector.UTILITIES,
+                market_cap=MarketCap.MEGA,
+                currency=Currency.USD,
+                exchange="NYSE",
+            )
         )
 
         nano_investment = Investment.create(
-            symbol="NANO",
-            name="Nano Cap",
-            investment_type=InvestmentType.STOCK,
-            sector=InvestmentSector.UTILITIES,
-            market_cap=MarketCap.NANO,
-            currency=Currency.USD,
-            exchange="NYSE",
+            InvestmentCreateParams(
+                symbol="NANO",
+                name="Nano Cap",
+                investment_type=InvestmentType.STOCK,
+                sector=InvestmentSector.UTILITIES,
+                market_cap=MarketCap.NANO,
+                currency=Currency.USD,
+                exchange="NYSE",
+            )
         )
 
         # Create identical positions
@@ -290,23 +301,27 @@ class TestRiskCalculatorService:
         """Test sector risk by analyzing investment risk levels."""
         # Create investments in different sectors
         energy_investment = Investment.create(
-            symbol="ENERGY",
-            name="Energy Company",
-            investment_type=InvestmentType.STOCK,
-            sector=InvestmentSector.ENERGY,
-            market_cap=MarketCap.LARGE,
-            currency=Currency.USD,
-            exchange="NYSE",
+            InvestmentCreateParams(
+                symbol="ENERGY",
+                name="Energy Company",
+                investment_type=InvestmentType.STOCK,
+                sector=InvestmentSector.ENERGY,
+                market_cap=MarketCap.LARGE,
+                currency=Currency.USD,
+                exchange="NYSE",
+            )
         )
 
         utilities_investment = Investment.create(
-            symbol="UTIL",
-            name="Utilities Company",
-            investment_type=InvestmentType.STOCK,
-            sector=InvestmentSector.UTILITIES,
-            market_cap=MarketCap.LARGE,
-            currency=Currency.USD,
-            exchange="NYSE",
+            InvestmentCreateParams(
+                symbol="UTIL",
+                name="Utilities Company",
+                investment_type=InvestmentType.STOCK,
+                sector=InvestmentSector.UTILITIES,
+                market_cap=MarketCap.LARGE,
+                currency=Currency.USD,
+                exchange="NYSE",
+            )
         )
 
         # Assess risk levels (which internally uses sector risk)
@@ -321,13 +336,15 @@ class TestRiskCalculatorService:
         """Test technical risk assessment through investment analysis."""
         # Create investment with extreme technical indicators
         extreme_investment = Investment.create(
-            symbol="VOLATILE",
-            name="Volatile Stock",
-            investment_type=InvestmentType.STOCK,
-            sector=InvestmentSector.TECHNOLOGY,
-            market_cap=MarketCap.SMALL,
-            currency=Currency.USD,
-            exchange="NASDAQ",
+            InvestmentCreateParams(
+                symbol="VOLATILE",
+                name="Volatile Stock",
+                investment_type=InvestmentType.STOCK,
+                sector=InvestmentSector.TECHNOLOGY,
+                market_cap=MarketCap.SMALL,
+                currency=Currency.USD,
+                exchange="NASDAQ",
+            )
         )
 
         # Update with extreme technical data

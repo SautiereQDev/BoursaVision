@@ -122,7 +122,7 @@ class Portfolio(AggregateRoot):
     def __post_init__(self):
         """Initialize aggregate root functionality"""
         # Don't call super().__init__() since _domain_events is already a field
-        pass
+        # No operation needed
 
     @classmethod
     def create(
@@ -265,7 +265,7 @@ class Portfolio(AggregateRoot):
                             if symbol in current_prices
                             else None
                         ),
-                        rationale=(
+                        reasoning=(
                             "Rebalancing: current "
                             f"{current_pct:.1f}% vs target "
                             f"{target_pct:.1f}%"

@@ -1,3 +1,7 @@
+
+"""
+SQLAlchemy models for market data, indicators, and signals (TimescaleDB).
+"""
 # ================================================================
 # PLATEFORME TRADING - MODELES DONNEES DE MARCHE
 # Modèles SQLAlchemy pour TimescaleDB (market data, indicateurs, signaux)

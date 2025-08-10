@@ -1,3 +1,7 @@
+
+"""
+SQLAlchemy models for company fundamental data.
+"""
 # ================================================================
 # PLATEFORME TRADING - MODELES DONNEES FONDAMENTALES
 # Modèles SQLAlchemy pour les données fondamentales des entreprises

@@ -1,3 +1,6 @@
+"""
+Mixins for SQLAlchemy models.
+"""
 import uuid
 from datetime import datetime, timezone
 

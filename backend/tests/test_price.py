@@ -3,8 +3,8 @@ from decimal import Decimal
 
 import pytest
 
-from domain.value_objects.money import Currency, Money
-from domain.value_objects.price import Price, PriceData, PricePoint
+from src.domain.value_objects.money import Currency, Money
+from src.domain.value_objects.price import Price, PriceData, PricePoint
 
 
 def test_price_creation_and_rounding():

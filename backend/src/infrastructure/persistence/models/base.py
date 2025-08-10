@@ -1,3 +1,8 @@
+
+"""
+Base SQLAlchemy models for the trading platform.
+Compatible with Clean Architecture + FastAPI.
+"""
 # ================================================================
 # TRADING PLATFORM - BASE SQLALCHEMY
 # Compatible with Clean Architecture + FastAPI

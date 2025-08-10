@@ -3,8 +3,8 @@ from decimal import Decimal
 
 import pytest
 
-from domain.entities.portfolio import Position
-from domain.value_objects.money import Currency, Money
+from src.domain.entities.portfolio import Position
+from src.domain.value_objects.money import Currency, Money
 
 
 def test_calculate_market_value():

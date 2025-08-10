@@ -1,3 +1,7 @@
+
+"""
+SQLAlchemy models for portfolios and positions.
+"""
 # ================================================================
 # PLATEFORME TRADING - MODELES PORTFOLIOS
 # Modèles SQLAlchemy pour portfolios et positions

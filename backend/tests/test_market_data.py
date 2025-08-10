@@ -1,6 +1,6 @@
 import pytest
 
-from infrastructure.persistence.models.market_data import MarketData
+from src.infrastructure.persistence.models.market_data import MarketData
 
 
 def test_market_data_example():
