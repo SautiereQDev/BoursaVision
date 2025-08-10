@@ -32,6 +32,7 @@ python-multipart = "^0.0.6"
 python-jose = { extras = ["cryptography"], version = "^3.3.0" }
 passlib = { extras = ["bcrypt"], version = "^1.7.4" }
 websockets = "^12.0"
+psycopg2-binary = "^2.9.10"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
@@ -43,6 +44,25 @@ isort = "^5.12.0"
 flake8 = "^6.1.0"
 mypy = "^1.7.1"
 pre-commit = "^3.6.0"
+
+# Documentation
+sphinx = "^7.2.6"
+sphinx_rtd_theme = "^2.0.0"
+sphinx-autodoc-typehints = "^2.1.0"
+nbsphinx = "^0.9.3"
+myst-parser = {extras = ["linkify"], version = "^4.0.1"}
+sphinx-copybutton = "^0.5.2"
+sphinx-mermaid = "^0.0.8"
+sphinxcontrib-mermaid = "^1.0.0"
+linkify-it-py = "^2.0.3"
+pygments = "^2.19.2"
+sphinxcontrib-plantuml = "^0.30"
+sphinx-tabs = "^3.4.7"
+sphinxext-opengraph = "^0.12.0"
+sphinx-design = "^0.6.1"
+sphinxcontrib-bibtex = "^2.6.5"
+sphinxcontrib-video = "^0.4.1"
+sphinxemoji = "^0.3.1"
 
 [tool.black]
 line-length = 88
