@@ -1,6 +1,6 @@
 import pytest
 
-from infrastructure.persistence.models.enums import TransactionType, InstrumentType
+from infrastructure.persistence.models.enums import InstrumentType, TransactionType
 
 
 def test_enums():
