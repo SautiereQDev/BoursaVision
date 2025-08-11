@@ -52,13 +52,15 @@ class CacheConfig:
     max_connections: int = 10
 
     # TTL settings (grouped into a dictionary to reduce attributes)
-    ttl_settings: Dict[str, int] = field(default_factory=lambda: {
-        "real_time": 30,
-        "intraday": 300,
-        "daily": 3600,
-        "weekly": 21600,
-        "monthly": 86400,
-    })
+    ttl_settings: Dict[str, int] = field(
+        default_factory=lambda: {
+            "real_time": 30,
+            "intraday": 300,
+            "daily": 3600,
+            "weekly": 21600,
+            "monthly": 86400,
+        }
+    )
 
     # Cache key prefix
     key_prefix: str = "boursa_vision:"
@@ -201,7 +203,10 @@ class RedisCache:
             logger.debug(f"Cached key {key} with TTL {ttl}s")
             return True
 
-        except (RedisError, TypeError) as e:  # Replaced `json.JSONEncodeError` with `TypeError`
+        except (
+            RedisError,
+            TypeError,
+        ) as e:  # Replaced `json.JSONEncodeError` with `TypeError`
             logger.warning("Cache set error for key %s: %s", key, e)
             return False
 

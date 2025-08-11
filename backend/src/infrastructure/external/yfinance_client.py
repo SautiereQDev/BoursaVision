@@ -431,7 +431,9 @@ class OptimizedYFinanceClient:
 
         except TemporaryFailureError as e:
             self.rate_limiter.report_rate_limit_error()
-            raise TemporaryFailureError(f"Failed to fetch info for {symbol}: {e}") from e
+            raise TemporaryFailureError(
+                f"Failed to fetch info for {symbol}: {e}"
+            ) from e
 
         except Exception as e:
             logger.error("Unexpected error: %s", e)
@@ -461,7 +463,9 @@ class OptimizedYFinanceClient:
 
         except TemporaryFailureError as e:
             self.rate_limiter.report_rate_limit_error()
-            raise TemporaryFailureError(f"Failed to fetch data for {symbol}: {e}") from e
+            raise TemporaryFailureError(
+                f"Failed to fetch data for {symbol}: {e}"
+            ) from e
 
         except Exception as e:
             logger.error("Unexpected error: %s", e)
