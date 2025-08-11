@@ -106,7 +106,6 @@ source-roots=
 
 # When enabled, pylint would attempt to guess common misconfiguration and emit
 # user-friendly hints instead of false-positive error messages.
-suggestion-mode=yes
 
 # Allow loading of arbitrary C extensions. Extensions are imported into the
 # active Python interpreter and may run arbitrary code.
@@ -438,7 +437,34 @@ disable=raw-checker-failed,
         deprecated-pragma,
         use-symbolic-message-instead,
         use-implicit-booleaness-not-comparison-to-string,
-        use-implicit-booleaness-not-comparison-to-zero
+        use-implicit-booleaness-not-comparison-to-zero,
+    R0903,  # too-few-public-methods
+    R0902,  # too-many-instance-attributes
+    R0904,  # too-many-public-methods
+    W0107,  # unnecessary-pass
+    W2301,  # unnecessary-ellipsis
+    W0718,  # broad-exception-caught
+    W1203,  # logging-fstring-interpolation
+    E0401,  # import-error
+    W0231,  # super-init-not-called
+    W0201,  # attribute-defined-outside-init
+    W0237,  # arguments-renamed
+    W0212,  # protected-access
+    W0611,  # unused-import
+    W0621,  # redefined-outer-name
+    R0913,  # too-many-arguments
+    R0917,  # too-many-positional-arguments
+    E1123,  # unexpected-keyword-arg
+    E1120,  # no-value-for-parameter
+    E0611,  # no-name-in-module
+    C0415,  # import-outside-toplevel
+    C0115,  # missing-class-docstring
+    W0404,  # reimported
+    R0916,  # too-many-boolean-expressions
+    R0914,  # too-many-locals
+    W0613,  # unused-argument
+    R0801,  # duplicate-code
+    C0206   # consider-using-dict-items
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
