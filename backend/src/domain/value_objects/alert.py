@@ -135,8 +135,7 @@ class Alert:
                 f"${self.target_value}"
             ),
             AlertCondition.EQUAL_TO: (
-                f"{self.symbol} price has reached "
-                f"${self.target_value}"
+                f"{self.symbol} price has reached " f"${self.target_value}"
             ),
             AlertCondition.GREATER_THAN_OR_EQUAL: (
                 f"{self.symbol} price ${current_value} has reached or exceeded "
