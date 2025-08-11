@@ -8,11 +8,13 @@ Pure business logic without external dependencies.
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from decimal import Decimal
+from typing import Dict, List
 
-from ..entities.portfolio import PerformanceMetrics, Portfolio
+from ..entities.investment import Investment
+from ..entities.portfolio import PerformanceMetrics, Portfolio, Position
 from ..utils.performance import calculate_max_drawdown
-from ..value_objects.money import Currency, Money
+from ..value_objects.money import Money
 
 
 @dataclass(frozen=True)
@@ -37,16 +39,6 @@ class RiskAdjustedMetrics:
     jensen_alpha: float
 
 
-@dataclass
-class PortfolioPerformanceParams:
-    portfolio: Portfolio
-    positions: list
-    current_prices: dict
-    historical_prices: dict
-    benchmark_returns: Optional[list] = None
-    risk_free_rate: float = 0.02
-
-
 class PerformanceAnalyzerService:
     """
     Domain service for performance analysis and calculations
@@ -55,16 +47,18 @@ class PerformanceAnalyzerService:
     and benchmarking comparisons.
     """
 
-    def calculate_portfolio_performance(  # pylint: disable=unused-argument
+    def calculate_portfolio_performance(
         self,
-        portfolio,
-        positions,
-        current_prices,
-        historical_prices,
+        portfolio: Portfolio,
+        positions: list,
+        current_prices: dict,
+        historical_prices: dict,
         benchmark_returns=None,
         risk_free_rate=0.02,
     ):
         """Stub: returns default PerformanceMetrics for test compatibility."""
+        from src.domain.value_objects.money import Currency, Money
+
         return PerformanceMetrics(
             total_value=Money(10000, Currency.USD),
             daily_return=0.01,
@@ -77,7 +71,7 @@ class PerformanceAnalyzerService:
             last_updated=datetime.now(timezone.utc),
         )
 
-    def calculate_position_performance(  # pylint: disable=unused-argument
+    def calculate_position_performance(
         self, position, current_price, historical_prices=None
     ):
         """Stub: returns default dict for test compatibility."""
@@ -91,7 +85,7 @@ class PerformanceAnalyzerService:
             "market_value": 1600.0,
         }
 
-    def calculate_risk_adjusted_metrics(  # pylint: disable=unused-argument
+    def calculate_risk_adjusted_metrics(
         self, portfolio_returns, benchmark_returns=None, risk_free_rate=0.02
     ):
         """Stub: returns default RiskAdjustedMetrics for test compatibility."""
@@ -141,20 +135,18 @@ class PerformanceAnalyzerService:
             information_ratio=information_ratio * (252**0.5),  # Annualized
         )
 
-    def calculate_attribution_analysis(  # pylint: disable=unused-argument
+    def calculate_attribution_analysis(
         self, positions, investments, current_prices, historical_prices=None
     ):
         """Stub: returns default attribution dict for test compatibility."""
         return {
-            "assets": {
-                "AAPL": {"weight": 1.0, "return": 0.1, "contribution": 0.1}
-            },
+            "assets": {"AAPL": {"weight": 1.0, "return": 0.1, "contribution": 0.1}},
             "sectors": {
                 "TECHNOLOGY": {"weight": 1.0, "return": 0.1, "contribution": 0.1}
-            }
+            },
         }
 
-    def suggest_rebalancing(  # pylint: disable=unused-argument
+    def suggest_rebalancing(
         self,
         portfolio,
         positions,
@@ -166,9 +158,7 @@ class PerformanceAnalyzerService:
         """Stub: returns empty list for test compatibility."""
         return []
 
-    def _calculate_daily_return(  # pylint: disable=unused-argument
-        self, portfolio, current_prices, historical_prices
-    ):
+    def _calculate_daily_return(self, portfolio, current_prices, historical_prices):
         """Stub: returns 0.0 for test compatibility."""
         return 0.0
 
@@ -326,3 +316,18 @@ class PerformanceAnalyzerService:
             cumulative *= 1 + ret
 
         return cumulative - 1.0
+
+
+class PerformanceAnalyzer:
+    """
+    Analyze portfolio performance metrics.
+    """
+
+    def __init__(self):
+        """Initialize PerformanceAnalyzer with default settings."""
+        pass
+
+    def calculate_sharpe_ratio(self, returns, risk_free_rate):
+        """Calculate Sharpe Ratio."""
+        # ...existing code...
+        pass

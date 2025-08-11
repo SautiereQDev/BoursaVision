@@ -49,3 +49,14 @@ class AggregateRoot(ABC):
     def clear_domain_events(self) -> None:
         """Clear domain events after publishing"""
         self._domain_events.clear()
+
+
+class Entity(ABC):
+    """
+    Base class for domain entities
+
+    Entities have identity and lifecycle but don't manage domain events
+    like aggregate roots do.
+    """
+
+    pass

@@ -7,8 +7,6 @@ Pure business logic without external dependencies.
 """
 
 
-
-
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, List
@@ -22,12 +20,12 @@ from ..value_objects.money import Money
 @dataclass
 class PortfolioRiskInput:
     """Input data for portfolio risk calculation."""
+
     portfolio: Portfolio
     positions: List[Position]
     investments: Dict[str, Investment]
     current_prices: Dict[str, Money]
     historical_returns: Dict[str, List[float]]
-
 
 
 @dataclass(frozen=True)  # pylint: disable=too-many-instance-attributes
@@ -53,15 +51,6 @@ class RiskValidationResult:
     violations: List[str]
     warnings: List[str]
     risk_score: float
-
-
-@dataclass
-class RiskValidationParams:
-    portfolio: Portfolio
-    positions: List[Position]
-    investments: Dict[str, Investment]
-    current_prices: Dict[str, Money]
-    risk_limits: RiskLimits
 
 
 class RiskCalculatorService:
@@ -99,7 +88,7 @@ class RiskCalculatorService:
 
     def calculate_portfolio_risk_metrics(
         self,
-        data: 'PortfolioRiskInput',
+        data: "PortfolioRiskInput",
     ) -> RiskMetrics:
         """Calculate comprehensive risk metrics for portfolio"""
         portfolio_value = data.portfolio.calculate_total_value(data.current_prices)
@@ -118,32 +107,31 @@ class RiskCalculatorService:
 
         # Convert to money amounts
         var_95_money = Money(
-            portfolio_value.amount * Decimal(str(abs(var_95))),
-            portfolio_value.currency
+            portfolio_value.amount * Decimal(str(abs(var_95))), portfolio_value.currency
         )
         var_99_money = Money(
-            portfolio_value.amount * Decimal(str(abs(var_99))),
-            portfolio_value.currency
+            portfolio_value.amount * Decimal(str(abs(var_99))), portfolio_value.currency
         )
         es_money = Money(
             portfolio_value.amount * Decimal(str(abs(expected_shortfall))),
-            portfolio_value.currency
+            portfolio_value.currency,
         )
 
         # Other metrics
-        portfolio_beta = self._calculate_portfolio_beta(data.positions, data.investments)
+        portfolio_beta = self._calculate_portfolio_beta(
+            data.positions, data.investments
+        )
         portfolio_volatility = self._calculate_volatility(portfolio_returns)
         max_drawdown = self._calculate_max_drawdown(portfolio_returns)
         concentration_risk = self._calculate_concentration_risk(
-            data.positions,
-            data.current_prices
+            data.positions, data.current_prices
         )
         sector_concentration = self._calculate_sector_concentration(
-            data.positions,
-            data.investments,
-            data.current_prices
+            data.positions, data.investments, data.current_prices
         )
-        largest_position = self._get_largest_position_weight(data.positions, data.current_prices)
+        largest_position = self._get_largest_position_weight(
+            data.positions, data.current_prices
+        )
 
         return RiskMetrics(
             value_at_risk_95=var_95_money,
@@ -157,7 +145,7 @@ class RiskCalculatorService:
             largest_position_weight=largest_position,
         )
 
-    def validate_risk_limits(  # pylint: disable=too-many-arguments
+    def validate_risk_limits(
         self,
         portfolio: Portfolio,
         positions: List[Position],
@@ -203,9 +191,7 @@ class RiskCalculatorService:
                 )
                 risk_score += 15
             elif weight > risk_limits.max_sector_exposure * 0.8:
-                warnings.append(
-                    f"Sector {sector} near limit: {weight:.1f}%"
-                )
+                warnings.append(f"Sector {sector} near limit: {weight:.1f}%")
                 risk_score += 5
 
         # Check cash minimum
@@ -224,7 +210,7 @@ class RiskCalculatorService:
             risk_score=min(100.0, risk_score),
         )
 
-    def suggest_risk_reduction(  # pylint: disable=too-many-arguments
+    def suggest_risk_reduction(
         self,
         portfolio: Portfolio,
         positions: List[Position],
@@ -254,7 +240,9 @@ class RiskCalculatorService:
 
         return suggestions
 
-    def _suggest_reduce_oversized_positions(self, positions, portfolio_value, risk_limits):
+    def _suggest_reduce_oversized_positions(
+        self, positions, portfolio_value, risk_limits
+    ):
         oversized_positions = []
         for position in positions:
             weight = self._calculate_position_weight(position, portfolio_value)
@@ -273,7 +261,9 @@ class RiskCalculatorService:
                 )
         return suggestions
 
-    def _suggest_reduce_sector_concentration(self, positions, investments, current_prices, risk_limits):
+    def _suggest_reduce_sector_concentration(
+        self, positions, investments, current_prices, risk_limits
+    ):
         sector_weights = self._calculate_sector_concentration(
             positions, investments, current_prices
         )
@@ -286,7 +276,9 @@ class RiskCalculatorService:
                 )
         return suggestions
 
-    def _suggest_reduce_high_risk_positions(self, positions, investments, portfolio_value):
+    def _suggest_reduce_high_risk_positions(
+        self, positions, investments, portfolio_value
+    ):
         high_risk_positions = []
         for position in positions:
             if position.symbol in investments:
@@ -393,7 +385,7 @@ class RiskCalculatorService:
         return min(100.0, risk_score)
 
     def _calculate_portfolio_returns(  # pylint: disable=too-many-arguments,too-many-locals
-        self, _positions: List[Position], historical_returns: Dict[str, List[float]]
+        self, positions: List[Position], historical_returns: Dict[str, List[float]]
     ) -> List[float]:
         """Calculate historical portfolio returns"""
         # Simplified implementation
@@ -582,3 +574,9 @@ class RiskCalculatorService:
         else:
             largest_value = Decimal("0")
         return float(largest_value / total_value * 100)
+
+
+class RiskCalculator:
+    """Classe pour le calcul des risques."""
+
+    pass

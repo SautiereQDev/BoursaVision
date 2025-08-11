@@ -1,4 +1,3 @@
-
 """
 Enumerations used in SQLAlchemy models.
 """

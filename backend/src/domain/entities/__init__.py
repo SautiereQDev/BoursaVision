@@ -1,13 +1,28 @@
 """
 Domain entities package.
 
-This package contains the core domain entity classes.
-
-Modules:
-    base: Base classes for domain entities and aggregate roots.
-    portfolio: Portfolio entity with its business logic.
-    investment: Investment entity with analysis capabilities.
+Contains aggregate roots and entities for the domain.
 """
+
+from .base import AggregateRoot, DomainEvent, Entity
+from .investment import Investment
+from .market_data import DataSource, MarketData, Timeframe
+from .portfolio import Portfolio, Position
+from .user import User, UserRole
+
+__all__ = [
+    "AggregateRoot",
+    "DomainEvent",
+    "Entity",
+    "Investment",
+    "Portfolio",
+    "Position",
+    "User",
+    "UserRole",
+    "MarketData",
+    "Timeframe",
+    "DataSource",
+]
 
 from .base import AggregateRoot, DomainEvent
 from .investment import (
