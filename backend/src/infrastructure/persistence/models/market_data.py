@@ -1,4 +1,3 @@
-
 """
 SQLAlchemy models for market data, indicators, and signals (TimescaleDB).
 """

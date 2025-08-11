@@ -1,4 +1,3 @@
-
 """
 Base SQLAlchemy models for the trading platform.
 Compatible with Clean Architecture + FastAPI.

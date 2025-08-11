@@ -1,4 +1,3 @@
-
 """
 SQLAlchemy models for alerts and notifications.
 """

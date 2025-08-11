@@ -1,4 +1,3 @@
-
 """
 SQLAlchemy models for portfolios and positions.
 """

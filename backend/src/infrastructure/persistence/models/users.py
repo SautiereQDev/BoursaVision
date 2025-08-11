@@ -1,3 +1,10 @@
+"""
+User Models
+===========
+
+This module contains SQLAlchemy models for managing user-related data in the trading platform.
+"""
+
 # ================================================================
 # TRADING PLATFORM - USER MODELS
 # SQLAlchemy models for user management

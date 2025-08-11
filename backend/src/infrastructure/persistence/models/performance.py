@@ -1,4 +1,3 @@
-
 """
 SQLAlchemy models for performance metrics (TimescaleDB).
 """
