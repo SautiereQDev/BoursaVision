@@ -37,4 +37,5 @@ __all__ = [
     "PerformanceAnalyzerService",
     "PerformanceComparison",
     "RiskAdjustedMetrics",
+    "RiskCalculator",
 ]

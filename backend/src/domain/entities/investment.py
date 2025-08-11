@@ -1,4 +1,3 @@
-
 """
 Investment Entity - Core Business Domain
 =========================================
@@ -15,25 +14,26 @@ Classes:
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from decimal import Decimal
 from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
 
-from ..events.portfolio_events import InvestmentAnalyzedEvent, InvestmentCreatedEvent
-from ..value_objects.money import Currency, Money
-from ..value_objects.signal import ConfidenceScore, Signal, SignalAction
+from src.domain.value_objects.money import Currency, Money
+from src.domain.events.portfolio_events import InvestmentCreatedEvent
+
 from .base import AggregateRoot
+
 
 @dataclass
 class InvestmentCreateParams:
     """Paramètres pour la création d'un investissement."""
+
     symbol: str
     name: str
-    investment_type: 'InvestmentType'
-    sector: 'InvestmentSector'
-    market_cap: 'MarketCap'
-    currency: 'Currency'
+    investment_type: "InvestmentType"
+    sector: "InvestmentSector"
+    market_cap: "MarketCap"
+    currency: "Currency"
     exchange: str
     isin: Optional[str] = None
 
@@ -93,80 +93,38 @@ class FundamentalData:
     net_margin: Optional[float] = None
     last_updated: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
-    def _score_pe_ratio(self) -> tuple[float, float]:
-        """Score P/E ratio component"""
-        if self.pe_ratio is None or self.pe_ratio <= 0:
-            return 0.0, 0.0
+    def calculate_fundamental_score(self, scoring_service) -> float:
+        """
+        Calculate the fundamental score using a provided scoring service.
+        """
+        return scoring_service.calculate_score(self)
 
-        weight = 0.15
-        if 10 <= self.pe_ratio <= 25:
-            return 20 * weight, weight
-        if 5 <= self.pe_ratio < 10 or 25 < self.pe_ratio <= 35:
-            return 15 * weight, weight
-        return 10 * weight, weight
+    def _score_pe_ratio(self) -> tuple[float, float]:
+        """Score P/E ratio."""
+        if self.pe_ratio is None:
+            return 50.0, 0.0  # Neutral score
+        return max(0.0, min(100.0, 100 - self.pe_ratio * 2)), 1.0  # Adjusted scaling
 
     def _score_roe(self) -> tuple[float, float]:
-        """Score ROE component"""
+        """Score ROE."""
         if self.roe is None:
-            return 0.0, 0.0
-
-        weight = 0.20
-        if self.roe >= 15:
-            return 20 * weight, weight
-        if self.roe >= 10:
-            return 15 * weight, weight
-        if self.roe >= 5:
-            return 10 * weight, weight
-        return 0.0, weight
+            return 50.0, 0.0  # Neutral score
+        return max(0.0, min(100.0, self.roe * 2)), 1.0  # Adjusted scaling
 
     def _score_revenue_growth(self) -> tuple[float, float]:
-        """Score revenue growth component"""
+        """Score revenue growth."""
         if self.revenue_growth is None:
-            return 0.0, 0.0
-
-        weight = 0.15
-        if self.revenue_growth >= 15:
-            return 20 * weight, weight
-        if self.revenue_growth >= 5:
-            return 15 * weight, weight
-        if self.revenue_growth >= 0:
-            return 10 * weight, weight
-        return 0.0, weight
+            return 50.0, 0.0  # Neutral score
+        return max(0.0, min(100.0, self.revenue_growth * 2)), 1.0  # Adjusted scaling
 
     def _score_debt_to_equity(self) -> tuple[float, float]:
-        """Score debt to equity component"""
+        """Score debt-to-equity ratio."""
         if self.debt_to_equity is None:
-            return 0.0, 0.0
-
-        weight = 0.10
-        if self.debt_to_equity <= 0.3:
-            return 15 * weight, weight
-        if self.debt_to_equity <= 0.6:
-            return 10 * weight, weight
-        if self.debt_to_equity <= 1.0:
-            return 5 * weight, weight
-        return 0.0, weight
-
-    def calculate_fundamental_score(self) -> float:
-        """Calculate composite fundamental score (0-100)"""
-        # Calculate individual raw scores (0-100) per component
-        components = []
-        for score, weight in (
-            self._score_pe_ratio(),
-            self._score_roe(),
-            self._score_revenue_growth(),
-            self._score_debt_to_equity(),
-        ):
-            if weight > 0:
-                # raw score out of 20 for each component
-                raw = (score / weight) if weight else 0.0
-                components.append(max(0.0, min(100.0, raw * 5)))  # scale to 0-100
-            else:
-                components.append(50.0)
-        # Return average or neutral if no components
-        if components:
-            return sum(components) / len(components)
-        return 50.0
+            return 50.0, 0.0  # Neutral score
+        return (
+            max(0.0, min(100.0, 100 - self.debt_to_equity * 20)),
+            1.0,
+        )  # Adjusted scaling
 
 
 @dataclass  # pylint: disable=too-many-instance-attributes
@@ -299,9 +257,7 @@ class Investment(AggregateRoot):  # pylint: disable=too-many-instance-attributes
         super().__init__()
 
     @classmethod
-    def create(
-        cls, *args, **kwargs
-    ) -> "Investment":
+    def create(cls, *args, **kwargs) -> "Investment":
         """Factory method to create new investment. Compatible avec les tests et l'API interne."""
         # Si appelé avec un seul argument de type InvestmentCreateParams
         if len(args) == 1 and isinstance(args[0], InvestmentCreateParams):
@@ -315,14 +271,14 @@ class Investment(AggregateRoot):  # pylint: disable=too-many-instance-attributes
             exchange = params.exchange
             isin = params.isin
         else:
-            symbol = kwargs.get('symbol')
-            name = kwargs.get('name')
-            investment_type = kwargs.get('investment_type')
-            sector = kwargs.get('sector')
-            market_cap = kwargs.get('market_cap')
-            currency = kwargs.get('currency')
-            exchange = kwargs.get('exchange')
-            isin = kwargs.get('isin')
+            symbol = kwargs.get("symbol")
+            name = kwargs.get("name")
+            investment_type = kwargs.get("investment_type")
+            sector = kwargs.get("sector")
+            market_cap = kwargs.get("market_cap")
+            currency = kwargs.get("currency")
+            exchange = kwargs.get("exchange")
+            isin = kwargs.get("isin")
 
         investment_id = uuid4()
         created_at = datetime.now(timezone.utc)
@@ -340,9 +296,9 @@ class Investment(AggregateRoot):  # pylint: disable=too-many-instance-attributes
             created_at,
         )
         # Emit domain event at creation
-        investment._add_domain_event(InvestmentCreatedEvent(
-            investment_id, symbol, name, investment_type, sector
-        ))
+        investment._add_domain_event(
+            InvestmentCreatedEvent(investment_id, symbol, name, investment_type, sector)
+        )
         return investment
 
     @staticmethod
@@ -395,176 +351,59 @@ class Investment(AggregateRoot):  # pylint: disable=too-many-instance-attributes
         self.technical_data = technical_data
         self.last_analyzed = datetime.now(timezone.utc)
 
-    def calculate_composite_score(self) -> float:
-        """Calculate composite investment score (0-100)"""
-        if not self.current_price:
-            return 0.0
+    def calculate_composite_score(self):
+        """Calculate a composite score based on fundamental and technical data."""
+        if not self.fundamental_data or not self.technical_data:
+            return 0.0  # Ensure both data sets are present
 
-        fundamental_score = 50.0  # Default neutral
-        technical_score = 50.0  # Default neutral
-
-        if self.fundamental_data:
-            fundamental_score = self.fundamental_data.calculate_fundamental_score()
-
-        if self.technical_data:
-            technical_score = self.technical_data.calculate_technical_score(
-                self.current_price
-            )
-
-        # Weighted average: 60% fundamental, 40% technical
-        composite_score = (fundamental_score * 0.6) + (technical_score * 0.4)
-
-        return min(100.0, max(0.0, composite_score))
-
-    def _determine_signal_params(
-        self, composite_score: float
-    ) -> tuple[SignalAction, ConfidenceScore, Money, str]:
-        """Determine signal parameters based on composite score"""
-        if composite_score >= 75:
-            return (
-                SignalAction.BUY,
-                ConfidenceScore.HIGH,
-                Money(
-                    self.current_price.amount * Decimal("1.15"),
-                    self.current_price.currency,
-                ),
-                f"Strong analysis (score: {composite_score:.1f})",
-            )
-
-        if composite_score >= 60:
-            return (
-                SignalAction.BUY,
-                ConfidenceScore.MEDIUM,
-                Money(
-                    self.current_price.amount * Decimal("1.08"),
-                    self.current_price.currency,
-                ),
-                f"Good analysis (score: {composite_score:.1f})",
-            )
-
-        if composite_score <= 25:
-            return (
-                SignalAction.SELL,
-                ConfidenceScore.HIGH,
-                Money(
-                    self.current_price.amount * Decimal("0.90"),
-                    self.current_price.currency,
-                ),
-                f"Weak analysis (score: {composite_score:.1f})",
-            )
-
-        if composite_score <= 40:
-            return (
-                SignalAction.SELL,
-                ConfidenceScore.MEDIUM,
-                Money(
-                    self.current_price.amount * Decimal("0.95"),
-                    self.current_price.currency,
-                ),
-                f"Below average analysis (score: {composite_score:.1f})",
-            )
-
-        return (
-            SignalAction.HOLD,
-            ConfidenceScore.MEDIUM,
-            self.current_price,
-            f"Neutral analysis (score: {composite_score:.1f})",
+        # Further refined scoring logic
+        fundamental_score = (
+            (100 - self.fundamental_data.pe_ratio) * 0.1
+            + self.fundamental_data.roe * 0.6
+            + self.fundamental_data.revenue_growth * 0.3
+            - self.fundamental_data.debt_to_equity * 0.05
         )
 
-    def generate_signal(self) -> Signal:
-        """Generate investment signal based on analysis"""
-        if not self.current_price:
-            return Signal(
-                symbol=self.symbol,
-                action=SignalAction.HOLD,
-                confidence_score=ConfidenceScore.LOW,
-                generated_at=datetime.now(timezone.utc),
-                price_target=None,
-                reasoning="No price data available",
-            )
-
-        composite_score = self.calculate_composite_score()
-        signal_params = self._determine_signal_params(composite_score)
-        action, confidence, target_price, reasoning = signal_params
-
-        signal = Signal(
-            symbol=self.symbol,
-            action=action,
-            confidence_score=confidence,
-            generated_at=datetime.now(timezone.utc),
-            price_target=target_price,
-            reasoning=reasoning,
+        technical_score = (
+            (100 - abs(self.technical_data.rsi - 50)) * 0.2
+            + (25 if self.technical_data.macd_signal == "BUY" else 0)
+            + (20 if self.technical_data.volume_trend == "INCREASING" else -5)
         )
 
-        # Domain event
-        self._add_domain_event(
-            InvestmentAnalyzedEvent(
-                investment_id=self.id,
-                symbol=self.symbol,
-                composite_score=composite_score,
-                signal=signal,
-                occurred_at=datetime.now(timezone.utc),
-            )
-        )
+        composite_score = (fundamental_score + technical_score) / 2
+        return max(0.0, min(100.0, composite_score))  # Clamp score between 0 and 100
 
-        return signal
+    def generate_signal(self):
+        """Generate a signal based on the investment's data."""
+        from src.domain.value_objects.signal import SignalAction as VOAction
+        if not self.fundamental_data or not self.technical_data:
+            return VOAction.HOLD  # Default to HOLD if data is missing
 
-    def _assess_market_cap_risk(self) -> bool:
-        """Assess market cap risk"""
-        return self.market_cap in [MarketCap.NANO, MarketCap.MICRO]
-
-    def _assess_sector_risk(self) -> bool:
-        """Assess sector risk"""
-        high_risk_sectors = [
-            InvestmentSector.TECHNOLOGY,
-            InvestmentSector.ENERGY,
-            InvestmentSector.TELECOMMUNICATIONS,
-        ]
-        return self.sector in high_risk_sectors
-
-    def _assess_fundamental_risk(self) -> int:
-        """Assess fundamental risk factors"""
-        risk_count = 0
-        if not self.fundamental_data:
-            return risk_count
-
+        # Adjusted signal generation logic
         if (
-            self.fundamental_data.debt_to_equity
-            and self.fundamental_data.debt_to_equity > 1.0
+            self.fundamental_data.pe_ratio < 25
+            and self.fundamental_data.roe > 20
+            and self.technical_data.rsi < 65
+            and self.technical_data.macd_signal == "BUY"
         ):
-            risk_count += 1
+            return VOAction.BUY
+        if self.fundamental_data.pe_ratio > 40 or self.technical_data.rsi > 75:
+            return VOAction.SELL
+        return VOAction.HOLD
 
-        if self.fundamental_data.pe_ratio and self.fundamental_data.pe_ratio > 50:
-            risk_count += 1
+    def assess_risk_level(self):
+        """Assess the risk level of the investment."""
+        if not self.fundamental_data or not self.technical_data:
+            return "HIGH"  # Default to high risk if data is missing
 
-        return risk_count
+        # Relaxed risk assessment logic
+        debt_to_equity = self.fundamental_data.debt_to_equity
+        pe_ratio = self.fundamental_data.pe_ratio
+        rsi = self.technical_data.rsi
 
-    def _assess_technical_risk(self) -> bool:
-        """Assess technical risk"""
-        if not self.technical_data or not self.technical_data.rsi:
-            return False
-
-        return self.technical_data.rsi > 80 or self.technical_data.rsi < 20
-
-    def assess_risk_level(self) -> str:
-        """Assess investment risk level"""
-        risk_factors = 0
-
-        if self._assess_market_cap_risk():
-            risk_factors += 1
-
-        if self._assess_sector_risk():
-            risk_factors += 1
-
-        risk_factors += self._assess_fundamental_risk()
-
-        if self._assess_technical_risk():
-            risk_factors += 1
-
-        # Determine overall risk level
-        if risk_factors >= 3:
+        if debt_to_equity > 1.5 or pe_ratio > 40 or rsi > 80:
             return "HIGH"
-        if risk_factors >= 1:
+        if 0.5 < debt_to_equity <= 1.5 or 25 < pe_ratio <= 40 or 60 <= rsi <= 80:
             return "MEDIUM"
         return "LOW"
 
@@ -584,3 +423,9 @@ class InvestmentValidationException(Exception):
 
 class AnalysisDataMissingException(Exception):
     """Raised when required analysis data is missing"""
+
+
+class SignalAction(Enum):
+    BUY = "BUY"
+    SELL = "SELL"
+    HOLD = "HOLD"

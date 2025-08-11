@@ -12,7 +12,7 @@ from .user import User, UserRole
 
 __all__ = [
     "AggregateRoot",
-    "DomainEvent", 
+    "DomainEvent",
     "Entity",
     "Investment",
     "Portfolio",

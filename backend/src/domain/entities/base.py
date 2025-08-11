@@ -54,8 +54,9 @@ class AggregateRoot(ABC):
 class Entity(ABC):
     """
     Base class for domain entities
-    
+
     Entities have identity and lifecycle but don't manage domain events
     like aggregate roots do.
     """
+
     pass

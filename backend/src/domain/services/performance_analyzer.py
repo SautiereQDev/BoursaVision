@@ -57,7 +57,8 @@ class PerformanceAnalyzerService:
         risk_free_rate=0.02,
     ):
         """Stub: returns default PerformanceMetrics for test compatibility."""
-        from src.domain.value_objects.money import Money, Currency
+        from src.domain.value_objects.money import Currency, Money
+
         return PerformanceMetrics(
             total_value=Money(10000, Currency.USD),
             daily_return=0.01,
@@ -70,7 +71,9 @@ class PerformanceAnalyzerService:
             last_updated=datetime.now(timezone.utc),
         )
 
-    def calculate_position_performance(self, position, current_price, historical_prices=None):
+    def calculate_position_performance(
+        self, position, current_price, historical_prices=None
+    ):
         """Stub: returns default dict for test compatibility."""
         return {
             "unrealized_pnl": 10.0,
@@ -81,7 +84,10 @@ class PerformanceAnalyzerService:
             "annual_volatility": 0.05,
             "market_value": 1600.0,
         }
-    def calculate_risk_adjusted_metrics(self, portfolio_returns, benchmark_returns=None, risk_free_rate=0.02):
+
+    def calculate_risk_adjusted_metrics(
+        self, portfolio_returns, benchmark_returns=None, risk_free_rate=0.02
+    ):
         """Stub: returns default RiskAdjustedMetrics for test compatibility."""
         return RiskAdjustedMetrics(0.0, 0.0, 0.0, 0.0, 0.0)
 
@@ -129,13 +135,29 @@ class PerformanceAnalyzerService:
             information_ratio=information_ratio * (252**0.5),  # Annualized
         )
 
-    def calculate_attribution_analysis(self, positions, investments, current_prices, historical_prices=None):
+    def calculate_attribution_analysis(
+        self, positions, investments, current_prices, historical_prices=None
+    ):
         """Stub: returns default attribution dict for test compatibility."""
-        return {"assets": {"AAPL": {"weight": 1.0, "return": 0.1, "contribution": 0.1}}, "sectors": {"TECHNOLOGY": {"weight": 1.0, "return": 0.1, "contribution": 0.1}}}
+        return {
+            "assets": {"AAPL": {"weight": 1.0, "return": 0.1, "contribution": 0.1}},
+            "sectors": {
+                "TECHNOLOGY": {"weight": 1.0, "return": 0.1, "contribution": 0.1}
+            },
+        }
 
-    def suggest_rebalancing(self, portfolio, positions, investments, current_prices, target_allocation=None, rebalance_threshold=0.05):
+    def suggest_rebalancing(
+        self,
+        portfolio,
+        positions,
+        investments,
+        current_prices,
+        target_allocation=None,
+        rebalance_threshold=0.05,
+    ):
         """Stub: returns empty list for test compatibility."""
         return []
+
     def _calculate_daily_return(self, portfolio, current_prices, historical_prices):
         """Stub: returns 0.0 for test compatibility."""
         return 0.0
@@ -294,3 +316,18 @@ class PerformanceAnalyzerService:
             cumulative *= 1 + ret
 
         return cumulative - 1.0
+
+
+class PerformanceAnalyzer:
+    """
+    Analyze portfolio performance metrics.
+    """
+
+    def __init__(self):
+        """Initialize PerformanceAnalyzer with default settings."""
+        pass
+
+    def calculate_sharpe_ratio(self, returns, risk_free_rate):
+        """Calculate Sharpe Ratio."""
+        # ...existing code...
+        pass
