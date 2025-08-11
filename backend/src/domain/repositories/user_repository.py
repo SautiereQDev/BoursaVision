@@ -1,0 +1,84 @@
+"""
+User Repository Interface
+========================
+
+Repository interface for user aggregate following DDD patterns.
+
+Classes:
+    IUserRepository: Abstract interface for user persistence operations.
+"""
+
+from abc import ABC, abstractmethod
+from typing import List, Optional
+from uuid import UUID
+
+from ..entities.user import User, UserRole
+
+
+class IUserRepository(ABC):
+    """
+    Repository interface for User aggregate.
+    
+    Defines the contract for user persistence operations
+    without coupling to specific infrastructure.
+    """
+    
+    @abstractmethod
+    async def find_by_id(self, user_id: UUID) -> Optional[User]:
+        """Find user by ID"""
+        pass
+    
+    @abstractmethod
+    async def find_by_email(self, email: str) -> Optional[User]:
+        """Find user by email address"""
+        pass
+    
+    @abstractmethod
+    async def find_by_username(self, username: str) -> Optional[User]:
+        """Find user by username"""
+        pass
+    
+    @abstractmethod
+    async def find_by_role(self, role: UserRole) -> List[User]:
+        """Find all users with specific role"""
+        pass
+    
+    @abstractmethod
+    async def find_active_users(self) -> List[User]:
+        """Find all active users"""
+        pass
+    
+    @abstractmethod
+    async def save(self, user: User) -> User:
+        """Save user (create or update)"""
+        pass
+    
+    @abstractmethod
+    async def delete(self, user_id: UUID) -> bool:
+        """Delete user by ID"""
+        pass
+    
+    @abstractmethod
+    async def exists_by_email(self, email: str) -> bool:
+        """Check if user with email exists"""
+        pass
+    
+    @abstractmethod
+    async def exists_by_username(self, username: str) -> bool:
+        """Check if user with username exists"""
+        pass
+    
+    @abstractmethod
+    async def count_by_role(self, role: UserRole) -> int:
+        """Count users by role"""
+        pass
+    
+    @abstractmethod
+    async def find_all(
+        self, 
+        offset: int = 0, 
+        limit: int = 100,
+        include_inactive: bool = False
+    ) -> List[User]:
+        """Find all users with pagination"""
+        pass

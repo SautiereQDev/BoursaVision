@@ -55,15 +55,6 @@ class RiskValidationResult:
     risk_score: float
 
 
-@dataclass
-class RiskValidationParams:
-    portfolio: Portfolio
-    positions: List[Position]
-    investments: Dict[str, Investment]
-    current_prices: Dict[str, Money]
-    risk_limits: RiskLimits
-
-
 class RiskCalculatorService:
     """
     Domain service for risk calculations and validations
@@ -157,7 +148,7 @@ class RiskCalculatorService:
             largest_position_weight=largest_position,
         )
 
-    def validate_risk_limits(  # pylint: disable=too-many-arguments
+    def validate_risk_limits(
         self,
         portfolio: Portfolio,
         positions: List[Position],
@@ -224,7 +215,7 @@ class RiskCalculatorService:
             risk_score=min(100.0, risk_score),
         )
 
-    def suggest_risk_reduction(  # pylint: disable=too-many-arguments
+    def suggest_risk_reduction(
         self,
         portfolio: Portfolio,
         positions: List[Position],
@@ -236,21 +227,9 @@ class RiskCalculatorService:
         suggestions = []
         portfolio_value = portfolio.calculate_total_value(current_prices)
 
-        suggestions.extend(
-            self._suggest_reduce_oversized_positions(
-                positions, portfolio_value, risk_limits
-            )
-        )
-        suggestions.extend(
-            self._suggest_reduce_sector_concentration(
-                positions, investments, current_prices, risk_limits
-            )
-        )
-        suggestions.extend(
-            self._suggest_reduce_high_risk_positions(
-                positions, investments, portfolio_value
-            )
-        )
+        suggestions.extend(self._suggest_reduce_oversized_positions(positions, portfolio_value, risk_limits))
+        suggestions.extend(self._suggest_reduce_sector_concentration(positions, investments, current_prices, risk_limits))
+        suggestions.extend(self._suggest_reduce_high_risk_positions(positions, investments, portfolio_value))
 
         return suggestions
 
@@ -393,7 +372,7 @@ class RiskCalculatorService:
         return min(100.0, risk_score)
 
     def _calculate_portfolio_returns(  # pylint: disable=too-many-arguments,too-many-locals
-        self, _positions: List[Position], historical_returns: Dict[str, List[float]]
+        self, positions: List[Position], historical_returns: Dict[str, List[float]]
     ) -> List[float]:
         """Calculate historical portfolio returns"""
         # Simplified implementation

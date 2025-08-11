@@ -1,7 +1,3 @@
-
-"""
-SQLAlchemy models for user management.
-"""
 # ================================================================
 # TRADING PLATFORM - USER MODELS
 # SQLAlchemy models for user management

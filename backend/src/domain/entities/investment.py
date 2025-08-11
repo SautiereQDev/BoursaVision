@@ -1,3 +1,4 @@
+
 """
 Investment Entity - Core Business Domain
 =========================================
@@ -345,7 +346,6 @@ class Investment(AggregateRoot):  # pylint: disable=too-many-instance-attributes
         return investment
 
     @staticmethod
-    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def _build_investment(
         investment_id,
         symbol,
