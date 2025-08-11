@@ -12,12 +12,12 @@ from uuid import uuid4
 from src.domain.entities.investment import (
     FundamentalData,
     Investment,
+    InvestmentCreateParams,
     InvestmentSector,
     InvestmentType,
     MarketCap,
     TechnicalData,
 )
-from src.domain.entities.investment import InvestmentCreateParams
 from src.domain.entities.portfolio import Portfolio, Position, RiskLimits
 from src.domain.services.risk_calculator import RiskCalculatorService
 from src.domain.value_objects.money import Currency, Money
@@ -219,6 +219,7 @@ class TestRiskCalculatorService:
         }
 
         from src.domain.services.risk_calculator import PortfolioRiskInput
+
         risk_input = PortfolioRiskInput(
             portfolio=self.portfolio,
             positions=self.positions,
