@@ -211,7 +211,7 @@ test-backend: ## Run backend tests
 .PHONY: test-backend-cov
 test-backend-cov: ## Run backend tests with coverage
 	@echo "$(YELLOW)Running backend tests with coverage...$(NC)"
-	@cd $(BACKEND_DIR) && poetry run pytest tests/ --cov=src --cov-report=html --cov-report=term
+	@cd $(BACKEND_DIR) && poetry run pytest tests/ --cov=src --cov-report=html --cov-report=term-missing
 	@echo "$(GREEN)Coverage report generated at backend/htmlcov/index.html$(NC)"
 
 .PHONY: test-frontend

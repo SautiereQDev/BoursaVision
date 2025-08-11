@@ -6,13 +6,10 @@ Contains adapters and infrastructure details:
     web: API endpoints, dependencies, and middleware.
 """
 
-from .persistence import models
-from .persistence.sqlalchemy import session
+# Import only what's needed to avoid circular imports
 from .web import dependencies, main, middleware, routers
 
 __all__ = [
-    "models",
-    "session",
     "dependencies",
     "main",
     "middleware",

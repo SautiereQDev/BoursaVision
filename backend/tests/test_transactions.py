@@ -42,7 +42,10 @@ def test_transactions_example():
 def test_transaction_creation(db_session):
     # Create user first
     user = User(
-        id=uuid.uuid4(), email="test@example.com", password_hash="hashed_password"
+        id=uuid.uuid4(),
+        email="test@example.com",
+        username="testuser",  # Ajout du champ obligatoire
+        password_hash="hashed_password",
     )
     db_session.add(user)
     db_session.flush()  # Get the user ID
@@ -102,7 +105,10 @@ def test_transaction_constraints(db_session):
 
 def test_transaction_relations(db_session):
     user = User(
-        id=uuid.uuid4(), email="relations@example.com", password_hash="hashed_password"
+        id=uuid.uuid4(),
+        email="relations@example.com",
+        username="relationuser",  # Ajout du champ obligatoire
+        password_hash="hashed_password",
     )
     db_session.add(user)
     db_session.flush()
@@ -139,7 +145,10 @@ def test_transaction_relations(db_session):
 
 def test_transaction_negative_values(db_session):
     user = User(
-        id=uuid.uuid4(), email="negative@example.com", password_hash="hashed_password"
+        id=uuid.uuid4(),
+        email="negative@example.com",
+        username="negativeuser",
+        password_hash="hashed_password",
     )
     db_session.add(user)
     db_session.flush()
@@ -173,7 +182,10 @@ def test_transaction_negative_values(db_session):
 
 def test_transaction_calculated_fields(db_session):
     user = User(
-        id=uuid.uuid4(), email="fields@example.com", password_hash="hashed_password"
+        id=uuid.uuid4(),
+        email="fields@example.com",
+        username="fieldsuser",
+        password_hash="hashed_password",
     )
     db_session.add(user)
     db_session.flush()
@@ -212,7 +224,10 @@ def test_transaction_calculated_fields(db_session):
 
 def test_transaction_zero_fees_and_taxes(db_session):
     user = User(
-        id=uuid.uuid4(), email="zero@example.com", password_hash="hashed_password"
+        id=uuid.uuid4(),
+        email="zero@example.com",
+        username="zerouser",
+        password_hash="hashed_password",
     )
     db_session.add(user)
     db_session.flush()
@@ -248,7 +263,10 @@ def test_transaction_zero_fees_and_taxes(db_session):
 
 def test_transaction_invalid_currency(db_session):
     user = User(
-        id=uuid.uuid4(), email="invalid@example.com", password_hash="hashed_password"
+        id=uuid.uuid4(),
+        email="invalid@example.com",
+        username="invaliduser",
+        password_hash="hashed_password",
     )
     db_session.add(user)
     db_session.flush()

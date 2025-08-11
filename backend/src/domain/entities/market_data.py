@@ -19,8 +19,8 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from ..events.market_events import MarketDataUpdatedEvent
-from ..value_objects.price import Price
 from ..value_objects.money import Currency  # Use the existing Currency class
+from ..value_objects.price import Price
 from .base import AggregateRoot
 
 

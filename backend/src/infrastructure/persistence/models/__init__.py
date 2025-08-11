@@ -21,6 +21,7 @@ from .enums import (
 )
 from .fundamental import FundamentalData
 from .instruments import Instrument
+from .investment import InvestmentModel
 from .market_data import TechnicalIndicator  # Signal import removed
 from .market_data import MarketData
 from .performance import PortfolioPerformance
@@ -47,6 +48,7 @@ __all__ = [
     "Portfolio",
     "Position",
     "Instrument",
+    "InvestmentModel",
     "Transaction",
     "MarketData",
     "TechnicalIndicator",

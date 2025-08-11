@@ -38,8 +38,10 @@ class User(Base, DatabaseMixin):
     __tablename__ = "users"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    username = Column(String(100), unique=True, nullable=False, index=True)
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
+    role = Column(String(20), default="VIEWER", nullable=False)
     first_name = Column(String(100))
     last_name = Column(String(100))
     phone = Column(String(20))
@@ -94,6 +96,10 @@ class User(Base, DatabaseMixin):
         CheckConstraint(
             "investment_experience IN ('beginner', 'intermediate', 'advanced')",
             name="check_investment_experience",
+        ),
+        CheckConstraint(
+            "role IN ('ADMIN', 'TRADER', 'ANALYST', 'VIEWER')",
+            name="check_user_role",
         ),
     )
 
