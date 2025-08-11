@@ -93,7 +93,9 @@ class PositionUpdatedEvent(DomainEvent):
 
 
 @dataclass
-class PerformanceCalculatedEvent(DomainEvent):  # pylint: disable=too-many-instance-attributes
+class PerformanceCalculatedEvent(
+    DomainEvent
+):  # pylint: disable=too-many-instance-attributes
     """Event raised when portfolio performance is calculated"""
 
     portfolio_id: UUID

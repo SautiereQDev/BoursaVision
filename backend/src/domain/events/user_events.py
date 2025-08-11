@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 @dataclass(kw_only=True)
 class UserCreatedEvent(DomainEvent):
     """Event fired when a new user is created"""
-    
+
     user_id: UUID
     email: str
     role: str  # Use string to avoid circular import
@@ -32,7 +32,7 @@ class UserCreatedEvent(DomainEvent):
 @dataclass(kw_only=True)
 class UserDeactivatedEvent(DomainEvent):
     """Event fired when a user is deactivated"""
-    
+
     user_id: UUID
     email: str
 
@@ -40,7 +40,7 @@ class UserDeactivatedEvent(DomainEvent):
 @dataclass(kw_only=True)
 class UserRoleChangedEvent(DomainEvent):
     """Event fired when a user's role changes"""
-    
+
     user_id: UUID
     old_role: str  # Use string to avoid circular import
     new_role: str  # Use string to avoid circular import
@@ -49,7 +49,7 @@ class UserRoleChangedEvent(DomainEvent):
 @dataclass(kw_only=True)
 class UserEmailVerifiedEvent(DomainEvent):
     """Event fired when a user's email is verified"""
-    
+
     user_id: UUID
     email: str
 
@@ -57,6 +57,6 @@ class UserEmailVerifiedEvent(DomainEvent):
 @dataclass(kw_only=True)
 class UserTwoFactorEnabledEvent(DomainEvent):
     """Event fired when two-factor authentication is enabled"""
-    
+
     user_id: UUID
     email: str

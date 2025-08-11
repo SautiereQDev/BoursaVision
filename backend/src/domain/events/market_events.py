@@ -21,7 +21,7 @@ from .portfolio_events import DomainEvent
 @dataclass(kw_only=True)
 class MarketDataUpdatedEvent(DomainEvent):
     """Event fired when market data is updated"""
-    
+
     symbol: str
     timestamp: datetime
     price: Decimal
@@ -32,7 +32,7 @@ class MarketDataUpdatedEvent(DomainEvent):
 @dataclass(kw_only=True)
 class MarketDataBatchUpdatedEvent(DomainEvent):
     """Event fired when multiple market data points are updated"""
-    
+
     symbols: List[str]
     count: int
     source: str
@@ -41,7 +41,7 @@ class MarketDataBatchUpdatedEvent(DomainEvent):
 @dataclass(kw_only=True)
 class MarketSessionOpenedEvent(DomainEvent):
     """Event fired when a market session opens"""
-    
+
     market: str
     session_date: datetime
 
@@ -49,7 +49,7 @@ class MarketSessionOpenedEvent(DomainEvent):
 @dataclass(kw_only=True)
 class MarketSessionClosedEvent(DomainEvent):
     """Event fired when a market session closes"""
-    
+
     market: str
     session_date: datetime
 
@@ -57,7 +57,7 @@ class MarketSessionClosedEvent(DomainEvent):
 @dataclass(kw_only=True)
 class PriceAlertTriggeredEvent(DomainEvent):
     """Event fired when a price alert is triggered"""
-    
+
     symbol: str
     alert_id: UUID
     trigger_price: Decimal

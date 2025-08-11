@@ -4,7 +4,6 @@ Domain events package.
 Contains event classes for the domain.
 """
 
-from .portfolio_events import DomainEvent, InvestmentAddedEvent, PortfolioCreatedEvent
 from .market_events import (
     MarketDataBatchUpdatedEvent,
     MarketDataUpdatedEvent,
@@ -12,6 +11,7 @@ from .market_events import (
     MarketSessionOpenedEvent,
     PriceAlertTriggeredEvent,
 )
+from .portfolio_events import DomainEvent, InvestmentAddedEvent, PortfolioCreatedEvent
 from .user_events import (
     UserCreatedEvent,
     UserDeactivatedEvent,
