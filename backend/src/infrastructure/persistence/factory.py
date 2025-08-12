@@ -9,6 +9,8 @@ from typing import Protocol
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from application.exceptions import FactoryProviderError
+
 from ...domain.repositories.investment_repository import IInvestmentRepository
 from ...domain.repositories.market_data_repository import IMarketDataRepository
 from ...domain.repositories.portfolio_repository import IPortfolioRepository
@@ -116,7 +118,7 @@ class RepositoryRegistry:
     async def get_user_repository(self) -> IUserRepository:
         """Get user repository instance."""
         if self._default_factory_provider is None:
-            raise RuntimeError("No factory provider registered")
+            raise FactoryProviderError()
 
         factory = await self._default_factory_provider.get_factory()
         return factory.create_user_repository()
@@ -124,7 +126,7 @@ class RepositoryRegistry:
     async def get_portfolio_repository(self) -> IPortfolioRepository:
         """Get portfolio repository instance."""
         if self._default_factory_provider is None:
-            raise RuntimeError("No factory provider registered")
+            raise FactoryProviderError()
 
         factory = await self._default_factory_provider.get_factory()
         return factory.create_portfolio_repository()
@@ -132,7 +134,7 @@ class RepositoryRegistry:
     async def get_market_data_repository(self) -> IMarketDataRepository:
         """Get market data repository instance."""
         if self._default_factory_provider is None:
-            raise RuntimeError("No factory provider registered")
+            raise FactoryProviderError()
 
         factory = await self._default_factory_provider.get_factory()
         return factory.create_market_data_repository()
@@ -140,7 +142,7 @@ class RepositoryRegistry:
     async def get_investment_repository(self) -> IInvestmentRepository:
         """Get investment repository instance."""
         if self._default_factory_provider is None:
-            raise RuntimeError("No factory provider registered")
+            raise FactoryProviderError()
 
         factory = await self._default_factory_provider.get_factory()
         return factory.create_investment_repository()
@@ -148,7 +150,7 @@ class RepositoryRegistry:
     async def get_unit_of_work(self) -> UnitOfWork:
         """Get unit of work instance."""
         if self._default_factory_provider is None:
-            raise RuntimeError("No factory provider registered")
+            raise FactoryProviderError()
 
         factory = await self._default_factory_provider.get_factory()
         return factory.create_unit_of_work()

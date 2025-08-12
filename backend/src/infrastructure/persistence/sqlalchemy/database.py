@@ -17,6 +17,8 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import NullPool, QueuePool
 
+from application.exceptions import DatabaseNotInitializedError
+
 from ..models.base import Base
 
 logger = logging.getLogger(__name__)
@@ -109,14 +111,14 @@ class DatabaseManager:
     def engine(self) -> AsyncEngine:
         """Get database engine."""
         if self._engine is None:
-            raise RuntimeError("Database not initialized. Call initialize() first.")
+            raise DatabaseNotInitializedError()
         return self._engine
 
     @property
     def session_factory(self) -> async_sessionmaker:
         """Get session factory."""
         if self._session_factory is None:
-            raise RuntimeError("Database not initialized. Call initialize() first.")
+            raise DatabaseNotInitializedError()
         return self._session_factory
 
     @asynccontextmanager

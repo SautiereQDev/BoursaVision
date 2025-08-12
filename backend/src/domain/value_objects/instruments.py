@@ -9,11 +9,12 @@ from typing import Optional
 @dataclass(frozen=True)
 class Stock:
     """Represents a stock instrument."""
+
     symbol: str
     name: str
     exchange: Optional[str] = None
     currency: str = "USD"
-    
+
     def __str__(self) -> str:
         return f"{self.symbol} ({self.name})"
 
@@ -21,6 +22,7 @@ class Stock:
 @dataclass(frozen=True)
 class Bond:
     """Represents a bond instrument."""
+
     symbol: str
     name: str
     maturity_date: str
@@ -31,6 +33,7 @@ class Bond:
 @dataclass(frozen=True)
 class ETF:
     """Represents an ETF instrument."""
+
     symbol: str
     name: str
     expense_ratio: Decimal

@@ -114,7 +114,10 @@ class GlobalSettings(BaseSettings):
         """Construit l'URL de la base de données."""
         if self.environment in ("development", "testing") or self.testing:
             return "sqlite:///:memory:"
-        return f"postgresql://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        return (
+            f"postgresql://{self.postgres_user}:{self.postgres_password}"
+            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        )
 
     @property
     def test_database_url(self) -> str:

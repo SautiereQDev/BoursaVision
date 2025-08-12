@@ -21,7 +21,6 @@ from src.infrastructure.persistence.repositories import (
 # Sous-classes de test pour contourner l'abstraction
 
 
-
 class TestUserRepo(SQLAlchemyUserRepository):
     __test__ = False
 

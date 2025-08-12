@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from application.exceptions import FactoryProviderError
 from src.infrastructure.persistence.factory import (
     RepositoryFactoryProvider,
     RepositoryRegistry,
@@ -75,5 +76,5 @@ async def test_repository_registry(monkeypatch):
 @pytest.mark.asyncio
 async def test_registry_raises_without_provider():
     registry = RepositoryRegistry()
-    with pytest.raises(RuntimeError):
+    with pytest.raises(FactoryProviderError):
         await registry.get_user_repository()

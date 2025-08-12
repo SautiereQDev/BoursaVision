@@ -19,7 +19,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class GlobalSettings(BaseSettings):
     """Configuration globale de l'application Boursa Vision."""
-    
+
     # Pydantic v2 settings configuration
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -217,7 +217,6 @@ class GlobalSettings(BaseSettings):
             return v
         values = info.data if hasattr(info, "data") else {}
         return values.get("secret_key", "")
-
 
     @property
     def is_development(self) -> bool:

@@ -22,7 +22,8 @@ class InvestmentModel(Base):
     market_cap = Column(Numeric(20, 2), nullable=True)
     description = Column(Text, nullable=True)
     created_at = Column(
-        DateTime(timezone=True), server_default=func.now()  # pylint: disable=not-callable
+        DateTime(timezone=True),
+        server_default=func.now(),  # pylint: disable=not-callable
     )
     updated_at = Column(
         DateTime(timezone=True),

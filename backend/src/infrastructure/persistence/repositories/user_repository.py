@@ -74,27 +74,21 @@ class SQLAlchemyUserRepository(IUserRepository):
 
     async def exists_by_email(self, email: str) -> bool:
         """Check if user with email exists."""
-        query = select(func.count(User.id)).where(
-            User.email == email
-        )
+        query = select(func.count(User.id)).where(User.email == email)
         result = await self._session.execute(query)
         count = result.scalar()
         return count > 0
 
     async def exists_by_username(self, username: str) -> bool:
         """Check if user with username exists."""
-        query = select(func.count(User.id)).where(
-            User.username == username
-        )
+        query = select(func.count(User.id)).where(User.username == username)
         result = await self._session.execute(query)
         count = result.scalar()
         return count > 0
 
     async def count_by_role(self, role: UserRole) -> int:
         """Count users by role."""
-        query = select(func.count(User.id)).where(
-            User.role == role.value
-        )
+        query = select(func.count(User.id)).where(User.role == role.value)
         result = await self._session.execute(query)
         return result.scalar()
 
