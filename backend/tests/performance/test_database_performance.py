@@ -69,9 +69,7 @@ class PerformanceTestSuite:
 
         for _ in range(iterations // 5):  # Fewer iterations for heavier queries
             await self.measure_latency(
-                lambda: repo.find_by_symbol_and_timerange(
-                    "AAPL", start_time, end_time
-                )
+                lambda: repo.find_by_symbol_and_timerange("AAPL", start_time, end_time)
             )
 
         timeseries_p95 = self.get_percentile(95)
@@ -108,9 +106,7 @@ class PerformanceTestSuite:
         self.reset_metrics()
 
         for _ in range(iterations):
-            await self.measure_latency(
-                lambda: repo.find_by_email("test@example.com")
-            )
+            await self.measure_latency(lambda: repo.find_by_email("test@example.com"))
 
         user_p95 = self.get_percentile(95)
         print(f"User query P95 latency: {user_p95:.2f}ms")

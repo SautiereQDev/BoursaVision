@@ -1,10 +1,14 @@
-import pytest
-from src.infrastructure.persistence.mock_repositories import MockMarketDataRepository
 from uuid import uuid4
+
+import pytest
+
+from src.infrastructure.persistence.mock_repositories import MockMarketDataRepository
+
 
 @pytest.fixture
 def market_data_repo():
     return MockMarketDataRepository()
+
 
 @pytest.mark.asyncio
 async def test_save_and_find_by_symbol(market_data_repo):
@@ -13,10 +17,12 @@ async def test_save_and_find_by_symbol(market_data_repo):
     found = await market_data_repo.find_by_symbol("AAPL")
     assert found == []
 
+
 @pytest.mark.asyncio
 async def test_exists_by_symbol_and_timestamp(market_data_repo):
     exists = await market_data_repo.exists_by_symbol_and_timestamp("AAPL", None)
     assert exists is False
+
 
 @pytest.mark.asyncio
 async def test_delete_by_symbol_and_date_range(market_data_repo):

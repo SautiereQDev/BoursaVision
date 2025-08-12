@@ -1,36 +1,63 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
+
+import pytest
+
+from src.infrastructure.persistence.mappers import MarketDataMapper
+
+# User repo: injects session and _mapper
+from src.infrastructure.persistence.mappers_new import (
+    InvestmentMapper,
+    PortfolioMapper,
+    UserMapper,
+)
 from src.infrastructure.persistence.repositories import (
-    SQLAlchemyUserRepository,
-    SQLAlchemyPortfolioRepository,
-    SQLAlchemyMarketDataRepository,
     SQLAlchemyInvestmentRepository,
+    SQLAlchemyMarketDataRepository,
+    SQLAlchemyPortfolioRepository,
+    SQLAlchemyUserRepository,
 )
 
 # Sous-classes de test pour contourner l'abstraction
 
-# User repo: injects session and _mapper
-from src.infrastructure.persistence.mappers_new import UserMapper, PortfolioMapper, InvestmentMapper
-from src.infrastructure.persistence.mappers import MarketDataMapper
+
+
 class TestUserRepo(SQLAlchemyUserRepository):
     __test__ = False
+
     def __init__(self, session):
         self._session = session
         self._mapper = UserMapper()
 
+
 class TestPortfolioRepo(SQLAlchemyPortfolioRepository):
     __test__ = False
+
     def __init__(self):
         self._mapper = PortfolioMapper()
+
     # override methods to avoid abstract errors
-    async def find_by_name(self, name): return None
-    async def exists(self, portfolio_id): return False
-    async def find_all(self): return []
-    async def find_by_ids(self, ids): return []
-    async def find_by_user_ids(self, user_ids): return []
-    async def count_by_user(self, user_id): return 0
-    async def exists_by_name(self, name): return False
+    async def find_by_name(self, name):
+        return None
+
+    async def exists(self, portfolio_id):
+        return False
+
+    async def find_all(self):
+        return []
+
+    async def find_by_ids(self, ids):
+        return []
+
+    async def find_by_user_ids(self, user_ids):
+        return []
+
+    async def count_by_user(self, user_id):
+        return 0
+
+    async def exists_by_name(self, name):
+        return False
+
 
 class TestMarketDataMapper:
     def to_persistence(self, market_data):
@@ -47,47 +74,99 @@ class TestMarketDataMapper:
             "source": str(market_data.source),
             "created_at": market_data.created_at,
         }
+
     def to_domain(self, model):
         return model  # Not needed for this minimal test
 
+
 class TestMarketDataRepo(SQLAlchemyMarketDataRepository):
     __test__ = False
+
     def __init__(self):
         self._mapper = TestMarketDataMapper()
+
     # override methods to avoid abstract errors
-    async def find_by_id(self, id): return None
-    async def delete(self, id): return False
-    async def find_all(self): return []
-    async def find_by_ids(self, ids): return []
-    async def exists(self, id): return False
-    async def find_by_symbol(self, symbol): return None
-    async def find_latest(self): return None
-    async def find_by_timerange(self, start, end): return []
-    async def find_by_symbols_and_timerange(self, symbols, start, end): return []
-    async def find_by_symbol_and_interval(self, symbol, interval): return []
-    async def find_by_symbol_and_time(self, symbol, time): return None
-    async def cleanup_old_data(self): return 0
-    async def count_by_symbol(self, symbol): return 0
-    async def delete_by_symbol_and_date_range(self, symbol, start, end): return 0
-    async def exists_by_symbol_and_timestamp(self, symbol, timestamp): return False
-    async def find_by_symbol_and_timestamp(self, symbol, timestamp): return None
-    async def find_latest_by_symbols(self, symbols): return []
-    async def find_missing_dates(self, symbol): return []
-    async def get_available_symbols(self): return []
-    async def get_date_range_for_symbol(self, symbol): return (None, None)
+    async def find_by_id(self, id):
+        return None
+
+    async def delete(self, id):
+        return False
+
+    async def find_all(self):
+        return []
+
+    async def find_by_ids(self, ids):
+        return []
+
+    async def exists(self, id):
+        return False
+
+    async def find_by_symbol(self, symbol):
+        return None
+
+    async def find_latest(self):
+        return None
+
+    async def find_by_timerange(self, start, end):
+        return []
+
+    async def find_by_symbols_and_timerange(self, symbols, start, end):
+        return []
+
+    async def find_by_symbol_and_interval(self, symbol, interval):
+        return []
+
+    async def find_by_symbol_and_time(self, symbol, time):
+        return None
+
+    async def cleanup_old_data(self):
+        return 0
+
+    async def count_by_symbol(self, symbol):
+        return 0
+
+    async def delete_by_symbol_and_date_range(self, symbol, start, end):
+        return 0
+
+    async def exists_by_symbol_and_timestamp(self, symbol, timestamp):
+        return False
+
+    async def find_by_symbol_and_timestamp(self, symbol, timestamp):
+        return None
+
+    async def find_latest_by_symbols(self, symbols):
+        return []
+
+    async def find_missing_dates(self, symbol):
+        return []
+
+    async def get_available_symbols(self):
+        return []
+
+    async def get_date_range_for_symbol(self, symbol):
+        return (None, None)
+
 
 class TestInvestmentRepo(SQLAlchemyInvestmentRepository):
     __test__ = False
+
     def __init__(self, session):
         self._session = session
         self._mapper = InvestmentMapper()
-    async def find_all_active(self): return []
-from src.domain.entities.user import User as DomainUser
-from src.domain.entities.portfolio import Portfolio as DomainPortfolio
-from src.domain.entities.market_data import MarketData as DomainMarketData, MarketDataArgs, Timeframe, DataSource
-from src.domain.value_objects.price import Price
-from src.domain.value_objects.money import Currency
+
+    async def find_all_active(self):
+        return []
+
+
 from src.domain.entities.investment import Investment
+from src.domain.entities.market_data import DataSource
+from src.domain.entities.market_data import MarketData as DomainMarketData
+from src.domain.entities.market_data import MarketDataArgs, Timeframe
+from src.domain.entities.portfolio import Portfolio as DomainPortfolio
+from src.domain.entities.user import User as DomainUser
+from src.domain.value_objects.money import Currency
+from src.domain.value_objects.price import Price
+
 
 @pytest.mark.asyncio
 async def test_user_repository_find_by_id():
@@ -112,8 +191,11 @@ async def test_user_repository_find_by_id():
     result = await repo.find_by_id(user_id)
     assert result is not None
 
+
 @pytest.mark.asyncio
-@patch("src.infrastructure.persistence.repositories.portfolio_repository.get_db_session")
+@patch(
+    "src.infrastructure.persistence.repositories.portfolio_repository.get_db_session"
+)
 async def test_portfolio_repository_find_by_id(mock_get_db_session):
     session = AsyncMock()
     repo = TestPortfolioRepo()
@@ -133,20 +215,29 @@ async def test_portfolio_repository_find_by_id(mock_get_db_session):
     execute_result = AsyncMock()
     execute_result.scalar_one_or_none = lambda: portfolio_mock
     session.execute.return_value = execute_result
+
     class DummyAsyncContext:
-        async def __aenter__(self): return session
-        async def __aexit__(self, exc_type, exc, tb): return None
+        async def __aenter__(self):
+            return session
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return None
+
     mock_get_db_session.return_value = DummyAsyncContext()
     result = await repo.find_by_id(portfolio_id)
     assert result is not None
 
+
 @pytest.mark.asyncio
-@patch("src.infrastructure.persistence.repositories.market_data_repository.get_db_session")
+@patch(
+    "src.infrastructure.persistence.repositories.market_data_repository.get_db_session"
+)
 async def test_market_data_repository_save(mock_get_db_session):
     session = AsyncMock()
     repo = TestMarketDataRepo()
     from datetime import datetime
     from decimal import Decimal
+
     args = MarketDataArgs(
         symbol="AAPL",
         timestamp=datetime(2023, 1, 1, 10, 0, 0),
@@ -158,7 +249,7 @@ async def test_market_data_repository_save(mock_get_db_session):
         timeframe=Timeframe.DAY_1,
         source=DataSource.INTERNAL,
         currency=Currency.USD,
-        adjusted_close=Decimal("105")
+        adjusted_close=Decimal("105"),
     )
     market_data = DomainMarketData.create(args)
     execute_result = AsyncMock()
@@ -167,12 +258,18 @@ async def test_market_data_repository_save(mock_get_db_session):
     session.flush.return_value = None
     # Patch session.add to avoid RuntimeWarning (not awaited)
     session.add = lambda *a, **kw: None
+
     class DummyAsyncContext:
-        async def __aenter__(self): return session
-        async def __aexit__(self, exc_type, exc, tb): return None
+        async def __aenter__(self):
+            return session
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return None
+
     mock_get_db_session.return_value = DummyAsyncContext()
     result = await repo.save(market_data)
     assert result is not None
+
 
 @pytest.mark.asyncio
 async def test_investment_repository_find_by_symbol():

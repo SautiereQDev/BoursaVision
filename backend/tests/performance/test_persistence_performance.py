@@ -1,8 +1,6 @@
 """
-Performance tests for the persistence layer.
-
-This module provides performance testing to ensure the persistence layer
-meets the acceptance criteria (p95 latency < 100ms).
+Performance tests for persistence layer operations.
+Tests for database operations, connection pooling, and query optimization.
 """
 
 import asyncio
@@ -10,12 +8,11 @@ import os
 import statistics
 import time
 from datetime import datetime, timezone
-from datetime import datetime
-from statistics import quantiles
 from typing import List
 
 import pytest
 
+from src.core.config_simple import settings
 from src.domain.entities.market_data import MarketData
 from src.domain.entities.user import User
 from src.domain.value_objects.money import Currency, Money
@@ -27,9 +24,22 @@ from src.infrastructure.persistence.repository_factory import (
     get_user_repository,
 )
 
+# Ensure we use mock repositories and testing environment for performance tests
+if not settings.use_mock_repositories or settings.environment != "testing":
+    # Force testing configuration
+    os.environ["USE_MOCK_REPOSITORIES"] = "true"
+    os.environ["ENVIRONMENT"] = "testing"
+    # Reload settings to pick up the changes
+    from importlib import reload
+
+    import src.core.config_simple
+
+    reload(src.core.config_simple)
+    from src.core.config_simple import settings
+
 # Ensure we use mock repositories for performance tests
-os.environ.setdefault('USE_MOCK_REPOSITORIES', 'true')
-os.environ.setdefault('ENVIRONMENT', 'testing')
+os.environ.setdefault("USE_MOCK_REPOSITORIES", "true")
+os.environ.setdefault("ENVIRONMENT", "testing")
 
 
 class PerformanceTestSuite:
@@ -53,7 +63,9 @@ class PerformanceTestSuite:
             return 0.0
         sorted_latencies = sorted(self.latencies)
         index = int(0.95 * len(sorted_latencies)) - 1
-        index = max(0, min(index, len(sorted_latencies) - 1))  # Ensure index is within bounds
+        index = max(
+            0, min(index, len(sorted_latencies) - 1)
+        )  # Ensure index is within bounds
         return sorted_latencies[index]
 
     def get_stats(self) -> dict:
@@ -84,7 +96,7 @@ async def test_user_repository_performance():
     """Test user repository performance."""
     # Configure to use mock repositories for consistent performance testing
     configure_repositories(MockRepositoryFactory())
-    
+
     perf_suite = PerformanceTestSuite()
     user_repo = get_user_repository()
 
@@ -116,7 +128,7 @@ async def test_market_data_repository_performance():
     """Test market data repository performance (TimescaleDB)."""
     # Configure to use mock repositories for consistent performance testing
     configure_repositories(MockRepositoryFactory())
-    
+
     perf_suite = PerformanceTestSuite()
     market_data_repo = get_market_data_repository()
 
@@ -160,7 +172,7 @@ async def test_concurrent_operations_performance():
     """Test performance under concurrent load."""
     # Configure to use mock repositories for consistent performance testing
     configure_repositories(MockRepositoryFactory())
-    
+
     perf_suite = PerformanceTestSuite()
 
     # Replace asyncio.current_task().get_name() with a safer alternative
@@ -204,7 +216,7 @@ async def test_bulk_operations_performance():
     """Test bulk operations performance."""
     # Configure to use mock repositories for consistent performance testing
     configure_repositories(MockRepositoryFactory())
-    
+
     perf_suite = PerformanceTestSuite()
     market_data_repo = get_market_data_repository()
 

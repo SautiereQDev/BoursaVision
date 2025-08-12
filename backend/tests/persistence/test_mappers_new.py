@@ -1,12 +1,16 @@
 from unittest.mock import MagicMock
 
+
 def test_user_mapper_update_model():
     user = MagicMock()
     user.preferred_currency.value = "USD"
+
     class Role:
         value = "USER"
+
         def __str__(self):
             return self.value
+
     domain = MagicMock()
     domain.email = "b@c.com"
     domain.username = "v"
@@ -21,6 +25,7 @@ def test_user_mapper_update_model():
     mappers_new.UserMapper.update_model(user, domain)
     assert user.email == "b@c.com"
     assert user.role.value == "USER"
+
 
 def test_portfolio_mapper_update_model():
     model = MagicMock()
@@ -37,11 +42,14 @@ def test_portfolio_mapper_update_model():
     assert model.name == "B"
     assert model.base_currency == "EUR"
 
+
 def test_market_data_mapper_to_domain_and_to_model():
-    from decimal import Decimal
     from datetime import datetime
-    from src.infrastructure.persistence.models.market_data import MarketData
+    from decimal import Decimal
     from unittest.mock import MagicMock
+
+    from src.infrastructure.persistence.models.market_data import MarketData
+
     model = MagicMock(spec=MarketData)
     model.symbol = "AAPL"
     model.time = datetime(2024, 1, 1, 12, 0, 0)
@@ -66,6 +74,7 @@ def test_market_data_mapper_to_domain_and_to_model():
     entity.source = "yahoo"
     model2 = mappers_new.MarketDataMapper.to_model(entity)
     assert model2.symbol == "AAPL"
+
 
 def test_investment_mapper_to_domain_to_persistence_and_update():
     instrument = MagicMock()
@@ -92,7 +101,10 @@ def test_investment_mapper_to_domain_to_persistence_and_update():
     mappers_new.InvestmentMapper.update_instrument_model(model, entity)
     assert model.symbol == "AAPL"
     assert model.is_active is True
+
+
 import src.infrastructure.persistence.mappers_new as mappers_new
+
 
 def test_user_mapper_to_domain_and_to_persistence():
     class DummyUser:
@@ -106,12 +118,12 @@ def test_user_mapper_to_domain_and_to_persistence():
         is_verified = True
         created_at = None
         last_login_at = None
-    
+
     domain_user = mappers_new.UserMapper.to_domain(DummyUser())
     assert domain_user.email == "test@example.com"
     assert domain_user.username == "testuser"
     assert domain_user.role.value == "admin"
-    
+
     # Minimal domain user for to_persistence
     class DomainUser:
         id = 1
@@ -124,11 +136,12 @@ def test_user_mapper_to_domain_and_to_persistence():
         email_verified = True
         created_at = None
         last_login = None
-    
+
     persistence_user = mappers_new.UserMapper.to_persistence(DomainUser())
     assert persistence_user.email == "test@example.com"
     assert persistence_user.username == "testuser"
     assert persistence_user.role == "ADMIN"
+
 
 def test_portfolio_mapper_to_domain_and_to_model():
     class DummyPortfolio:
@@ -143,7 +156,7 @@ def test_portfolio_mapper_to_domain_and_to_model():
         total_value = 1000
         created_at = None
         updated_at = None
-    
+
     # Adapter le DummyPortfolio pour ne pas passer 'description' à Portfolio.create()
     class DummyPortfolioNoDesc:
         id = 1
@@ -157,6 +170,7 @@ def test_portfolio_mapper_to_domain_and_to_model():
         total_value = 1000
         created_at = None
         updated_at = None
+
     domain_portfolio = mappers_new.PortfolioMapper.to_domain(DummyPortfolioNoDesc())
     assert domain_portfolio.name == "Test Portfolio"
     assert domain_portfolio.base_currency.value == "USD"
@@ -167,13 +181,21 @@ def test_portfolio_mapper_to_domain_and_to_model():
         name = "Test Portfolio"
         description = "desc"
         base_currency = type("Currency", (), {"value": "USD"})()
-        initial_cash = type("Money", (), {"amount": 1000, "currency": type("Currency", (), {"value": "USD"})()})()
-        current_cash = type("Money", (), {"amount": 1000, "currency": type("Currency", (), {"value": "USD"})()})()
+        initial_cash = type(
+            "Money",
+            (),
+            {"amount": 1000, "currency": type("Currency", (), {"value": "USD"})()},
+        )()
+        current_cash = type(
+            "Money",
+            (),
+            {"amount": 1000, "currency": type("Currency", (), {"value": "USD"})()},
+        )()
         total_invested = type("Money", (), {"amount": 0})()
         total_value = type("Money", (), {"amount": 1000})()
         created_at = None
         updated_at = None
-    
+
     model_portfolio = mappers_new.PortfolioMapper.to_model(DomainPortfolio())
     assert model_portfolio.name == "Test Portfolio"
     assert model_portfolio.base_currency == "USD"

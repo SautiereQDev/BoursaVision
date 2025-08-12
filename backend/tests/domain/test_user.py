@@ -1,6 +1,8 @@
 import pytest
+
 from src.domain.entities.user import User, UserRole
 from src.domain.value_objects.money import Currency
+
 
 def test_user_creation():
     user = User.create(
@@ -16,6 +18,7 @@ def test_user_creation():
     assert user.is_active
     assert not user.email_verified
 
+
 def test_user_role_admin():
     user = User.create(
         email="admin@example.com",
@@ -28,6 +31,7 @@ def test_user_role_admin():
     assert user.role == UserRole.ADMIN
     assert user.is_active
 
+
 def test_user_set_email_verified():
     user = User.create(
         email="user2@example.com",
@@ -39,6 +43,7 @@ def test_user_set_email_verified():
     )
     user.email_verified = True
     assert user.email_verified
+
 
 def test_user_inactive():
     user = User.create(
