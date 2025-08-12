@@ -7,7 +7,6 @@ from . import models
 
 __all__ = ["models"]
 
-from . import models
 from .initializer import (
     PersistenceLayerConfig,
     PersistenceLayerInitializer,

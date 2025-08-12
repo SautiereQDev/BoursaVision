@@ -279,7 +279,9 @@ class SqlAlchemyInvestmentRepository(IInvestmentRepository):
         stmt = (
             select(Instrument)
             .options(selectinload(Instrument.fundamental_data))
-            .where(and_(Instrument.exchange == exchange, Instrument.is_active.is_(True)))
+            .where(
+                and_(Instrument.exchange == exchange, Instrument.is_active.is_(True))
+            )
         )
         result = await self._session.execute(stmt)
         models = result.scalars().all()

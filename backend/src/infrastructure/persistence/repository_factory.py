@@ -3,10 +3,10 @@ Repository factory for dependency injection and service location.
 Implements the Abstract Factory pattern for repository creation.
 """
 
-import os
 from abc import ABC, abstractmethod
 from typing import Dict, Optional, Type
 
+from src.core.config_simple import settings
 from src.domain.repositories.market_data_repository import IMarketDataRepository
 from src.domain.repositories.portfolio_repository import IPortfolioRepository
 from src.domain.repositories.user_repository import IUserRepository
@@ -34,16 +34,19 @@ class MockRepositoryFactory(IRepositoryFactory):
     def create_user_repository(self) -> IUserRepository:
         """Create mock user repository."""
         from .mock_repositories import MockUserRepository
+
         return MockUserRepository()
 
     def create_portfolio_repository(self) -> IPortfolioRepository:
         """Create mock portfolio repository."""
         from .mock_repositories import MockPortfolioRepository
+
         return MockPortfolioRepository()
 
     def create_market_data_repository(self) -> IMarketDataRepository:
         """Create mock market data repository."""
         from .mock_repositories import MockMarketDataRepository
+
         return MockMarketDataRepository()
 
 
@@ -57,28 +60,29 @@ class SQLAlchemyRepositoryFactory(IRepositoryFactory):
     def create_user_repository(self) -> IUserRepository:
         """Create SQLAlchemy user repository."""
         from .repositories.user_repository import SQLAlchemyUserRepository
+
         return SQLAlchemyUserRepository()
 
     def create_portfolio_repository(self) -> IPortfolioRepository:
         """Create SQLAlchemy portfolio repository."""
         from .repositories.portfolio_repository import SQLAlchemyPortfolioRepository
+
         return SQLAlchemyPortfolioRepository()
 
     def create_market_data_repository(self) -> IMarketDataRepository:
         """Create SQLAlchemy market data repository."""
         from .repositories.market_data_repository import SQLAlchemyMarketDataRepository
+
         return SQLAlchemyMarketDataRepository()
 
 
 def get_default_factory() -> IRepositoryFactory:
     """Get the default repository factory based on environment."""
-    env = os.getenv("ENVIRONMENT", "development").lower()
-    use_mocks = os.getenv("USE_MOCK_REPOSITORIES", "true").lower() == "true"
-    
+
     # For testing and development, always use mocks
-    if env in ("testing", "test") or use_mocks:
+    if settings.environment in ("testing", "test") or settings.use_mock_repositories:
         return MockRepositoryFactory()
-    
+
     # For production, try SQLAlchemy first, fallback to mocks if issues
     try:
         # Check if database is available and SQLAlchemy repositories work

@@ -5,8 +5,9 @@ SQLAlchemy repository implementations for User entity.
 from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import func
 
 from src.domain.entities.user import User as DomainUser
 from src.domain.entities.user import UserRole
@@ -73,21 +74,27 @@ class SQLAlchemyUserRepository(IUserRepository):
 
     async def exists_by_email(self, email: str) -> bool:
         """Check if user with email exists."""
-        query = select(func.count(User.id)).where(User.email == email)  # pylint: disable=not-callable
+        query = select(func.count(User.id)).where(
+            User.email == email
+        )
         result = await self._session.execute(query)
         count = result.scalar()
         return count > 0
 
     async def exists_by_username(self, username: str) -> bool:
         """Check if user with username exists."""
-        query = select(func.count(User.id)).where(User.username == username)  # pylint: disable=not-callable
+        query = select(func.count(User.id)).where(
+            User.username == username
+        )
         result = await self._session.execute(query)
         count = result.scalar()
         return count > 0
 
     async def count_by_role(self, role: UserRole) -> int:
         """Count users by role."""
-        query = select(func.count(User.id)).where(User.role == role.value)  # pylint: disable=not-callable
+        query = select(func.count(User.id)).where(
+            User.role == role.value
+        )
         result = await self._session.execute(query)
         return result.scalar()
 
@@ -128,9 +135,9 @@ class SQLAlchemyUserRepository(IUserRepository):
 
         return self._mapper.to_domain(user_model)
 
-    async def delete(self, user_id: UUID) -> bool:
-        """Delete user."""
-        user_model = await self._session.get(User, user_id)
+    async def delete(self, entity_id: UUID) -> bool:
+        """Delete a user by their ID."""
+        user_model = await self._session.get(User, entity_id)
 
         if user_model is None:
             return False

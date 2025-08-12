@@ -1,95 +1,49 @@
 """
-Configuration and initialization for the persistence layer.
+Configuration et initialisation pour la couche de persistance.
 
-This module provides configuration classes and initialization logic
-for setting up the complete persistence layer with PostgreSQL + TimescaleDB.
+Ce module fournit les classes de configuration et la logique d'initialisation
+pour configurer la couche de persistance complète avec PostgreSQL + TimescaleDB.
+
+Utilise maintenant la configuration globale centralisée.
 """
 
 import logging
-import os
-from pathlib import Path
 from typing import Optional
 
+import sqlalchemy
+
+from ...core.config_simple import settings
 from .database import DatabaseConfig, DatabaseManager
 
 logger = logging.getLogger(__name__)
 
 
-# Load environment variables from .env file at project root
-def load_env_file():
-    """Load environment variables from .env file at project root."""
-    # Find the project root (.env file location)
-    current_path = Path(__file__).resolve()
-    project_root = None
-
-    # Search for .env file by going up the directory tree
-    for parent in current_path.parents:
-        env_file = parent / ".env"
-        if env_file.exists():
-            project_root = parent
-            break
-
-    if project_root:
-        env_file = project_root / ".env"
-        try:
-            # Explicitly specify encoding
-            with open(env_file, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line and not line.startswith("#") and "=" in line:
-                        key, value = line.split("=", 1)
-                        # Remove quotes if present
-                        value = value.strip("\"'")
-                        # Handle variable substitution like ${POSTGRES_USER}
-                        if "${" in value and "}" in value:
-                            # Simple variable substitution
-                            import re
-
-                            for match in re.finditer(r"\$\{([^}]+)\}", value):
-                                var_name = match.group(1)
-                                var_value = os.getenv(var_name, "")
-                                value = value.replace(match.group(0), var_value)
-                        os.environ[key] = value
-            logger.info(f"Loaded environment variables from {env_file}")
-        except Exception as e:
-            logger.warning(f"Could not load .env file: {e}")
-    else:
-        logger.warning("No .env file found in project hierarchy")
-
-
-# Load environment variables on module import
-load_env_file()
+# Initialize configuration
+# load_env_file()  # Removed: now handled by global config
 
 
 class PersistenceConfig:
-    """Configuration for the persistence layer."""
+    """Configuration for the persistence layer using global settings."""
 
-    def __init__(
-        self,
-        database_host: Optional[str] = None,
-        database_port: Optional[int] = None,
-        database_name: Optional[str] = None,
-        database_user: Optional[str] = None,
-        database_password: Optional[str] = None,
-        pool_size: int = 20,
-        max_overflow: int = 30,
-        echo_sql: bool = False,
-        enable_metrics: bool = True,
-    ):
-        # Use environment variables from .env file with fallbacks
-        self.database_host = database_host or os.getenv("POSTGRES_HOST", "localhost")
-        self.database_port = database_port or int(os.getenv("POSTGRES_PORT", "5432"))
-        self.database_name = database_name or os.getenv("POSTGRES_DB", "boursa_vision")
-        self.database_user = database_user or os.getenv("POSTGRES_USER", "boursa_user")
-        self.database_password = database_password or os.getenv(
-            "POSTGRES_PASSWORD", "boursa_dev_password_2024"
+    def __init__(self, **overrides):
+        """Initialize persistence configuration using global settings."""
+        # Use global settings with optional overrides
+        self.database_url = overrides.get("database_url", settings.database_url)
+        self.database_host = overrides.get("database_host", settings.postgres_host)
+        self.database_port = overrides.get("database_port", settings.postgres_port)
+        self.database_name = overrides.get("database_name", settings.postgres_db)
+        self.database_user = overrides.get("database_user", settings.postgres_user)
+        self.database_password = overrides.get(
+            "database_password", settings.postgres_password
         )
-        self.pool_size = pool_size
-        self.max_overflow = max_overflow
-        self.echo_sql = (
-            echo_sql or os.getenv("ENABLE_QUERY_DEBUGGING", "false").lower() == "true"
-        )
-        self.enable_metrics = enable_metrics
+
+        # Development settings
+        self.echo_sql = overrides.get("echo_sql", settings.debug)
+
+        # Pool configuration
+        self.pool_size = overrides.get("pool_size", settings.db_pool_size)
+        self.pool_overflow = overrides.get("pool_overflow", settings.db_pool_overflow)
+        self.pool_timeout = overrides.get("pool_timeout", settings.db_pool_timeout)
 
     def to_database_config(self) -> DatabaseConfig:
         """Convert to DatabaseConfig."""
@@ -100,7 +54,7 @@ class PersistenceConfig:
             username=self.database_user,
             password=self.database_password,
             pool_size=self.pool_size,
-            max_overflow=self.max_overflow,
+            max_overflow=self.pool_overflow,
             echo=self.echo_sql,
         )
 
@@ -145,8 +99,8 @@ class PersistenceInitializer:
             self._is_initialized = True
             logger.info("Persistence layer initialized successfully")
 
-        except Exception as e:
-            logger.error(f"Failed to initialize persistence layer: {e}")
+        except (ConnectionError, ImportError, RuntimeError) as e:
+            logger.error("Failed to initialize persistence layer: %s", e)
             raise
 
     async def shutdown(self) -> None:
@@ -228,13 +182,21 @@ async def check_database_health() -> bool:
         return False
 
     try:
+        if initializer.database_manager is None:
+            logger.error("Database manager is not initialized")
+            return False
+
+        if initializer.database_manager is None:
+            logger.error("Database manager is not initialized")
+            return False
+
         async with initializer.database_manager.get_session() as session:
             from sqlalchemy import text
 
             await session.execute(text("SELECT 1"))
             return True
-    except Exception as e:
-        logger.error(f"Database health check failed: {e}")
+    except (ConnectionError, sqlalchemy.exc.SQLAlchemyError) as e:
+        logger.error("Database health check failed: %s", e)
         return False
 
 
@@ -245,6 +207,10 @@ async def check_timescale_health() -> bool:
         return False
 
     try:
+        if initializer.database_manager is None:
+            logger.error("Database manager is not initialized")
+            return False
+
         async with initializer.database_manager.get_session() as session:
             from sqlalchemy import text
 
@@ -252,7 +218,7 @@ async def check_timescale_health() -> bool:
                 text("SELECT count(*) FROM timescaledb_information.hypertables")
             )
             hypertable_count = result.scalar()
-            return hypertable_count > 0
-    except Exception as e:
-        logger.error(f"TimescaleDB health check failed: {e}")
+            return hypertable_count is not None and hypertable_count > 0
+    except (ConnectionError, sqlalchemy.exc.SQLAlchemyError) as e:
+        logger.error("TimescaleDB health check failed: %s", e)
         return False

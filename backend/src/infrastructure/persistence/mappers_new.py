@@ -125,7 +125,8 @@ class MarketDataMapper:
     def to_domain(model: MarketData) -> DomainMarketData:
         """Convert SQLAlchemy MarketData model to domain MarketData entity."""
         currency = Currency.USD  # Default currency, should be retrieved from instrument
-        from ...domain.entities.market_data import MarketDataArgs, Timeframe, DataSource
+        from ...domain.entities.market_data import DataSource, MarketDataArgs, Timeframe
+
         args = MarketDataArgs(
             symbol=model.symbol,
             timestamp=model.time,
@@ -134,12 +135,16 @@ class MarketDataMapper:
             low_price=model.low_price,
             close_price=model.close_price,
             volume=model.volume,
-            timeframe=Timeframe.DAY_1 if not hasattr(model, 'interval_type') else Timeframe(model.interval_type),
-            source=DataSource.YAHOO_FINANCE if not hasattr(model, 'source') else DataSource(model.source),
+            timeframe=Timeframe.DAY_1
+            if not hasattr(model, "interval_type")
+            else Timeframe(model.interval_type),
+            source=DataSource.YAHOO_FINANCE
+            if not hasattr(model, "source")
+            else DataSource(model.source),
             currency=currency,
-            adjusted_close=getattr(model, 'adjusted_close', None),
-            dividend_amount=getattr(model, 'dividend_amount', None),
-            split_coefficient=getattr(model, 'split_coefficient', None),
+            adjusted_close=getattr(model, "adjusted_close", None),
+            dividend_amount=getattr(model, "dividend_amount", None),
+            split_coefficient=getattr(model, "split_coefficient", None),
         )
         return DomainMarketData.create(args)
 
@@ -182,14 +187,17 @@ class InvestmentMapper:
     def to_persistence(entity: Investment) -> "InvestmentModel":
         """Convert domain Investment entity to SQLAlchemy InvestmentModel."""
         from .models.investment import InvestmentModel
+
         return InvestmentModel(
             symbol=entity.symbol,
             name=entity.name,
             exchange=entity.exchange,
-            sector=entity.sector.value if hasattr(entity.sector, 'value') else str(entity.sector),
-            industry=getattr(entity, 'industry', None),
-            market_cap=getattr(entity, 'market_cap', None),
-            description=getattr(entity, 'description', None),
+            sector=entity.sector.value
+            if hasattr(entity.sector, "value")
+            else str(entity.sector),
+            industry=getattr(entity, "industry", None),
+            market_cap=getattr(entity, "market_cap", None),
+            description=getattr(entity, "description", None),
         )
 
     @staticmethod

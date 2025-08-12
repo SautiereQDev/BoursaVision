@@ -35,6 +35,7 @@ class SQLAlchemyRepositoryFactory(IRepositoryFactory):
         from src.infrastructure.persistence.repositories.user_repository import (
             SQLAlchemyUserRepository,
         )
+
         return SQLAlchemyUserRepository()
 
     def create_portfolio_repository(self) -> IPortfolioRepository:
@@ -42,6 +43,7 @@ class SQLAlchemyRepositoryFactory(IRepositoryFactory):
         from src.infrastructure.persistence.repositories.portfolio_repository import (
             SQLAlchemyPortfolioRepository,
         )
+
         return SQLAlchemyPortfolioRepository()
 
     def create_market_data_repository(self) -> IMarketDataRepository:
@@ -49,6 +51,7 @@ class SQLAlchemyRepositoryFactory(IRepositoryFactory):
         from src.infrastructure.persistence.repositories.market_data_repository import (
             SQLAlchemyMarketDataRepository,
         )
+
         return SQLAlchemyMarketDataRepository()
 
 
