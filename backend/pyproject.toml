@@ -14,7 +14,7 @@ packages = [{ include = "*", from = "src" }]
 python = "^3.11"
 fastapi = "^0.104.1"
 uvicorn = { extras = ["standard"], version = "^0.24.0" }
-pydantic = "^2.5.0"
+pydantic = {extras = ["dotenv"], version = "^2.11.7"}
 pydantic-settings = "^2.1.0"
 sqlalchemy = "^2.0.23"
 alembic = "^1.13.0"
