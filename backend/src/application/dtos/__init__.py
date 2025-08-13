@@ -315,3 +315,125 @@ class PortfolioAnalysisResultDTO(BaseModel):
     def risk(self):
         """Access risk metrics via .risk attribute."""
         return self.risk_metrics
+
+
+# ============================================================================
+# RISK ASSESSMENT DTOs
+# ============================================================================
+
+
+class RiskFactorDTO(BaseModel):
+    """DTO pour un facteur de risque individuel"""
+
+    name: str
+    category: str  # MARKET, FUNDAMENTAL, GEOPOLITICAL, ESG, etc.
+    level: str  # VERY_LOW, LOW, MODERATE, HIGH, VERY_HIGH, CRITICAL
+    score: float  # 0-100
+    description: str
+    impact: str  # LOW, MEDIUM, HIGH
+    probability: str  # LOW, MEDIUM, HIGH
+    timeframe: str  # SHORT, MEDIUM, LONG
+    source: str
+    last_updated: datetime
+
+
+class GeopoliticalRiskDTO(BaseModel):
+    """DTO pour les risques géopolitiques"""
+
+    country_risk: Optional[RiskFactorDTO] = None
+    sector_risk: Optional[RiskFactorDTO] = None
+    international_exposure: Optional[RiskFactorDTO] = None
+    regulatory_risk: Optional[RiskFactorDTO] = None
+    trade_war_impact: Optional[RiskFactorDTO] = None
+    sanctions_risk: Optional[RiskFactorDTO] = None
+
+
+class FundamentalRiskDTO(BaseModel):
+    """DTO pour les risques fondamentaux"""
+
+    debt_risk: Optional[RiskFactorDTO] = None
+    liquidity_risk: Optional[RiskFactorDTO] = None
+    profitability_risk: Optional[RiskFactorDTO] = None
+    valuation_risk: Optional[RiskFactorDTO] = None
+    growth_risk: Optional[RiskFactorDTO] = None
+    revenue_quality_risk: Optional[RiskFactorDTO] = None
+    competitive_position_risk: Optional[RiskFactorDTO] = None
+
+
+class MarketRiskDTO(BaseModel):
+    """DTO pour les risques de marché"""
+
+    volatility_risk: Optional[RiskFactorDTO] = None
+    beta_risk: Optional[RiskFactorDTO] = None
+    correlation_risk: Optional[RiskFactorDTO] = None
+    drawdown_risk: Optional[RiskFactorDTO] = None
+    liquidity_risk: Optional[RiskFactorDTO] = None
+    concentration_risk: Optional[RiskFactorDTO] = None
+
+
+class ESGRiskDTO(BaseModel):
+    """DTO pour les risques ESG"""
+
+    environmental_risk: Optional[RiskFactorDTO] = None
+    social_risk: Optional[RiskFactorDTO] = None
+    governance_risk: Optional[RiskFactorDTO] = None
+    sustainability_risk: Optional[RiskFactorDTO] = None
+    reputation_risk: Optional[RiskFactorDTO] = None
+
+
+class RiskAssessmentDTO(BaseModel):
+    """DTO pour l'évaluation complète des risques"""
+
+    symbol: str
+    overall_risk_score: float  # 0-100
+    overall_risk_level: str  # VERY_LOW, LOW, MODERATE, HIGH, VERY_HIGH, CRITICAL
+    total_risk_factors: int
+    critical_risk_count: int
+
+    # Risques par catégorie
+    market_risks: MarketRiskDTO = Field(default_factory=MarketRiskDTO)
+    fundamental_risks: FundamentalRiskDTO = Field(default_factory=FundamentalRiskDTO)
+    geopolitical_risks: GeopoliticalRiskDTO = Field(default_factory=GeopoliticalRiskDTO)
+    esg_risks: ESGRiskDTO = Field(default_factory=ESGRiskDTO)
+
+    # Groupement par catégorie
+    risks_by_category: Dict[str, List[RiskFactorDTO]] = Field(default_factory=dict)
+
+    # Tous les facteurs de risque
+    all_risk_factors: List[RiskFactorDTO] = Field(default_factory=list)
+
+    # Métadonnées
+    analysis_timestamp: datetime
+    summary: str
+
+    # Recommandations basées sur les risques
+    risk_mitigation_strategies: List[str] = Field(default_factory=list)
+    monitoring_recommendations: List[str] = Field(default_factory=list)
+
+
+class ComprehensiveInvestmentAnalysisDTO(BaseModel):
+    """DTO pour une analyse complète d'investissement incluant les risques"""
+
+    symbol: str
+    name: str
+
+    # Analyses existantes
+    technical_analysis: Optional[TechnicalAnalysisDTO] = None
+    signal: Optional[SignalDTO] = None
+
+    # Nouvelle analyse des risques
+    risk_assessment: Optional[RiskAssessmentDTO] = None
+
+    # Score global combiné
+    overall_investment_score: float  # 0-100
+    investment_recommendation: str  # BUY, HOLD, SELL
+    confidence_level: str  # LOW, MEDIUM, HIGH
+
+    # Résumé exécutif
+    executive_summary: str
+    key_opportunities: List[str] = Field(default_factory=list)
+    key_risks: List[str] = Field(default_factory=list)
+
+    # Métadonnées
+    analysis_date: datetime
+    analyst_notes: Optional[str] = None

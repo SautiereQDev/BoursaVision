@@ -368,11 +368,6 @@ health: ## Check health of all services
 	@curl -f http://localhost:5173 || echo "$(RED)Frontend health check failed$(NC)"
 	@echo "$(GREEN)Health checks completed$(NC)"
 
-.PHONY: status
-status: ## Show status of all services
-	@echo "$(BLUE)Service Status:$(NC)"
-	@docker-compose -f $(DOCKER_COMPOSE_DEV) ps
-
 .PHONY: logs-backend
 logs-backend: ## Show backend logs
 	@docker-compose -f $(DOCKER_COMPOSE_DEV) logs -f backend
@@ -413,6 +408,106 @@ full-reset: dev-stop docker-clean setup dev ## Complete reset and restart
 .PHONY: ci
 ci: lint test ## Run CI pipeline locally
 	@echo "$(GREEN)CI pipeline completed successfully$(NC)"
+
+# ========================================
+# Boursa Vision API (Local)
+# ========================================
+
+.PHONY: api
+api: ## Démarrer l'API localement (sans Docker)
+	@echo "$(YELLOW)🎯 Démarrage local de l'API Boursa Vision...$(NC)"
+	@echo "$(BLUE)📚 Documentation: http://localhost:8005/docs$(NC)"
+	@cd $(BACKEND_DIR) && API_PORT=8005 poetry run python main.py
+
+.PHONY: api-dev
+api-dev: ## Démarrer l'API en mode développement local
+	@echo "$(YELLOW)🎯 Démarrage local de l'API en mode dev...$(NC)"
+	@echo "$(BLUE)📚 Documentation: http://localhost:8005/docs$(NC)"
+	@cd $(BACKEND_DIR) && API_RELOAD=true API_PORT=8005 poetry run python main.py
+
+.PHONY: api-prod
+api-prod: ## Démarrer l'API en mode production local
+	@echo "$(YELLOW)🎯 Démarrage local de l'API en mode production...$(NC)"
+	@echo "$(BLUE)📚 Documentation: http://localhost:8005/docs$(NC)"
+	@cd $(BACKEND_DIR) && API_RELOAD=false API_WORKERS=4 API_PORT=8005 poetry run python main.py
+
+.PHONY: api-direct
+api-direct: ## Démarrer l'API directement (plus rapide)
+	@echo "$(YELLOW)🎯 Démarrage direct de l'API...$(NC)"
+	@echo "$(BLUE)📚 Documentation: http://localhost:8005/docs$(NC)"
+	@cd $(BACKEND_DIR) && poetry run python api.py
+
+.PHONY: api-test
+api-test: ## Lancer le script de test de l'API localement
+	@echo "$(YELLOW)🧪 Test de l'API...$(NC)"
+	@cd $(BACKEND_DIR) && poetry run python show_best_investments.py --api-url http://localhost:8005
+
+.PHONY: api-stop
+api-stop: ## Arrêter tous les processus de l'API locale
+	@echo "$(YELLOW)⏹️  Arrêt de l'API locale...$(NC)"
+	@pkill -f "uvicorn.*main:app" 2>/dev/null || echo "$(YELLOW)Aucun processus uvicorn trouvé$(NC)"
+	@pkill -f "python.*main.py" 2>/dev/null || echo "$(YELLOW)Aucun processus main.py trouvé$(NC)"
+	@pkill -f "python.*api.py" 2>/dev/null || echo "$(YELLOW)Aucun processus api.py trouvé$(NC)"
+	@echo "$(GREEN)✅ Processus API locaux arrêtés$(NC)"
+
+.PHONY: api-test-recommendations
+api-test-recommendations: ## Tester les recommandations d'investissement
+	@echo "$(YELLOW)🧪 Test des recommandations d'investissement...$(NC)"
+	@./test_recommendations.sh
+
+.PHONY: api-health
+api-health: ## Vérifier l'état de santé de l'API
+	@echo "$(YELLOW)❤️  Vérification de la santé de l'API...$(NC)"
+	@curl -s http://localhost:8005/health | head -10
+
+# ========================================
+# Docker avec API
+# ========================================
+
+.PHONY: docker-api
+docker-api: ## Démarrer l'API avec Docker
+	@echo "$(YELLOW)🐳 Démarrage de l'API avec Docker...$(NC)"
+	@API_MODE=advanced API_PORT=8006 docker-compose -f $(DOCKER_COMPOSE_DEV) up -d backend
+	@echo "$(GREEN)🎯 API démarrée avec Docker!$(NC)"
+	@echo "$(BLUE)API: http://localhost:8006$(NC)"
+	@echo "$(BLUE)Documentation: http://localhost:8006/docs$(NC)"
+
+.PHONY: docker-api-logs
+docker-api-logs: ## Afficher les logs de l'API Docker
+	@echo "$(YELLOW)📋 Logs de l'API Docker...$(NC)"
+	@docker-compose -f $(DOCKER_COMPOSE_DEV) logs -f backend
+
+.PHONY: docker-api-rebuild
+docker-api-rebuild: ## Reconstruire et redémarrer l'API Docker
+	@echo "$(YELLOW)🔨 Reconstruction de l'API Docker...$(NC)"
+	@API_MODE=advanced API_PORT=8006 docker-compose -f $(DOCKER_COMPOSE_DEV) build backend
+	@API_MODE=advanced API_PORT=8006 docker-compose -f $(DOCKER_COMPOSE_DEV) up -d --force-recreate backend
+	@echo "$(GREEN)✅ API Docker reconstruite et redémarrée$(NC)"
+
+.PHONY: docker-api-stop
+docker-api-stop: ## Arrêter l'API Docker
+	@echo "$(YELLOW)🛑 Arrêt de l'API Docker...$(NC)"
+	@docker-compose -f $(DOCKER_COMPOSE_DEV) stop backend
+	@echo "$(GREEN)✅ API Docker arrêtée$(NC)"
+
+# ========================================
+# Raccourcis et statut
+# ========================================
+
+.PHONY: start
+start: api-advanced ## Raccourci pour démarrer l'API Advanced localement
+
+.PHONY: docker-start
+docker-start: docker-api ## Raccourci pour démarrer l'API Advanced avec Docker
+
+.PHONY: status
+status: ## Afficher le statut des services Docker
+	@echo "$(BLUE)📊 Statut des services Boursa Vision$(NC)"
+	@echo "=================================="
+	@echo "$(YELLOW)🐳 Services Docker:$(NC)"
+	@docker-compose -f $(DOCKER_COMPOSE_DEV) ps 2>/dev/null || echo "$(RED)Docker Compose non démarré$(NC)"
+	@echo "\n$(YELLOW)📱 Ports utilisés:$(NC)"
+	@netstat -tulpn 2>/dev/null | grep -E ":(8000|8005|8006|5432|6379)" || echo "$(YELLOW)Aucun port de service détecté$(NC)"
 
 # ========================================
 # Default target

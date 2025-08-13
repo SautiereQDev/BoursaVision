@@ -7,30 +7,35 @@ Boursa Vision est une plateforme moderne de trading et de gestion de portefeuill
 ## 🌟 Fonctionnalités
 
 ### 🔒 Authentification et Sécurité
+
 - Authentification JWT sécurisée
 - Gestion des rôles et permissions
 - Authentification à deux facteurs (2FA)
 - Chiffrement des données sensibles
 
 ### 📊 Gestion de Portefeuille
+
 - Création et gestion de portefeuilles multiples
 - Suivi en temps réel des performances
 - Calcul automatique des rendements
 - Historique détaillé des transactions
 
 ### 📈 Analyse et Reporting
+
 - Tableaux de bord interactifs
 - Graphiques de performance
 - Rapports personnalisables
 - Alertes et notifications
 
 ### 🔄 Trading
+
 - Interface de trading intuitive
 - Ordres automatisés
 - Suivi des positions
 - Gestion des risques
 
 ### 📱 PWA (Progressive Web App)
+
 - Application installable
 - Fonctionnement hors ligne
 - Notifications push
@@ -41,6 +46,7 @@ Boursa Vision est une plateforme moderne de trading et de gestion de portefeuill
 ### Stack Technologique
 
 **Backend**:
+
 - **FastAPI** - Framework web moderne et performant
 - **PostgreSQL** - Base de données principale
 - **TimescaleDB** - Extension pour données temporelles
@@ -49,6 +55,7 @@ Boursa Vision est une plateforme moderne de trading et de gestion de portefeuill
 - **Alembic** - Migrations de base de données
 
 **Frontend**:
+
 - **React 18** - Framework frontend
 - **TypeScript** - Typage statique
 - **TanStack Router** - Routing moderne
@@ -57,6 +64,7 @@ Boursa Vision est une plateforme moderne de trading et de gestion de portefeuill
 - **Vite** - Build tool rapide
 
 **Infrastructure**:
+
 - **Docker** - Conteneurisation
 - **Nginx** - Proxy inverse et load balancer
 - **Let's Encrypt** - Certificats SSL automatiques
@@ -298,6 +306,7 @@ docker-compose logs postgres
 ### Problèmes Courants
 
 **Erreur de connexion à la base de données**:
+
 ```bash
 # Vérifier que PostgreSQL est démarré
 docker-compose ps postgres
@@ -307,6 +316,7 @@ docker-compose logs postgres
 ```
 
 **Erreur de build frontend**:
+
 ```bash
 # Nettoyer le cache
 rm -rf node_modules package-lock.json
@@ -317,6 +327,7 @@ node --version  # Doit être 18+
 ```
 
 **Problème de permissions Docker**:
+
 ```bash
 # Ajouter l'utilisateur au groupe docker
 sudo usermod -aG docker $USER
@@ -337,6 +348,7 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 ## 🎯 Roadmap
 
 ### Version 1.0 (Q1 2024)
+
 - [x] Architecture de base
 - [x] Authentification et autorisation
 - [x] Gestion de portefeuilles
@@ -344,12 +356,14 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 - [ ] Rapports de performance
 
 ### Version 1.1 (Q2 2024)
+
 - [ ] Trading automatisé
 - [ ] Notifications push
 - [ ] API mobile
 - [ ] Intégrations brokers
 
 ### Version 2.0 (Q3 2024)
+
 - [ ] Machine Learning pour prédictions
 - [ ] Social trading
 - [ ] API publique
