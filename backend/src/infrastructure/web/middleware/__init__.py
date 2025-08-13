@@ -4,8 +4,11 @@ Middleware package for FastAPI application.
 Contains middleware implementations for the API.
 """
 
-from .rate_limiting import RateLimitMiddleware
+from .custom import LoggingMiddleware, SecurityHeadersMiddleware
+from .rate_limit import RateLimitMiddleware
 
 __all__ = [
+    "LoggingMiddleware",
+    "SecurityHeadersMiddleware",
     "RateLimitMiddleware",
 ]

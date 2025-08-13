@@ -36,18 +36,36 @@ COPY . .
 
 # Install dependencies (including dev dependencies) and install package in editable mode
 RUN poetry config virtualenvs.in-project true && \
+    poetry config virtualenvs.create true && \
     poetry install --with dev && \
-    poetry run pip install -e . && \
     rm -rf "$POETRY_CACHE_DIR"
 
-# Create non-root user
+# Create startup script for flexible API mode
+RUN echo '#!/bin/bash\n\
+if [ "$API_MODE" = "advanced" ]; then\n\
+    echo "🎯 Starting Boursa Vision Advanced API..."\n\
+    exec /app/.venv/bin/python main.py\n\
+else\n\
+    echo "🔧 Starting Boursa Vision Standard API..."\n\
+    exec /app/.venv/bin/python -m uvicorn src.infrastructure.web.main:app --host $API_HOST --port $API_PORT --reload\n\
+fi' > /app/start_api.sh && chmod +x /app/start_api.sh
+
+# Create non-root user and set ownership
 RUN groupadd -r appuser && useradd -r -g appuser appuser && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
 
-# Use direct path to uvicorn
-CMD ["/app/.venv/bin/uvicorn", "src.infrastructure.web.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Environment variables for API configuration
+ENV BOURSA_API_VERSION=advanced \
+    API_HOST=0.0.0.0 \
+    API_PORT=8000 \
+    API_RELOAD=true \
+    API_MODE=standard \
+    ENVIRONMENT=development
+
+# Use our startup script
+CMD ["/app/start_api.sh"]
 
 # Production stage
 FROM base AS production
