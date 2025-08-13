@@ -1,0 +1,193 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: boursa-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    networks:
+      - boursa-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: boursa-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - boursa-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+
+  # Backend API (Development)
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+      target: development
+    container_name: boursa-backend
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+      - LOG_LEVEL=DEBUG
+      - API_V1_STR=/api/v1
+      - SECRET_KEY=${SECRET_KEY:-development_secret_key_change_in_production}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=60
+      - YFINANCE_RATE_LIMIT=10
+      - YFINANCE_BATCH_SIZE=50
+      # Configuration API Advanced
+      - API_MODE=${API_MODE:-standard}
+      - API_HOST=0.0.0.0
+      - API_PORT=${API_PORT:-8000}
+      - API_RELOAD=true
+      - API_WORKERS=1
+    ports:
+      - "${API_PORT:-8000}:${API_PORT:-8000}"
+    volumes:
+      - backend_logs:/app/logs
+      - ../backend:/app:cached
+    networks:
+      - boursa-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    command: >
+      sh -c "
+        if [ \"$$API_MODE\" = \"advanced\" ]; then
+          echo '🎯 Starting Boursa Vision Advanced API...' &&
+          cd /app && poetry run python main.py
+        else
+          echo '🔧 Starting Boursa Vision Standard API...' &&
+          cd /app && poetry run python -m uvicorn src.infrastructure.web.main:app --host $$API_HOST --port $$API_PORT --reload
+        fi
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${API_PORT:-8000}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend PWA (Development) - DISABLED FOR NOW
+  # frontend:
+  #   build:
+  #     context: ../frontend
+  #     dockerfile: ../docker/Dockerfile.frontend
+  #     target: development
+  #   container_name: boursa-frontend
+  #   environment:
+  #     - VITE_API_BASE_URL=http://localhost:8000/api/v1
+  #     - VITE_WS_URL=ws://localhost:8000/ws
+  #     - VITE_ENVIRONMENT=development
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ../frontend:/app
+  #     - /app/node_modules
+  #   networks:
+  #     - boursa-network
+  #   depends_on:
+  #     - backend
+  #   restart: unless-stopped
+
+  # Background Tasks (Celery Worker) - DISABLED FOR NOW
+  # celery-worker:
+  #   build:
+  #     context: ../backend
+  #     dockerfile: ../docker/Dockerfile.backend
+  #     target: development
+  #   container_name: boursa-celery-worker
+  #   environment:
+  #     - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-development_password}@postgres:5432/boursa_vision
+  #     - REDIS_URL=redis://redis:6379/0
+  #     - ENVIRONMENT=development
+  #     - LOG_LEVEL=DEBUG
+  #   networks:
+  #     - boursa-network
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #   command: /app/.venv/bin/celery -A src.infrastructure.background.celery_app worker --loglevel=info
+
+  # Celery Beat (Scheduler) - DISABLED FOR NOW
+  # celery-beat:
+  #   build:
+  #     context: ../backend
+  #     dockerfile: ../docker/Dockerfile.backend
+  #     target: development
+  #   container_name: boursa-celery-beat
+  #   environment:
+  #     - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-development_password}@postgres:5432/boursa_vision
+  #     - REDIS_URL=redis://redis:6379/0
+  #     - ENVIRONMENT=development
+  #     - LOG_LEVEL=DEBUG
+  #   networks:
+  #     - boursa-network
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #   command: /app/.venv/bin/celery -A src.infrastructure.background.celery_app beat --loglevel=info
+
+  # Nginx Reverse Proxy (Development) - DISABLED FOR NOW
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: boursa-nginx
+  #   ports:
+  #     - "8080:80"
+  #     - "8443:443"
+  #   volumes:
+  #     - ../nginx/nginx.dev.conf:/etc/nginx/nginx.conf
+  #     - nginx_logs:/var/log/nginx
+  #   networks:
+  #     - boursa-network
+  #   depends_on:
+  #     - backend
+  #     - frontend
+  #   restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_logs:
+    driver: local
+  nginx_logs:
+    driver: local
+
+networks:
+  boursa-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
