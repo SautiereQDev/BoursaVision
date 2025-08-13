@@ -3,17 +3,18 @@ Global error handlers for the API
 """
 import traceback
 
+import structlog
 from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-import structlog
 
 from application.exceptions import (
     BoursaVisionError,
-    PortfolioNotFoundError,
     InvalidSymbolError,
+    PortfolioNotFoundError,
     PriceRangeError,
 )
+
 from .exceptions import APIException
 
 logger = structlog.get_logger(__name__)
@@ -28,7 +29,7 @@ async def api_exception_handler(request: Request, exc: APIException) -> JSONResp
         status_code=exc.status_code,
         detail=exc.detail,
     )
-    
+
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -43,8 +44,7 @@ async def api_exception_handler(request: Request, exc: APIException) -> JSONResp
 
 
 async def validation_exception_handler(
-    request: Request, 
-    exc: RequestValidationError
+    request: Request, exc: RequestValidationError
 ) -> JSONResponse:
     """Handle FastAPI validation errors."""
     logger.warning(
@@ -53,7 +53,7 @@ async def validation_exception_handler(
         method=request.method,
         errors=exc.errors(),
     )
-    
+
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
@@ -68,8 +68,7 @@ async def validation_exception_handler(
 
 
 async def domain_exception_handler(
-    request: Request, 
-    exc: BoursaVisionError
+    request: Request, exc: BoursaVisionError
 ) -> JSONResponse:
     """Handle domain layer exceptions."""
     logger.warning(
@@ -78,7 +77,7 @@ async def domain_exception_handler(
         method=request.method,
         exception=str(exc),
     )
-    
+
     # Map domain exceptions to HTTP status codes
     if isinstance(exc, PortfolioNotFoundError):
         status_code = status.HTTP_404_NOT_FOUND
@@ -86,7 +85,7 @@ async def domain_exception_handler(
         status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
     else:
         status_code = status.HTTP_400_BAD_REQUEST
-    
+
     return JSONResponse(
         status_code=status_code,
         content={
@@ -108,7 +107,7 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
         exception=str(exc),
         traceback=traceback.format_exc(),
     )
-    
+
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={

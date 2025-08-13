@@ -8,7 +8,7 @@ from fastapi import HTTPException, status
 
 class APIException(HTTPException):
     """Base API exception."""
-    
+
     def __init__(
         self,
         status_code: int,
@@ -20,7 +20,7 @@ class APIException(HTTPException):
 
 class ValidationError(APIException):
     """Validation error exception."""
-    
+
     def __init__(self, detail: str, field: Optional[str] = None):
         if field:
             detail = f"Validation error for field '{field}': {detail}"
@@ -32,7 +32,7 @@ class ValidationError(APIException):
 
 class NotFoundError(APIException):
     """Resource not found exception."""
-    
+
     def __init__(self, resource: str, identifier: Any):
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -42,7 +42,7 @@ class NotFoundError(APIException):
 
 class ConflictError(APIException):
     """Resource conflict exception."""
-    
+
     def __init__(self, detail: str):
         super().__init__(
             status_code=status.HTTP_409_CONFLICT,
@@ -52,7 +52,7 @@ class ConflictError(APIException):
 
 class UnauthorizedError(APIException):
     """Unauthorized access exception."""
-    
+
     def __init__(self, detail: str = "Authentication required"):
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -63,7 +63,7 @@ class UnauthorizedError(APIException):
 
 class ForbiddenError(APIException):
     """Forbidden access exception."""
-    
+
     def __init__(self, detail: str = "Access denied"):
         super().__init__(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -73,7 +73,7 @@ class ForbiddenError(APIException):
 
 class InternalServerError(APIException):
     """Internal server error exception."""
-    
+
     def __init__(self, detail: str = "Internal server error"):
         super().__init__(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -83,7 +83,7 @@ class InternalServerError(APIException):
 
 class ExternalServiceError(APIException):
     """External service error exception."""
-    
+
     def __init__(self, service: str, detail: str):
         super().__init__(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -93,7 +93,7 @@ class ExternalServiceError(APIException):
 
 class RateLimitError(APIException):
     """Rate limit exceeded exception."""
-    
+
     def __init__(self, retry_after: int):
         super().__init__(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,

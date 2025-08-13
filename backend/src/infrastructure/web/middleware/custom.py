@@ -4,9 +4,9 @@ Custom middleware for the API
 import time
 from typing import Callable
 
+import structlog
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-import structlog
 
 logger = structlog.get_logger(__name__)
 
@@ -17,7 +17,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Process request and log details."""
         start_time = time.time()
-        
+
         # Log request
         logger.info(
             "Request started",
@@ -25,7 +25,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             url=str(request.url),
             headers=dict(request.headers),
         )
-        
+
         try:
             response = await call_next(request)
         except Exception as exc:
@@ -38,9 +38,9 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 error=str(exc),
             )
             raise
-        
+
         process_time = time.time() - start_time
-        
+
         # Log response
         logger.info(
             "Request completed",
@@ -49,7 +49,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             status_code=response.status_code,
             process_time=process_time,
         )
-        
+
         response.headers["X-Process-Time"] = str(process_time)
         return response
 
@@ -60,12 +60,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Add security headers to response."""
         response = await call_next(request)
-        
+
         # Security headers
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers[
+            "Strict-Transport-Security"
+        ] = "max-age=31536000; includeSubDomains"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        
+
         return response

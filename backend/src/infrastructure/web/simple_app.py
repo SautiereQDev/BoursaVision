@@ -27,7 +27,7 @@ async def root():
     return {
         "message": "Boursa Vision API is running!",
         "version": "1.0.0",
-        "docs": "/docs"
+        "docs": "/docs",
     }
 
 
@@ -40,11 +40,7 @@ async def health_check():
 @app.get("/api/v1/portfolios")
 async def get_portfolios():
     """Get user portfolios."""
-    return {
-        "portfolios": [],
-        "total": 0,
-        "message": "Portfolio endpoint working!"
-    }
+    return {"portfolios": [], "total": 0, "message": "Portfolio endpoint working!"}
 
 
 @app.post("/api/v1/portfolios")
@@ -55,7 +51,7 @@ async def create_portfolio():
         "name": "Test Portfolio",
         "total_value": 0.0,
         "currency": "USD",
-        "message": "Portfolio creation endpoint working!"
+        "message": "Portfolio creation endpoint working!",
     }
 
 
@@ -65,7 +61,7 @@ async def get_investment_recommendations():
     return {
         "recommendations": [],
         "generated_at": "2024-01-01T00:00:00Z",
-        "message": "Investment recommendations endpoint working!"
+        "message": "Investment recommendations endpoint working!",
     }
 
 
@@ -75,12 +71,8 @@ async def get_market_data(symbol: str):
     return {
         "symbol": symbol.upper(),
         "data": [],
-        "metadata": {
-            "period": "1d",
-            "interval": "1h",
-            "source": "yfinance"
-        },
-        "message": f"Market data for {symbol.upper()} endpoint working!"
+        "metadata": {"period": "1d", "interval": "1h", "source": "yfinance"},
+        "message": f"Market data for {symbol.upper()} endpoint working!",
     }
 
 

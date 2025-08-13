@@ -11,10 +11,10 @@ Comprehensive FastAPI application for Boursa Vision with:
 """
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.exceptions import RequestValidationError
 import structlog
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .error_handlers import (
@@ -28,12 +28,7 @@ from .middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
 )
-from .routers import (
-    investments,
-    market_data,
-    portfolio,
-    websocket,
-)
+from .routers import investments, market_data, portfolio, websocket
 
 # Configure structured logging
 structlog.configure(
@@ -46,7 +41,7 @@ structlog.configure(
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer()
+        structlog.processors.JSONRenderer(),
     ],
     context_class=dict,
     logger_factory=structlog.stdlib.LoggerFactory(),
@@ -62,30 +57,30 @@ async def lifespan(app: FastAPI):
     """Application lifespan events."""
     # Startup
     logger.info("Starting Boursa Vision API", version=settings.app_version)
-    
+
     # TODO: Initialize database connections, cache, etc.
     # await initialize_database()
     # await initialize_cache()
     # await start_background_tasks()
-    
+
     logger.info("API startup completed")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down Boursa Vision API")
-    
+
     # TODO: Cleanup connections, stop background tasks, etc.
     # await cleanup_database()
     # await cleanup_cache()
     # await stop_background_tasks()
-    
+
     logger.info("API shutdown completed")
 
 
 def create_application() -> FastAPI:
     """Create and configure the FastAPI application."""
-    
+
     # Create FastAPI application with comprehensive configuration
     application = FastAPI(
         title=settings.app_name,
@@ -93,7 +88,9 @@ def create_application() -> FastAPI:
         version=settings.app_version,
         debug=settings.debug,
         lifespan=lifespan,
-        openapi_url="/api/v1/openapi.json" if settings.environment != "production" else None,
+        openapi_url="/api/v1/openapi.json"
+        if settings.environment != "production"
+        else None,
         docs_url="/api/v1/docs" if settings.environment != "production" else None,
         redoc_url="/api/v1/redoc" if settings.environment != "production" else None,
         openapi_tags=[
@@ -115,7 +112,7 @@ def create_application() -> FastAPI:
             },
         ],
     )
-    
+
     # Add middleware stack (order matters!)
     if settings.rate_limit_enabled:
         application.add_middleware(
@@ -123,10 +120,10 @@ def create_application() -> FastAPI:
             calls=settings.rate_limit_calls,
             period=settings.rate_limit_period,
         )
-    
+
     application.add_middleware(SecurityHeadersMiddleware)
     application.add_middleware(LoggingMiddleware)
-    
+
     # CORS Configuration
     application.add_middleware(
         CORSMiddleware,
@@ -135,22 +132,24 @@ def create_application() -> FastAPI:
         allow_methods=settings.cors_methods,
         allow_headers=settings.cors_headers,
     )
-    
+
     # Add global exception handlers
     application.add_exception_handler(APIException, api_exception_handler)
-    application.add_exception_handler(RequestValidationError, validation_exception_handler)
+    application.add_exception_handler(
+        RequestValidationError, validation_exception_handler
+    )
     application.add_exception_handler(Exception, general_exception_handler)
-    
+
     # TODO: Add domain exception handlers when domain layer is ready
     # application.add_exception_handler(DomainError, domain_exception_handler)
     # application.add_exception_handler(BusinessLogicError, domain_exception_handler)
-    
+
     # Include routers with API versioning
     application.include_router(portfolio.router)
     application.include_router(investments.router)
     application.include_router(market_data.router)
     application.include_router(websocket.router)
-    
+
     # Root endpoints
     @application.get("/", tags=["root"])
     async def root():
@@ -159,10 +158,12 @@ def create_application() -> FastAPI:
             "message": "Boursa Vision API",
             "version": settings.app_version,
             "environment": settings.environment.value,
-            "docs_url": "/api/v1/docs" if settings.environment != "production" else None,
+            "docs_url": "/api/v1/docs"
+            if settings.environment != "production"
+            else None,
             "health_url": "/health",
         }
-    
+
     @application.get("/health", tags=["health"])
     async def health_check():
         """Comprehensive health check endpoint."""
@@ -177,7 +178,7 @@ def create_application() -> FastAPI:
             # "cache": await check_cache_health(),
             # "external_services": await check_external_services_health(),
         }
-    
+
     return application
 
 
@@ -187,7 +188,7 @@ app = create_application()
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "main:app",
         host=settings.host,
