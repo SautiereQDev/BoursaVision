@@ -1,7 +1,8 @@
 #!"""FastAPI application with real YFinance data and advanced investment analysis."""
 
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 import yfinance as yf
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,9 +11,9 @@ from pydantic import BaseModel, Field
 # Import our advanced analysis services
 try:
     from src.application.services.investment_recommendation_service import (
-        InvestmentRecommendationService, 
+        InvestmentRecommendationService,
+        PortfolioRecommendation,
         RecommendationRequest,
-        PortfolioRecommendation
     )
     ADVANCED_ANALYSIS_AVAILABLE = True
 except ImportError as e:
@@ -429,15 +430,15 @@ FastAPI Simple avec YFinance - Alternative à production_api_with_real_data.py
 Documentation automatique avec FastAPI /docs
 """
 
-import os
-from datetime import datetime
-from typing import Dict, List, Optional, Any
-
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-import yfinance as yf
 import asyncio
 import logging
+import os
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import yfinance as yf
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 # Configuration du logging
 logging.basicConfig(level=logging.INFO)
