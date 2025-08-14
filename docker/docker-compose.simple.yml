@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  # Backend API simplifiée pour test
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+      target: development
+    container_name: boursa-backend-simple
+    environment:
+      # Configuration API Production avec vraies données
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      
+      # Configuration vraies données YFinance
+      - ENABLED_MARKET_INDICES=cac40,nasdaq100,ftse100
+      - YFINANCE_REQUEST_DELAY=0.2
+      - YFINANCE_TIMEOUT=10
+      
+      # Configuration Poetry
+      - POETRY_VENV_IN_PROJECT=true
+      - POETRY_NO_INTERACTION=1
+      - POETRY_CACHE_DIR=/tmp/poetry_cache
+      
+      # Docker environment detection
+      - DOCKER_ENV=true
+    ports:
+      - "8000:8000"
+    volumes:
+      - backend_logs:/app/logs
+      - poetry_cache:/tmp/poetry_cache
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo '🚀 Starting unified FastAPI (simple mode)...' &&
+        export DOCKER_ENV=true &&
+        poetry run python main.py
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  backend_logs:
+  poetry_cache:

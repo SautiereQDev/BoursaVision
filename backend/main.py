@@ -1,77 +1,117 @@
 #!/usr/bin/env python3
 """
-Boursa Vision Advanced API - Point d'entrée principal
-API d'intelligence financière avec analyse massive de marché
+🚀 Point d'entrée unifié pour Boursa Vision FastAPI
+
+✨ ARCHITECTURE UNIFIÉE ✨
+• Même code FastAPI fonctionne avec Docker ET localement
+• Détection automatique de l'environnement (Docker vs Local)  
+• Configuration adaptée automatiquement selon le contexte
+• Documentation FastAPI automatique sur /docs
+
+🐳 Docker:    Mode production, stable, port 8000
+💻 Local:     Mode développement, hot-reload, port 8001
+
+🌟 Usage:
+  make api        # Docker
+  make api-local  # Local
 """
 
-import logging
 import os
 import sys
 from pathlib import Path
 
-# Ajouter le répertoire backend au PYTHONPATH
-backend_dir = Path(__file__).parent
-sys.path.insert(0, str(backend_dir))
+import uvicorn
 
-# Configuration du logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+
+def setup_paths():
+    """Configure les chemins Python pour les imports"""
+    current_dir = Path(__file__).parent.absolute()
+    src_dir = current_dir / "src"
+
+    # Ajouter src au PYTHONPATH
+    if str(src_dir) not in sys.path:
+        sys.path.insert(0, str(src_dir))
+
+    # Ajouter le répertoire backend aussi
+    if str(current_dir) not in sys.path:
+        sys.path.insert(0, str(current_dir))
+
+
+def detect_environment() -> dict:
+    """Détecte l'environnement d'exécution et retourne la configuration appropriée"""
+
+    # Détection Docker
+    is_docker = os.path.exists("/.dockerenv") or os.getenv("DOCKER_ENV") == "true"
+
+    # Configuration de base
+    config = {
+        "host": "0.0.0.0",
+        "port": int(os.getenv("API_PORT", "8000")),
+        "reload": True,
+    }
+
+    if is_docker:
+        print("🐳 Détection environnement Docker")
+        config["reload"] = False  # Plus stable en production Docker
+    else:
+        print("💻 Détection environnement local")
+        config["reload"] = True  # Pratique pour le développement local
+
+    print(f"📡 Serveur configuré sur {config['host']}:{config['port']}")
+    print(f"🔄 Rechargement automatique: {config['reload']}")
+
+    return config
+
+
+def create_app():
+    """Crée et configure l'application FastAPI"""
+    try:
+        # Configuration des chemins
+        setup_paths()
+
+        # Import de l'application
+        from fastapi_yfinance import app
+
+        print("✅ Application FastAPI chargée avec succès")
+        return app
+
+    except ImportError as e:
+        print(f"❌ Erreur d'import FastAPI: {e}")
+        print("💡 Vérifiez que le fichier src/fastapi_yfinance.py existe")
+        sys.exit(1)
 
 
 def main():
-    """Point d'entrée principal de l'API"""
-
-    print(
-        """
-╔══════════════════════════════════════════════════════════════╗
-║                                                              ║
-║   🎯 BOURSA VISION ADVANCED - API Intelligence Financière   ║
-║                                                              ║
-║   🚀 Analyse massive de marché avec IA                      ║
-║   📊 Recommandations d'investissement automatisées          ║
-║   💼 Optimisation de portefeuille intelligente              ║
-║                                                              ║
-╚══════════════════════════════════════════════════════════════╝
-    """
-    )
+    """Point d'entrée principal"""
+    print("🚀 Démarrage Boursa Vision FastAPI")
 
     try:
-        # Import de l'application FastAPI
-        import uvicorn
+        # Configuration automatique
+        config = detect_environment()
 
-        from api import app
+        # Démarrage du serveur
+        print("🌟 Lancement du serveur FastAPI...")
+        print(
+            f"📖 Documentation disponible sur: http://{config['host']}:{config['port']}/docs"
+        )
 
-        # Configuration
-        host = os.getenv("API_HOST", "0.0.0.0")
-        port = int(
-            os.getenv("API_PORT", "8006")
-        )  # Port 8006 par défaut pour éviter les conflits
-        reload = os.getenv("API_RELOAD", "true").lower() == "true"
-        workers = int(os.getenv("API_WORKERS", "1"))
-
-        logger.info(f"🌐 Démarrage sur {host}:{port}")
-        logger.info(f"🔄 Reload: {reload}")
-        logger.info(f"👥 Workers: {workers}")
-        logger.info(f"📚 Documentation: http://{host}:{port}/docs")
-
-        # Lancement de l'API
-        if reload:
-            # Mode reload : utiliser import string
+        if config["reload"]:
+            # Mode reload nécessite une chaîne d'import
+            print("🔄 Mode développement avec rechargement automatique")
             uvicorn.run(
-                "api:app", host=host, port=port, reload=reload, log_level="info"
+                "fastapi_yfinance:app",
+                host=config["host"],
+                port=config["port"],
+                reload=True,
             )
         else:
-            # Mode production : utiliser l'objet app directement
-            uvicorn.run(app, host=host, port=port, workers=workers, log_level="info")
+            # Mode production avec l'objet app directement
+            print("🏭 Mode production sans rechargement")
+            app = create_app()
+            uvicorn.run(app, host=config["host"], port=config["port"], reload=False)
 
-    except ImportError as e:
-        logger.error(f"❌ Erreur d'import: {e}")
-        logger.error("💡 Assurez-vous que toutes les dépendances sont installées")
-        sys.exit(1)
     except Exception as e:
-        logger.error(f"❌ Erreur lors du démarrage: {e}")
+        print(f"❌ Erreur de démarrage: {e}")
         sys.exit(1)
 
 
