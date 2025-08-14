@@ -52,7 +52,8 @@ def detect_environment() -> dict:
 
     if is_docker:
         print("🐳 Détection environnement Docker")
-        config["reload"] = False  # Plus stable en production Docker
+        # En mode développement Docker, on active le reload si demandé
+        config["reload"] = os.getenv("API_RELOAD", "false").lower() == "true"
     else:
         print("💻 Détection environnement local")
         config["reload"] = True  # Pratique pour le développement local
@@ -98,12 +99,32 @@ def main():
         if config["reload"]:
             # Mode reload nécessite une chaîne d'import
             print("🔄 Mode développement avec rechargement automatique")
-            uvicorn.run(
-                "fastapi_yfinance:app",
-                host=config["host"],
-                port=config["port"],
-                reload=True,
+
+            # Détecter si on est dans Docker pour ajuster le chemin de reload
+            is_docker = (
+                os.path.exists("/.dockerenv") or os.getenv("DOCKER_ENV") == "true"
             )
+
+            if is_docker:
+                # Dans Docker, on surveille /app/src
+                uvicorn.run(
+                    "src.fastapi_yfinance:app",
+                    host=config["host"],
+                    port=config["port"],
+                    reload=True,
+                    reload_dirs=["/app/src"],
+                    log_level="debug",
+                )
+            else:
+                # Localement, on surveille src/
+                uvicorn.run(
+                    "src.fastapi_yfinance:app",
+                    host=config["host"],
+                    port=config["port"],
+                    reload=True,
+                    reload_dirs=["src/"],
+                    log_level="debug",
+                )
         else:
             # Mode production avec l'objet app directement
             print("🏭 Mode production sans rechargement")
