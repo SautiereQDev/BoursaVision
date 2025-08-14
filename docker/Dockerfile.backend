@@ -34,24 +34,42 @@ FROM base AS development
 # Copy source code first
 COPY . .
 
-# Install dependencies (including dev dependencies) and install package in editable mode
+# Create non-root user with specific home directory
+RUN groupadd -r appuser && useradd -r -g appuser -m -d /home/appuser appuser
+
+# Set proper ownership and permissions
+RUN mkdir -p /tmp/poetry_cache /app/.venv /home/appuser && \
+    chown -R appuser:appuser /app /tmp/poetry_cache /home/appuser /app/.venv && \
+    chmod -R 755 /home/appuser && \
+    chmod -R 755 /app
+
+# Switch to appuser before installing dependencies
+USER appuser
+
+# Set environment variables for Poetry
+ENV POETRY_CACHE_DIR=/tmp/poetry_cache \
+    POETRY_VENV_IN_PROJECT=1 \
+    POETRY_NO_INTERACTION=1
+
+# Install dependencies (including dev dependencies) without installing package
 RUN poetry config virtualenvs.in-project true && \
     poetry config virtualenvs.create true && \
-    poetry install --with dev && \
-    rm -rf "$POETRY_CACHE_DIR"
+    poetry config cache-dir /tmp/poetry_cache && \
+    poetry install --with dev --no-root --no-cache && \
+    poetry env info
 
-# Create startup script for flexible API mode
+# Switch back to root to create startup script
+USER root
+
+# Create startup script for production API with real data
 RUN echo '#!/bin/bash\n\
-if [ "$API_MODE" = "advanced" ]; then\n\
-    echo "🎯 Starting Boursa Vision Advanced API..."\n\
-    exec /app/.venv/bin/python main.py\n\
-else\n\
-    echo "🔧 Starting Boursa Vision Standard API..."\n\
-    exec /app/.venv/bin/python -m uvicorn src.infrastructure.web.main:app --host $API_HOST --port $API_PORT --reload\n\
-fi' > /app/start_api.sh && chmod +x /app/start_api.sh
+echo "🧪 Starting Simple Test API to check dependencies..."\n\
+cd /app\n\
+exec poetry run python src/simple_test_api.py' > /app/start_test_api.sh && \
+    chmod +x /app/start_test_api.sh && \
+    chown appuser:appuser /app/start_test_api.sh
 
-# Create non-root user and set ownership
-RUN groupadd -r appuser && useradd -r -g appuser appuser && chown -R appuser:appuser /app
+# Switch back to appuser
 USER appuser
 
 EXPOSE 8000
@@ -64,8 +82,8 @@ ENV BOURSA_API_VERSION=advanced \
     API_MODE=standard \
     ENVIRONMENT=development
 
-# Use our startup script
-CMD ["/app/start_api.sh"]
+# Use our test startup script
+CMD ["/app/start_test_api.sh"]
 
 # Production stage
 FROM base AS production
@@ -74,9 +92,9 @@ FROM base AS production
 COPY src ./src
 COPY alembic.ini ./
 
-# Install only production dependencies
+# Install only production dependencies without installing package
 RUN poetry config virtualenvs.in-project true && \
-    poetry install --only=main && \
+    poetry install --only=main --no-root && \
     rm -rf "$POETRY_CACHE_DIR"
 
 # Create non-root user

@@ -50,6 +50,24 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/boursa_vision
       - REDIS_URL=redis://redis:6379/0
       - ENVIRONMENT=production
+      - LOG_LEVEL=WARNING
+      - API_V1_STR=/api/v1
+      - SECRET_KEY=${SECRET_KEY}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=720
+      - YFINANCE_RATE_LIMIT=50
+      - YFINANCE_BATCH_SIZE=100
+      # Configuration Cache Intelligent
+      - CACHE_MODE=production
+      - CACHE_DEBUG=false
+      - YFINANCE_REQUESTS_PER_MINUTE=150
+      - YFINANCE_REQUESTS_PER_HOUR=5000
+      - MAX_CONCURRENT_REQUESTS=50
+      - BATCH_SIZE=100
+      - MAX_MEMORY_USAGE_MB=2048
+      - MAX_TIMELINES_IN_MEMORY=500
+      - ENABLE_METRICS=true
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=production
       - LOG_LEVEL=INFO
       - SECRET_KEY=${SECRET_KEY}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
@@ -69,6 +87,58 @@ services:
       interval: 60s
       timeout: 10s
       retries: 3
+
+  # Cache Intelligent YFinance (Production)
+  cache-system:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.cache
+      target: cache-production
+    container_name: boursa-cache-system-prod
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/boursa_vision
+      - REDIS_URL=redis://redis:6379/2
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - ENVIRONMENT=production
+      - LOG_LEVEL=WARNING
+      - CACHE_MODE=production
+      - CACHE_DEBUG=false
+      - YFINANCE_REQUESTS_PER_MINUTE=150
+      - YFINANCE_REQUESTS_PER_HOUR=5000
+      - MAX_CONCURRENT_REQUESTS=50
+      - BATCH_SIZE=100
+      - MAX_MEMORY_USAGE_MB=2048
+      - MAX_TIMELINES_IN_MEMORY=500
+      - ENABLE_METRICS=true
+      - ENABLE_PREFETCHING=true
+    ports:
+      - "8001:8001"
+    volumes:
+      - cache_data:/app/cache_data
+      - cache_logs:/app/logs
+      - cache_metrics:/app/metrics
+    networks:
+      - boursa-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+          cpus: '2.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   # Frontend PWA (Production)
   frontend:
@@ -156,6 +226,12 @@ volumes:
   redis_data:
     driver: local
   backend_logs:
+    driver: local
+  cache_data:
+    driver: local
+  cache_logs:
+    driver: local
+  cache_metrics:
     driver: local
   nginx_logs:
     driver: local

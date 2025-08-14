@@ -40,7 +40,7 @@ services:
       retries: 5
     command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
 
-  # Backend API (Development)
+  # Backend API (Production with Real YFinance Data)
   backend:
     build:
       context: ../backend
@@ -48,26 +48,31 @@ services:
       target: development
     container_name: boursa-backend
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      - REDIS_URL=redis://redis:6379/0
+      # Configuration API Production avec vraies données
       - ENVIRONMENT=development
-      - LOG_LEVEL=DEBUG
-      - API_V1_STR=/api/v1
-      - SECRET_KEY=${SECRET_KEY:-development_secret_key_change_in_production}
-      - ACCESS_TOKEN_EXPIRE_MINUTES=60
-      - YFINANCE_RATE_LIMIT=10
-      - YFINANCE_BATCH_SIZE=50
-      # Configuration API Advanced
-      - API_MODE=${API_MODE:-standard}
+      - LOG_LEVEL=INFO
       - API_HOST=0.0.0.0
       - API_PORT=${API_PORT:-8000}
-      - API_RELOAD=true
-      - API_WORKERS=1
+      
+      # Configuration vraies données YFinance
+      - ENABLED_MARKET_INDICES=${ENABLED_MARKET_INDICES:-cac40,nasdaq100,ftse100}
+      - YFINANCE_REQUEST_DELAY=${YFINANCE_REQUEST_DELAY:-0.2}
+      - YFINANCE_TIMEOUT=${YFINANCE_TIMEOUT:-10}
+      - MAX_CONCURRENT_REQUESTS=${MAX_CONCURRENT_REQUESTS:-5}
+      
+      # Configuration Poetry
+      - POETRY_VENV_IN_PROJECT=true
+      - POETRY_NO_INTERACTION=1
+      - POETRY_CACHE_DIR=/tmp/poetry_cache
+      
+      # Database optionnelle (pour futures extensions)
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
     ports:
       - "${API_PORT:-8000}:${API_PORT:-8000}"
     volumes:
       - backend_logs:/app/logs
-      - ../backend:/app:cached
+      - poetry_cache:/tmp/poetry_cache
     networks:
       - boursa-network
     depends_on:
@@ -78,13 +83,9 @@ services:
     restart: unless-stopped
     command: >
       sh -c "
-        if [ \"$$API_MODE\" = \"advanced\" ]; then
-          echo '🎯 Starting Boursa Vision Advanced API...' &&
-          cd /app && poetry run python main.py
-        else
-          echo '🔧 Starting Boursa Vision Standard API...' &&
-          cd /app && poetry run python -m uvicorn src.infrastructure.web.main:app --host $$API_HOST --port $$API_PORT --reload
-        fi
+        echo '🚀 Starting unified FastAPI (same code as local)...' &&
+        export DOCKER_ENV=true &&
+        poetry run python main.py
       "
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${API_PORT:-8000}/health"]
@@ -181,6 +182,8 @@ volumes:
   redis_data:
     driver: local
   backend_logs:
+    driver: local
+  poetry_cache:
     driver: local
   nginx_logs:
     driver: local
