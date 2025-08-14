@@ -24,6 +24,7 @@ from .instruments import Instrument
 from .investment import InvestmentModel
 from .market_data import TechnicalIndicator  # Signal import removed
 from .market_data import MarketData
+from .market_data_archive import MarketDataArchive
 from .performance import PortfolioPerformance
 from .portfolios import Portfolio, Position
 from .system import AuditLog, SystemConfig
@@ -48,14 +49,15 @@ __all__ = [
     "Portfolio",
     "Position",
     "Instrument",
-    "InvestmentModel",
-    "Transaction",
     "MarketData",
+    "MarketDataArchive",
     "TechnicalIndicator",
-    "Alert",
-    "Notification",
+    "Transaction",
     "FundamentalData",
     "PortfolioPerformance",
+    "InvestmentModel",
+    "Alert",
+    "Notification",
     "AuditLog",
     "SystemConfig",
 ]

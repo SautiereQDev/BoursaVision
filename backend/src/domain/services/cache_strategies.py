@@ -357,7 +357,7 @@ class MarketDataCacheManager:
 
     def _evict_expired(self) -> None:
         """Éviction des entrées expirées"""
-        for symbol in self._cache.keys():
+        for symbol in self._cache:
             symbol_cache = self._cache[symbol]
             expired_timestamps = [
                 ts for ts, entry in symbol_cache.items() if entry.is_expired

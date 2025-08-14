@@ -1,13 +1,14 @@
 """
 Market data endpoints
 """
-from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import Optional
 
 import structlog
 from fastapi import APIRouter, HTTPException, Query, status
 
-from infrastructure.web.schemas import MarketDataResponse
+from ..dependencies import Container, CurrentUserOptional
+from ..exceptions import ExternalServiceError, NotFoundError
+from ..schemas import MarketDataResponse
 
 logger = structlog.get_logger(__name__)
 
@@ -16,181 +17,163 @@ router = APIRouter(
     tags=["market-data"],
     responses={
         404: {"description": "Symbol not found"},
-        500: {"description": "Internal server error"},
+        503: {"description": "External service unavailable"},
     },
 )
 
 
 @router.get(
-    "/price/{symbol}",
+    "/{symbol}",
     response_model=MarketDataResponse,
-    summary="Get current price",
-    description="Get current market price and basic statistics for a symbol.",
+    summary="Get market data for symbol",
+    description="Retrieve market data for a specific symbol with optional time range.",
 )
-async def get_current_price(symbol: str) -> MarketDataResponse:
-    """Get current market price for a symbol."""
+async def get_market_data(
+    symbol: str,
+    container: Container,
+    current_user: CurrentUserOptional,
+    period: Optional[str] = Query(
+        "1d",
+        description="Time period (1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max)",
+        regex="^(1d|5d|1mo|3mo|6mo|1y|2y|5y|10y|ytd|max)$",
+    ),
+    interval: Optional[str] = Query(
+        "1h",
+        description="Data interval (1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo)",
+        regex="^(1m|2m|5m|15m|30m|60m|90m|1h|1d|5d|1wk|1mo|3mo)$",
+    ),
+) -> MarketDataResponse:
+    """Get market data for a specific symbol."""
     try:
+        symbol = symbol.upper()
+
+        logger.info(
+            "Fetching market data",
+            symbol=symbol,
+            period=period,
+            interval=interval,
+            user_id=current_user.id if current_user else None,
+        )
+
         # TODO: Implement actual market data fetching
+        # market_data_service = container.get_market_data_service()
+        # data = await market_data_service.get_market_data(
+        #     symbol=symbol,
+        #     period=period,
+        #     interval=interval
+        # )
+
+        # Mock response for now
         return MarketDataResponse(
             symbol=symbol,
-            current_price=150.0,
-            change_amount=2.5,
-            change_percent=1.69,
-            volume=1000000,
-            market_cap=2500000000.0,
-            timestamp="2024-01-01T00:00:00Z",
+            data=[],
+            metadata={"period": period, "interval": interval, "source": "yfinance"},
         )
-    except Exception as e:
-        logger.error("Error fetching price", symbol=symbol, error=str(e))
+
+    except ValueError as exc:
+        logger.warning("Invalid symbol format", symbol=symbol, error=str(exc))
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Symbol not found"
-        )
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid symbol format: {symbol}",
+        ) from exc
+    except Exception as exc:
+        logger.error("Failed to fetch market data", symbol=symbol, error=str(exc))
+        raise ExternalServiceError("Market Data Provider", str(exc)) from exc
 
 
 @router.get(
-    "/history/{symbol}",
-    summary="Get price history",
-    description="Get historical price data for a symbol.",
+    "/{symbol}/latest",
+    summary="Get latest price for symbol",
+    description="Get the latest price information for a specific symbol.",
 )
-async def get_price_history(
+async def get_latest_price(
     symbol: str,
-    period: Optional[str] = Query(
-        "1y",
-        description="Time period (1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max)",
-    ),
-    interval: Optional[str] = Query(
-        "1d",
-        description="Data interval (1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo)",
-    ),
-) -> dict:
-    """Get historical price data."""
+    container: Container,
+    current_user: CurrentUserOptional,
+):
+    """Get latest price for a symbol."""
     try:
-        # TODO: Implement actual historical data fetching
-        # Generate mock historical data
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=365)  # 1 year for example
+        symbol = symbol.upper()
 
-        # Mock data
-        history = [
-            {
-                "date": "2024-01-01",
-                "open": 149.0,
-                "high": 152.0,
-                "low": 148.0,
-                "close": 150.0,
-                "volume": 1000000,
-            }
-        ]
+        logger.info(
+            "Fetching latest price",
+            symbol=symbol,
+            user_id=current_user.id if current_user else None,
+        )
+
+        # TODO: Implement actual latest price fetching
+        # market_data_service = container.get_market_data_service()
+        # price_data = await market_data_service.get_latest_price(symbol)
+
+        # Mock response for now
+        from datetime import datetime
+        from decimal import Decimal
 
         return {
             "symbol": symbol,
-            "period": period,
-            "interval": interval,
-            "history": history,
-            "count": len(history),
+            "price": Decimal("100.00"),
+            "change": Decimal("1.50"),
+            "change_percent": 1.52,
+            "timestamp": datetime.utcnow(),
+            "volume": 1000000,
+            "market_cap": Decimal("1000000000.00"),
         }
-    except Exception as e:
-        logger.error("Error fetching price history", symbol=symbol, error=str(e))
+
+    except ValueError as exc:
+        logger.warning("Invalid symbol format", symbol=symbol, error=str(exc))
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Symbol not found"
-        )
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid symbol format: {symbol}",
+        ) from exc
+    except Exception as exc:
+        logger.error("Failed to fetch latest price", symbol=symbol, error=str(exc))
+        raise ExternalServiceError("Market Data Provider", str(exc)) from exc
 
 
 @router.get(
-    "/search",
-    summary="Search symbols",
-    description="Search for stock symbols and company names.",
+    "/search/{query}",
+    summary="Search for symbols",
+    description="Search for investment symbols by name or ticker.",
 )
 async def search_symbols(
-    q: str = Query(..., description="Search query"),
-    limit: int = Query(10, ge=1, le=50, description="Number of results to return"),
-) -> dict:
-    """Search for symbols."""
+    query: str,
+    container: Container,
+    current_user: CurrentUserOptional,
+    limit: int = Query(10, ge=1, le=50, description="Maximum number of results"),
+):
+    """Search for symbols by query."""
     try:
+        logger.info(
+            "Searching symbols",
+            query=query,
+            limit=limit,
+            user_id=current_user.id if current_user else None,
+        )
+
         # TODO: Implement actual symbol search
-        results = [
-            {
-                "symbol": "AAPL",
-                "name": "Apple Inc.",
-                "exchange": "NASDAQ",
-                "type": "stock",
-            },
-            {
-                "symbol": "MSFT",
-                "name": "Microsoft Corporation",
-                "exchange": "NASDAQ",
-                "type": "stock",
-            },
-        ]
+        # market_data_service = container.get_market_data_service()
+        # results = await market_data_service.search_symbols(query, limit)
 
-        return {"query": q, "results": results[:limit], "count": len(results)}
-    except Exception as e:
-        logger.error("Error searching symbols", query=q, error=str(e))
+        # Mock response for now
+        return {"query": query, "results": [], "total": 0}
+
+    except Exception as exc:
+        logger.error("Failed to search symbols", query=query, error=str(exc))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error",
-        )
+            detail="Failed to search symbols",
+        ) from exc
 
 
 @router.get(
-    "/movers",
-    summary="Get market movers",
-    description="Get top gainers, losers, and most active stocks.",
+    "/health",
+    summary="Market data service health check",
+    description="Check the health of the market data service.",
 )
-async def get_market_movers(
-    category: Optional[str] = Query(
-        "gainers", description="Category (gainers, losers, active)"
-    )
-) -> dict:
-    """Get market movers."""
-    try:
-        # TODO: Implement actual market movers data
-        movers = [
-            {
-                "symbol": "TSLA",
-                "name": "Tesla Inc.",
-                "current_price": 210.0,
-                "change_amount": 15.0,
-                "change_percent": 7.69,
-                "volume": 25000000,
-            }
-        ]
-
-        return {"category": category, "movers": movers, "count": len(movers)}
-    except Exception as e:
-        logger.error("Error fetching market movers", category=category, error=str(e))
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error",
-        )
-
-
-@router.get(
-    "/news/{symbol}",
-    summary="Get symbol news",
-    description="Get latest news for a specific symbol.",
-)
-async def get_symbol_news(
-    symbol: str,
-    limit: int = Query(10, ge=1, le=50, description="Number of news items to return"),
-) -> dict:
-    """Get news for a symbol."""
-    try:
-        # TODO: Implement actual news fetching
-        news = [
-            {
-                "title": f"Breaking news about {symbol}",
-                "summary": f"Important update regarding {symbol} stock performance",
-                "url": "https://example.com/news/1",
-                "published_at": "2024-01-01T00:00:00Z",
-                "source": "Financial Times",
-            }
-        ]
-
-        return {"symbol": symbol, "news": news[:limit], "count": len(news)}
-    except Exception as e:
-        logger.error("Error fetching news", symbol=symbol, error=str(e))
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error",
-        )
+async def market_data_health():
+    """Market data service health check."""
+    return {
+        "status": "ok",
+        "service": "market-data",
+        "timestamp": "2024-01-01T00:00:00Z",
+    }

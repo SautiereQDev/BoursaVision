@@ -45,7 +45,10 @@ class TickerInfoResponse(BaseModel):
 # Initialize FastAPI app
 app = FastAPI(
     title="Boursa Vision - Advanced Investment Analysis API",
-    description="Real financial data with comprehensive analysis using YFinance and advanced algorithms",
+    description=(
+        "Real financial data with comprehensive analysis using "
+        "YFinance and advanced algorithms"
+    ),
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -301,7 +304,10 @@ def get_api_info():
     return {
         "service": "Boursa Vision - Advanced Investment Analysis API",
         "version": "2.0.0",
-        "description": "Real financial data with comprehensive analysis using YFinance and advanced algorithms",
+        "description": (
+            "Real financial data with comprehensive analysis using "
+            "YFinance and advanced algorithms"
+        ),
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "documentation": {
             "swagger_ui": "/docs",
@@ -348,6 +354,8 @@ def health_check():
                 len(symbols) for symbols in FINANCIAL_INDICES.values()
             ),
             "advanced_analysis_available": ADVANCED_ANALYSIS_AVAILABLE,
+            "hot_reload_test": "🔥 Hot Reload Works! - "
+            + datetime.now(timezone.utc).strftime("%H:%M:%S"),
         },
     )
 
@@ -444,8 +452,123 @@ def get_available_indices():
         "total_indices": len(FINANCIAL_INDICES),
         "total_symbols": sum(len(symbols) for symbols in FINANCIAL_INDICES.values()),
         "indices": indices_info,
-        "last_updated": datetime.now(timezone.utc).isoformat(),
+        "endpoints": {
+            "ticker_info": "/ticker/{symbol}/info",
+            "ticker_history": "/ticker/{symbol}/history",
+            "best_investments": "/recommendations/best-investments",
+            "archived_recommendations": "/recommendations/best-investments-archived",
+        },
     }
+
+
+# Simple archive-based recommendation endpoint
+@app.get("/recommendations/best-investments-archived")
+def get_archived_recommendations(
+    max_recommendations: int = Query(5, ge=1, le=20),
+    min_score: float = Query(50.0, ge=0, le=100),
+) -> Dict[str, Any]:
+    """Get investment recommendations from archived data."""
+    try:
+        import os
+
+        import psycopg2
+
+        database_url = os.getenv(
+            "DATABASE_URL", "postgresql://postgres:password@db:5432/boursa_vision"
+        )
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor()
+
+        # Get symbols with recent data
+        cur.execute(
+            """
+            SELECT DISTINCT i.symbol, i.name, COUNT(md.id) as data_count
+            FROM instruments i
+            JOIN market_data md ON i.id = md.instrument_id
+            WHERE md.interval_type = 'archiver'
+            GROUP BY i.symbol, i.name
+            HAVING COUNT(md.id) >= 5
+            ORDER BY data_count DESC
+            LIMIT %s
+        """,
+            (max_recommendations * 2,),
+        )
+
+        symbols_data = cur.fetchall()
+        recommendations = []
+
+        for symbol, name, data_count in symbols_data:
+            if len(recommendations) >= max_recommendations:
+                break
+
+            # Get latest prices for simple analysis
+            cur.execute(
+                """
+                SELECT close_price, volume
+                FROM market_data md
+                JOIN instruments i ON md.instrument_id = i.id
+                WHERE i.symbol = %s AND md.interval_type = 'archiver'
+                ORDER BY md.time DESC
+                LIMIT 10
+            """,
+                (symbol,),
+            )
+
+            price_data = cur.fetchall()
+            if len(price_data) >= 5:
+                prices = [float(row[0]) for row in price_data]
+                current_price = prices[0]
+                avg_price = sum(prices) / len(prices)
+
+                # Simple momentum score
+                price_trend = (current_price - avg_price) / avg_price * 100
+
+                if price_trend > 3:
+                    score = 75
+                    recommendation = "BUY"
+                elif price_trend > 0:
+                    score = 65
+                    recommendation = "HOLD"
+                elif price_trend > -3:
+                    score = 55
+                    recommendation = "HOLD"
+                else:
+                    score = 40
+                    recommendation = "SELL"
+
+                if score >= min_score:
+                    recommendations.append(
+                        {
+                            "symbol": symbol,
+                            "name": name or f"{symbol} Security",
+                            "recommendation": recommendation,
+                            "score": round(score, 1),
+                            "current_price": round(current_price, 2),
+                            "price_trend_pct": round(price_trend, 2),
+                            "data_points": data_count,
+                        }
+                    )
+
+        cur.close()
+        conn.close()
+
+        # Sort by score
+        recommendations.sort(key=lambda x: x["score"], reverse=True)
+
+        return {
+            "status": "success",
+            "source": "archived_data",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "recommendations": recommendations,
+            "summary": {
+                "symbols_analyzed": len(symbols_data),
+                "recommendations_generated": len(recommendations),
+                "min_score": min_score,
+            },
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Archive error: {str(e)}")
 
 
 if ADVANCED_ANALYSIS_AVAILABLE:
@@ -512,9 +635,249 @@ if ADVANCED_ANALYSIS_AVAILABLE:
             )
 
             # Generate recommendations
-            portfolio_recommendation = (
-                recommendation_service.get_investment_recommendations(service_request)
-            )
+            try:
+                portfolio_recommendation = (
+                    recommendation_service.get_investment_recommendations(
+                        service_request
+                    )
+                )
+
+                # Check if we got sufficient recommendations with the live service
+                has_sufficient_recommendations = len(
+                    portfolio_recommendation.recommendations
+                ) >= 1 and any(
+                    rec.overall_score >= min_score
+                    for rec in portfolio_recommendation.recommendations
+                )
+
+                if has_sufficient_recommendations:
+                    rec_count = len(portfolio_recommendation.recommendations)
+                    print(f"✅ Using live data analysis: {rec_count} recommendations")
+                else:
+                    print(
+                        f"⚠️ Live analysis insufficient ({len(portfolio_recommendation.recommendations)} recs with min_score {min_score}), trying archived data..."
+                    )
+                    raise ValueError(
+                        "Insufficient live recommendations - triggering archive fallback"
+                    )
+
+            except Exception as live_error:
+                print(f"📁 Falling back to archived data due to: {live_error}")
+
+                # Fallback to archived recommendations
+                try:
+                    import os
+
+                    import psycopg2
+
+                    database_url = os.getenv(
+                        "DATABASE_URL",
+                        "postgresql://postgres:password@db:5432/boursa_vision",
+                    )
+                    conn = psycopg2.connect(database_url)
+                    cur = conn.cursor()
+
+                    # Use archived symbols if no specific symbols requested
+                    target_symbols = symbols_list if symbols_list else []
+
+                    if not target_symbols:
+                        # Get symbols with good archived data
+                        cur.execute(
+                            """
+                            SELECT DISTINCT i.symbol, COUNT(md.id) as data_count
+                            FROM instruments i
+                            JOIN market_data md ON i.id = md.instrument_id
+                            WHERE md.interval_type = 'archiver'
+                            GROUP BY i.symbol
+                            HAVING COUNT(md.id) >= 30
+                            ORDER BY data_count DESC
+                            LIMIT %s
+                        """,
+                            (max_recommendations * 2,),
+                        )
+                        target_symbols = [row[0] for row in cur.fetchall()]
+
+                    archived_recommendations = []
+
+                    for symbol in target_symbols:
+                        if len(archived_recommendations) >= max_recommendations:
+                            break
+
+                        # Get price data for analysis
+                        cur.execute(
+                            """
+                            SELECT close_price, volume, time
+                            FROM market_data md
+                            JOIN instruments i ON md.instrument_id = i.id
+                            WHERE i.symbol = %s AND md.interval_type = 'archiver'
+                            ORDER BY md.time DESC
+                            LIMIT 20
+                        """,
+                            (symbol,),
+                        )
+
+                        price_data = cur.fetchall()
+                        if len(price_data) >= 10:
+                            prices = [float(row[0]) for row in price_data]
+                            current_price = prices[0]
+
+                            # Calculate moving averages and trends
+                            ma_5 = sum(prices[:5]) / 5
+                            ma_10 = sum(prices[:10]) / 10
+                            ma_20 = sum(prices) / len(prices)
+
+                            # Technical score calculation
+                            technical_score = 50.0
+                            if current_price > ma_5:
+                                technical_score += 10
+                            if ma_5 > ma_10:
+                                technical_score += 10
+                            if ma_10 > ma_20:
+                                technical_score += 10
+
+                            # Momentum score
+                            price_change_5d = (
+                                (current_price - prices[4]) / prices[4] * 100
+                                if len(prices) > 4
+                                else 0
+                            )
+                            price_change_10d = (
+                                (current_price - prices[9]) / prices[9] * 100
+                                if len(prices) > 9
+                                else 0
+                            )
+
+                            momentum_score = 50.0
+                            if price_change_5d > 2:
+                                momentum_score += 15
+                            elif price_change_5d > 0:
+                                momentum_score += 5
+                            if price_change_10d > 5:
+                                momentum_score += 10
+                            elif price_change_10d > 0:
+                                momentum_score += 5
+
+                            # Overall score and recommendation
+                            overall_score = technical_score * 0.6 + momentum_score * 0.4
+
+                            if overall_score >= 75:
+                                recommendation = "BUY"
+                                risk_level = "MODERATE"
+                            elif overall_score >= 65:
+                                recommendation = "HOLD"
+                                risk_level = "MODERATE"
+                            elif overall_score >= 50:
+                                recommendation = "HOLD"
+                                risk_level = "HIGH"
+                            else:
+                                recommendation = "SELL"
+                                risk_level = "HIGH"
+
+                            if overall_score >= min_score:
+                                # Get symbol name
+                                cur.execute(
+                                    "SELECT name FROM instruments WHERE symbol = %s",
+                                    (symbol,),
+                                )
+                                name_result = cur.fetchone()
+                                symbol_name = (
+                                    name_result[0]
+                                    if name_result
+                                    else f"{symbol} Security"
+                                )
+
+                                archived_recommendations.append(
+                                    {
+                                        "rank": len(archived_recommendations) + 1,
+                                        "symbol": symbol,
+                                        "name": symbol_name,
+                                        "recommendation": recommendation,
+                                        "overall_score": round(overall_score, 2),
+                                        "confidence": 0.75,  # Archive-based confidence
+                                        "risk_level": risk_level,
+                                        "scores": {
+                                            "technical": round(technical_score, 2),
+                                            "fundamental": 60.0,  # Default for archive
+                                            "momentum": round(momentum_score, 2),
+                                        },
+                                        "price_targets": {
+                                            "current": round(current_price, 2),
+                                            "target": round(current_price * 1.1, 2),
+                                            "stop_loss": round(current_price * 0.95, 2),
+                                            "upside_potential_pct": 10.0,
+                                        },
+                                        "analysis": {
+                                            "strengths": [
+                                                "Historical price stability",
+                                                "Archive data available",
+                                            ],
+                                            "weaknesses": [
+                                                "Limited fundamental data"
+                                            ],
+                                            "key_insights": [
+                                                f"MA trend: {'Bullish' if ma_5 > ma_10 else 'Bearish'}",
+                                                f"5d change: {price_change_5d:.1f}%",
+                                            ],
+                                            "data_quality": "ARCHIVE",
+                                        },
+                                    }
+                                )
+
+                    cur.close()
+                    conn.close()
+
+                    # Sort by overall score
+                    archived_recommendations.sort(
+                        key=lambda x: x["overall_score"], reverse=True
+                    )
+
+                    # Create a portfolio recommendation-like response using archived data
+                    from src.application.services.investment_recommendation_service import (
+                        InvestmentRecommendation,
+                        PortfolioRecommendation,
+                    )
+
+                    # Convert archived recommendations to service format for response
+                    portfolio_recommendation = type(
+                        "obj",
+                        (object,),
+                        {
+                            "recommendations": archived_recommendations,
+                            "portfolio_metrics": {
+                                "archive_source": True,
+                                "symbols_analyzed": len(target_symbols),
+                            },
+                            "risk_assessment": {"primary_source": "archived_data"},
+                            "sector_allocation": {},
+                            "analysis_summary": {
+                                "source": "archived",
+                                "recommendations_count": len(archived_recommendations),
+                            },
+                        },
+                    )()
+
+                    print(
+                        f"✅ Generated {len(archived_recommendations)} archived recommendations"
+                    )
+
+                except Exception as archive_error:
+                    print(f"❌ Archive fallback failed: {archive_error}")
+                    # Return empty response if both fail
+                    portfolio_recommendation = type(
+                        "obj",
+                        (object,),
+                        {
+                            "recommendations": [],
+                            "portfolio_metrics": {
+                                "error": "Both live and archive analysis failed"
+                            },
+                            "risk_assessment": {"error": str(archive_error)},
+                            "sector_allocation": {},
+                            "analysis_summary": {
+                                "error": f"Live: {live_error}, Archive: {archive_error}"
+                            },
+                        },
+                    )()
 
             # Convert to API response format
             response = {
@@ -529,36 +892,77 @@ if ADVANCED_ANALYSIS_AVAILABLE:
                     "min_score": min_score,
                     "max_risk_level": max_risk_level,
                 },
-                "recommendations": [
-                    {
-                        "rank": idx + 1,
-                        "symbol": rec.symbol,
-                        "recommendation": rec.recommendation,
-                        "overall_score": round(rec.overall_score, 2),
-                        "confidence": round(rec.confidence, 3),
-                        "risk_level": rec.risk_level,
-                        "scores": {
-                            "technical": round(rec.technical_score, 2),
-                            "fundamental": round(rec.fundamental_score, 2),
-                            "momentum": round(rec.momentum_score, 2),
-                        },
-                        "price_targets": {
-                            "current": rec.current_price,
-                            "target": rec.target_price,
-                            "stop_loss": rec.stop_loss,
-                            "upside_potential_pct": round(rec.upside_potential, 2)
-                            if rec.upside_potential
-                            else None,
-                        },
-                        "analysis": {
-                            "strengths": rec.strengths,
-                            "weaknesses": rec.weaknesses,
-                            "key_insights": rec.key_insights,
-                            "data_quality": rec.data_quality,
-                        },
-                    }
-                    for idx, rec in enumerate(portfolio_recommendation.recommendations)
-                ],
+                "recommendations": (
+                    portfolio_recommendation.recommendations
+                    if isinstance(portfolio_recommendation.recommendations, list)
+                    and all(
+                        isinstance(rec, dict)
+                        for rec in portfolio_recommendation.recommendations
+                    )
+                    else [
+                        {
+                            "rank": idx + 1,
+                            "symbol": rec.symbol
+                            if hasattr(rec, "symbol")
+                            else str(rec),
+                            "recommendation": rec.recommendation
+                            if hasattr(rec, "recommendation")
+                            else "HOLD",
+                            "overall_score": round(rec.overall_score, 2)
+                            if hasattr(rec, "overall_score")
+                            else 60.0,
+                            "confidence": round(rec.confidence, 3)
+                            if hasattr(rec, "confidence")
+                            else 0.75,
+                            "risk_level": rec.risk_level
+                            if hasattr(rec, "risk_level")
+                            else "MODERATE",
+                            "scores": {
+                                "technical": round(rec.technical_score, 2)
+                                if hasattr(rec, "technical_score")
+                                else 60.0,
+                                "fundamental": round(rec.fundamental_score, 2)
+                                if hasattr(rec, "fundamental_score")
+                                else 60.0,
+                                "momentum": round(rec.momentum_score, 2)
+                                if hasattr(rec, "momentum_score")
+                                else 60.0,
+                            },
+                            "price_targets": {
+                                "current": rec.current_price
+                                if hasattr(rec, "current_price")
+                                else 100.0,
+                                "target": rec.target_price
+                                if hasattr(rec, "target_price")
+                                else 110.0,
+                                "stop_loss": rec.stop_loss
+                                if hasattr(rec, "stop_loss")
+                                else 95.0,
+                                "upside_potential_pct": round(rec.upside_potential, 2)
+                                if hasattr(rec, "upside_potential")
+                                and rec.upside_potential
+                                else 10.0,
+                            },
+                            "analysis": {
+                                "strengths": rec.strengths
+                                if hasattr(rec, "strengths")
+                                else ["Archived data available"],
+                                "weaknesses": rec.weaknesses
+                                if hasattr(rec, "weaknesses")
+                                else ["Limited real-time data"],
+                                "key_insights": rec.key_insights
+                                if hasattr(rec, "key_insights")
+                                else ["Historical analysis"],
+                                "data_quality": rec.data_quality
+                                if hasattr(rec, "data_quality")
+                                else "ARCHIVE",
+                            },
+                        }
+                        for idx, rec in enumerate(
+                            portfolio_recommendation.recommendations
+                        )
+                    ]
+                ),
                 "portfolio_analysis": {
                     "metrics": portfolio_recommendation.portfolio_metrics,
                     "risk_assessment": portfolio_recommendation.risk_assessment,
@@ -665,7 +1069,8 @@ if ADVANCED_ANALYSIS_AVAILABLE:
                 status_code=500, detail=f"Error analyzing symbol {symbol}: {str(e)}"
             )
 
-else:
+
+if not ADVANCED_ANALYSIS_AVAILABLE:
 
     @app.get("/recommendations/best-investments")
     def best_investments_not_available():

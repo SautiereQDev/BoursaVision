@@ -112,6 +112,35 @@ class GlobalSettings(BaseSettings):
     real_time_data_cache_ttl: int = Field(default=60, env="REAL_TIME_DATA_CACHE_TTL")
 
     # =====================================
+    # MARKET DATA ARCHIVAL
+    # =====================================
+    enable_automatic_archival: bool = Field(
+        default=True, env="ENABLE_AUTOMATIC_ARCHIVAL"
+    )
+
+    # Scheduling configuration
+    archival_frequent_interval: int = Field(default=5, env="ARCHIVAL_FREQUENT_INTERVAL")
+    archival_daily_hour: int = Field(default=18, env="ARCHIVAL_DAILY_HOUR")
+    archival_weekly_day: int = Field(default=0, env="ARCHIVAL_WEEKLY_DAY")
+    archival_weekly_hour: int = Field(default=20, env="ARCHIVAL_WEEKLY_HOUR")
+
+    # Batch processing
+    archival_batch_size: int = Field(default=25, env="ARCHIVAL_BATCH_SIZE")
+    archival_concurrent_workers: int = Field(
+        default=2, env="ARCHIVAL_CONCURRENT_WORKERS"
+    )
+    archival_request_delay: float = Field(default=0.2, env="ARCHIVAL_REQUEST_DELAY")
+
+    # Data retention
+    archival_retention_days: int = Field(default=1095, env="ARCHIVAL_RETENTION_DAYS")
+    archival_cleanup_enabled: bool = Field(default=True, env="ARCHIVAL_CLEANUP_ENABLED")
+
+    # Error handling
+    archival_max_retries: int = Field(default=3, env="ARCHIVAL_MAX_RETRIES")
+    archival_retry_delay: int = Field(default=60, env="ARCHIVAL_RETRY_DELAY")
+    archival_error_threshold: int = Field(default=20, env="ARCHIVAL_ERROR_THRESHOLD")
+
+    # =====================================
     # BACKGROUND TASKS
     # =====================================
     celery_broker_url: Optional[str] = Field(default=None, env="CELERY_BROKER_URL")

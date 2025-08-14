@@ -7,6 +7,32 @@
 # Variables
 # ========================================
 
+.PHONY: archive
+archive: ## Archive market data once
+	@echo "$(CYAN)📊 Archiving market data...$(NC)"
+	@./scripts/market-archiver.sh archive
+
+.PHONY: archive-stats
+archive-stats: ## Show archive statistics
+	@echo "$(CYAN)📈 Archive statistics:$(NC)"
+	@./scripts/market-archiver.sh stats
+
+.PHONY: archive-continuous
+archive-continuous: ## Start continuous archiving (every 24 hours)
+	@echo "$(CYAN)🔄 Starting continuous archiving...$(NC)"
+	@./scripts/market-archiver.sh monitor
+
+.PHONY: archive-test
+archive-test: ## Test archiving functionality
+	@echo "$(CYAN)🧪 Testing archive functionality...$(NC)"
+	@./scripts/market-archiver.sh quality========
+# Docker-only execution - No local commands
+# Supports: CAC40, NASDAQ100, FTSE100, DAX40
+
+# ========================================
+# Variables
+# ========================================
+
 # Colors for terminal output
 RED := \033[0;31m
 GREEN := \033[0;32m
@@ -57,7 +83,7 @@ api: ## Start Production API with real YFinance data (simple Docker)
 		-e API_PORT=8000 \
 		-e ENABLED_MARKET_INDICES=cac40,nasdaq100,ftse100,dax40 \
 		boursa-api \
-		sh -c "poetry run python main.py"
+		sh -c "poetry run python -m boursa_vision.main"
 	@echo "$(GREEN)✅ Production API started successfully!$(NC)"
 	@echo "$(BLUE)📊 API Endpoint: http://localhost:8000$(NC)"
 	@echo "$(BLUE)💚 Health Check: http://localhost:8000/health$(NC)"
@@ -110,7 +136,84 @@ api-local: ## Start Production API locally (same code as Docker)
 	@echo "$(BLUE)📊 API will start on: http://localhost:8001$(NC)"
 	@echo "$(BLUE)📚 Documentation: http://localhost:8001/docs$(NC)"
 	@echo "$(YELLOW)🔄 Hot-reload enabled$(NC)"
-	@cd backend && API_PORT=8001 poetry run python main.py
+	@cd backend && API_PORT=8001 poetry run python -m boursa_vision.main
+
+.PHONY: api-dev
+api-dev: ## Start Development API with Hot-reload
+	@echo "$(YELLOW)🔥 Starting Development API with Hot-reload...$(NC)"
+	@echo "$(BLUE)📊 API will start on: http://localhost:8001$(NC)"
+	@echo "$(BLUE)📚 Documentation: http://localhost:8001/docs$(NC)"
+	@echo "$(YELLOW)🔄 Hot-reload enabled$(NC)"
+	@cd backend && API_PORT=8001 poetry run python -m boursa_vision.main
+
+# ========================================
+# Hot Reload Development Commands
+# ========================================
+
+.PHONY: dev
+dev: ## Start all services with Hot Reload (Docker)
+	@echo "$(YELLOW)🔥 Starting Development with Hot Reload...$(NC)"
+	@docker/dev-hot-reload.sh start
+
+.PHONY: dev-restart
+dev-restart: ## Restart backend with Hot Reload
+	@echo "$(YELLOW)🔄 Restarting backend with Hot Reload...$(NC)"
+	@docker/dev-hot-reload.sh restart
+
+.PHONY: dev-logs
+dev-logs: ## Show Hot Reload development logs
+	@echo "$(YELLOW)📋 Showing Hot Reload logs...$(NC)"
+	@docker/dev-hot-reload.sh logs
+
+.PHONY: dev-shell
+dev-shell: ## Open shell in development backend container
+	@echo "$(YELLOW)🐚 Opening shell in backend container...$(NC)"
+	@docker/dev-hot-reload.sh shell
+
+.PHONY: dev-stop
+dev-stop: ## Stop all development services
+	@echo "$(YELLOW)🛑 Stopping all development services...$(NC)"
+	@docker/dev-hot-reload.sh stop
+
+.PHONY: dev-clean
+dev-clean: ## Clean all development containers and volumes
+	@echo "$(YELLOW)🧹 Cleaning development environment...$(NC)"
+	@docker/dev-hot-reload.sh clean
+
+.PHONY: dev-test
+dev-test: ## Test development API
+	@echo "$(YELLOW)🧪 Testing development API...$(NC)"
+	@docker/dev-hot-reload.sh test
+
+.PHONY: archiver
+archiver: ## Start market data archiver services
+	@echo "$(YELLOW)📊 Starting Market Data Archiver...$(NC)"
+	@echo "$(BLUE)🔄 This will start Celery worker and beat scheduler$(NC)"
+	@cd docker && docker-compose -f docker-compose.dev.yml up -d celery-worker celery-beat
+	@echo "$(GREEN)✅ Archiver services started$(NC)"
+	@echo "$(BLUE)📋 Check logs: make archiver-logs$(NC)"
+
+.PHONY: archiver-logs
+archiver-logs: ## Show archiver logs
+	@echo "$(YELLOW)📋 Market Data Archiver Logs$(NC)"
+	@cd docker && docker-compose -f docker-compose.dev.yml logs -f celery-worker celery-beat
+
+.PHONY: archiver-status
+archiver-status: ## Show archiver status
+	@echo "$(YELLOW)📊 Market Data Archiver Status$(NC)"
+	@cd docker && docker-compose -f docker-compose.dev.yml ps celery-worker celery-beat
+
+.PHONY: archiver-stop
+archiver-stop: ## Stop archiver services
+	@echo "$(YELLOW)⏹️  Stopping Market Data Archiver...$(NC)"
+	@cd docker && docker-compose -f docker-compose.dev.yml stop celery-worker celery-beat
+	@echo "$(GREEN)✅ Archiver services stopped$(NC)"
+
+.PHONY: archiver-restart
+archiver-restart: ## Restart archiver services
+	@$(MAKE) archiver-stop
+	@$(MAKE) archiver
+	@echo "$(GREEN)🔄 Archiver services restarted$(NC)"
 
 .PHONY: api-shell
 api-shell: ## Access Production API container shell

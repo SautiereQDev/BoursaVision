@@ -37,3 +37,5 @@ alembic/versions/*.py
 
 # Ignore Sphinx build files
 docs/_build/
+
+.venv

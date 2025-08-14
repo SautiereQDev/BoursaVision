@@ -304,27 +304,25 @@ class PrecisionPolicies(Base, DatabaseMixin, TimestampMixin):
 
 
 # Vue matérialisée pour les requêtes fréquentes
-"""
--- Vue matérialisée pour les métriques en temps réel
-CREATE MATERIALIZED VIEW market_data_cache_summary AS
-SELECT 
-    symbol,
-    interval_type,
-    precision_level,
-    COUNT(*) as total_points,
-    MIN(time) as oldest_data,
-    MAX(time) as newest_data,
-    AVG(access_count) as avg_access_count,
-    SUM(CASE WHEN is_significant_movement THEN 1 ELSE 0 END) as significant_movements,
-    AVG(volume) as avg_volume,
-    EXTRACT(EPOCH FROM (MAX(time) - MIN(time))) / 3600 as timespan_hours
-FROM market_data_cache
-GROUP BY symbol, interval_type, precision_level;
-
--- Index sur la vue
-CREATE UNIQUE INDEX idx_cache_summary_pk 
-ON market_data_cache_summary (symbol, interval_type, precision_level);
-
--- Rafraîchissement automatique (à configurer avec un cron job)
--- REFRESH MATERIALIZED VIEW CONCURRENTLY market_data_cache_summary;
-"""
+# -- Vue matérialisée pour les métriques en temps réel
+# CREATE MATERIALIZED VIEW market_data_cache_summary AS
+# SELECT 
+#     symbol,
+#     interval_type,
+#     precision_level,
+#     COUNT(*) as total_points,
+#     MIN(time) as oldest_data,
+#     MAX(time) as newest_data,
+#     AVG(access_count) as avg_access_count,
+#     SUM(CASE WHEN is_significant_movement THEN 1 ELSE 0 END) as significant_movements,
+#     AVG(volume) as avg_volume,
+#     EXTRACT(EPOCH FROM (MAX(time) - MIN(time))) / 3600 as timespan_hours
+# FROM market_data_cache
+# GROUP BY symbol, interval_type, precision_level;
+#
+# -- Index sur la vue
+# CREATE UNIQUE INDEX idx_cache_summary_pk
+# ON market_data_cache_summary (symbol, interval_type, precision_level);
+#
+# -- Rafraîchissement automatique (à configurer avec un cron job)
+# -- REFRESH MATERIALIZED VIEW CONCURRENTLY market_data_cache_summary;
