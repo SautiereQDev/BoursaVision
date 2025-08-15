@@ -34,7 +34,7 @@ import src.infrastructure.persistence.models.portfolios  # noqa: E402,F401
 import src.infrastructure.persistence.models.system  # noqa: E402,F401
 import src.infrastructure.persistence.models.transactions  # noqa: E402,F401
 import src.infrastructure.persistence.models.users  # noqa: E402,F401
-from src.infrastructure.persistence.models.base import Base  # noqa: E402
+from boursa_vision.infrastructure.persistence.models.base import Base  # noqa: E402
 
 # Set your metadata
 # If you have multiple Base classes, merge their metadata

@@ -9,11 +9,11 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func
 
-from src.domain.entities.user import User as DomainUser
-from src.domain.entities.user import UserRole
-from src.domain.repositories.user_repository import IUserRepository
-from src.infrastructure.persistence.mappers_new import UserMapper
-from src.infrastructure.persistence.models.users import User
+from boursa_vision.domain.entities.user import User as DomainUser
+from boursa_vision.domain.entities.user import UserRole
+from boursa_vision.domain.repositories.user_repository import IUserRepository
+from boursa_vision.infrastructure.persistence.mappers_new import UserMapper
+from boursa_vision.infrastructure.persistence.models.users import User
 
 
 class SQLAlchemyUserRepository(IUserRepository):

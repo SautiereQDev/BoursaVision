@@ -6,14 +6,16 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from src.domain.entities.market_data import DataSource
-from src.domain.entities.market_data import MarketData as DomainMarketData
-from src.domain.entities.market_data import Timeframe
-from src.domain.entities.portfolio import Portfolio as DomainPortfolio
-from src.domain.entities.user import User as DomainUser
-from src.domain.repositories.market_data_repository import IMarketDataRepository
-from src.domain.repositories.portfolio_repository import IPortfolioRepository
-from src.domain.repositories.user_repository import IUserRepository
+from boursa_vision.domain.entities.market_data import DataSource
+from boursa_vision.domain.entities.market_data import MarketData as DomainMarketData
+from boursa_vision.domain.entities.market_data import Timeframe
+from boursa_vision.domain.entities.portfolio import Portfolio as DomainPortfolio
+from boursa_vision.domain.entities.user import User as DomainUser
+from boursa_vision.domain.repositories.market_data_repository import (
+    IMarketDataRepository,
+)
+from boursa_vision.domain.repositories.portfolio_repository import IPortfolioRepository
+from boursa_vision.domain.repositories.user_repository import IUserRepository
 
 
 class MockUserRepository(IUserRepository):

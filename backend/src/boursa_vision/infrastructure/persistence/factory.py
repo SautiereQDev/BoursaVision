@@ -7,9 +7,8 @@ enabling easy dependency injection and testability.
 
 from typing import Protocol
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from application.exceptions import FactoryProviderError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...domain.repositories.investment_repository import IInvestmentRepository
 from ...domain.repositories.market_data_repository import IMarketDataRepository

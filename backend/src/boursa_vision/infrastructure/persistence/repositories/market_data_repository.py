@@ -8,11 +8,13 @@ from typing import Dict, List, Optional
 from sqlalchemy import and_, desc, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.domain.entities.market_data import MarketData as DomainMarketData
-from src.domain.repositories.market_data_repository import IMarketDataRepository
-from src.infrastructure.persistence.mappers import MapperFactory
-from src.infrastructure.persistence.models.market_data import MarketData
-from src.infrastructure.persistence.sqlalchemy.database import get_db_session
+from boursa_vision.domain.entities.market_data import MarketData as DomainMarketData
+from boursa_vision.domain.repositories.market_data_repository import (
+    IMarketDataRepository,
+)
+from boursa_vision.infrastructure.persistence.mappers import MapperFactory
+from boursa_vision.infrastructure.persistence.models.market_data import MarketData
+from boursa_vision.infrastructure.persistence.sqlalchemy.database import get_db_session
 
 
 class SQLAlchemyMarketDataRepository(IMarketDataRepository):

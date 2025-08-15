@@ -10,11 +10,11 @@ from sqlalchemy import and_, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.domain.entities.portfolio import Portfolio as DomainPortfolio
-from src.domain.repositories.portfolio_repository import IPortfolioRepository
-from src.infrastructure.persistence.mappers import MapperFactory
-from src.infrastructure.persistence.models.portfolios import Portfolio
-from src.infrastructure.persistence.sqlalchemy.database import get_db_session
+from boursa_vision.domain.entities.portfolio import Portfolio as DomainPortfolio
+from boursa_vision.domain.repositories.portfolio_repository import IPortfolioRepository
+from boursa_vision.infrastructure.persistence.mappers import MapperFactory
+from boursa_vision.infrastructure.persistence.models.portfolios import Portfolio
+from boursa_vision.infrastructure.persistence.sqlalchemy.database import get_db_session
 
 
 class SQLAlchemyPortfolioRepository(IPortfolioRepository):

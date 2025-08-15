@@ -8,19 +8,21 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.domain.repositories.market_data_repository import IMarketDataRepository
-from src.domain.repositories.portfolio_repository import IPortfolioRepository
-from src.domain.repositories.user_repository import IUserRepository
-from src.infrastructure.persistence.repositories.market_data_repository import (
+from boursa_vision.domain.repositories.market_data_repository import (
+    IMarketDataRepository,
+)
+from boursa_vision.domain.repositories.portfolio_repository import IPortfolioRepository
+from boursa_vision.domain.repositories.user_repository import IUserRepository
+from boursa_vision.infrastructure.persistence.repositories.market_data_repository import (
     SQLAlchemyMarketDataRepository,
 )
-from src.infrastructure.persistence.repositories.portfolio_repository import (
+from boursa_vision.infrastructure.persistence.repositories.portfolio_repository import (
     SQLAlchemyPortfolioRepository,
 )
-from src.infrastructure.persistence.repositories.user_repository import (
+from boursa_vision.infrastructure.persistence.repositories.user_repository import (
     SQLAlchemyUserRepository,
 )
-from src.infrastructure.persistence.sqlalchemy.database import get_db_manager
+from boursa_vision.infrastructure.persistence.sqlalchemy.database import get_db_manager
 
 
 class IUnitOfWork(ABC):

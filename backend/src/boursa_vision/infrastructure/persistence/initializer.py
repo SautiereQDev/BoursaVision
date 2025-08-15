@@ -7,11 +7,11 @@ import asyncio
 import logging
 from typing import Optional
 
-from src.infrastructure.persistence.repository_factory import (
+from boursa_vision.infrastructure.persistence.repository_factory import (
     SQLAlchemyRepositoryFactory,
     configure_repositories,
 )
-from src.infrastructure.persistence.sqlalchemy.database import (
+from boursa_vision.infrastructure.persistence.sqlalchemy.database import (
     DatabaseConfig,
     DatabaseManager,
     TimescaleDBManager,
@@ -19,7 +19,7 @@ from src.infrastructure.persistence.sqlalchemy.database import (
     get_timescale_manager,
     init_database,
 )
-from src.infrastructure.persistence.unit_of_work import (
+from boursa_vision.infrastructure.persistence.unit_of_work import (
     UnitOfWorkFactory,
     init_uow_factory,
 )

@@ -306,7 +306,7 @@ class PrecisionPolicies(Base, DatabaseMixin, TimestampMixin):
 # Vue matérialisée pour les requêtes fréquentes
 # -- Vue matérialisée pour les métriques en temps réel
 # CREATE MATERIALIZED VIEW market_data_cache_summary AS
-# SELECT 
+# SELECT
 #     symbol,
 #     interval_type,
 #     precision_level,

@@ -7,6 +7,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
+from application.exceptions import DatabaseNotInitializedError
 from sqlalchemy import MetaData, event, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import (
@@ -16,8 +17,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.pool import NullPool, QueuePool
-
-from application.exceptions import DatabaseNotInitializedError
 
 from ..models.base import Base
 

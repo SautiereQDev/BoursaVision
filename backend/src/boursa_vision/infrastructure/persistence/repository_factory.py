@@ -6,9 +6,11 @@ Implements the Abstract Factory pattern for repository creation.
 from abc import ABC, abstractmethod
 from typing import Dict, Optional, Type
 
-from src.domain.repositories.market_data_repository import IMarketDataRepository
-from src.domain.repositories.portfolio_repository import IPortfolioRepository
-from src.domain.repositories.user_repository import IUserRepository
+from boursa_vision.domain.repositories.market_data_repository import (
+    IMarketDataRepository,
+)
+from boursa_vision.domain.repositories.portfolio_repository import IPortfolioRepository
+from boursa_vision.domain.repositories.user_repository import IUserRepository
 
 
 class IRepositoryFactory(ABC):
@@ -32,7 +34,7 @@ class SQLAlchemyRepositoryFactory(IRepositoryFactory):
 
     def create_user_repository(self) -> IUserRepository:
         """Create SQLAlchemy user repository."""
-        from src.infrastructure.persistence.repositories.user_repository import (
+        from boursa_vision.infrastructure.persistence.repositories.user_repository import (
             SQLAlchemyUserRepository,
         )
 
@@ -40,7 +42,7 @@ class SQLAlchemyRepositoryFactory(IRepositoryFactory):
 
     def create_portfolio_repository(self) -> IPortfolioRepository:
         """Create SQLAlchemy portfolio repository."""
-        from src.infrastructure.persistence.repositories.portfolio_repository import (
+        from boursa_vision.infrastructure.persistence.repositories.portfolio_repository import (
             SQLAlchemyPortfolioRepository,
         )
 
@@ -48,7 +50,7 @@ class SQLAlchemyRepositoryFactory(IRepositoryFactory):
 
     def create_market_data_repository(self) -> IMarketDataRepository:
         """Create SQLAlchemy market data repository."""
-        from src.infrastructure.persistence.repositories.market_data_repository import (
+        from boursa_vision.infrastructure.persistence.repositories.market_data_repository import (
             SQLAlchemyMarketDataRepository,
         )
 

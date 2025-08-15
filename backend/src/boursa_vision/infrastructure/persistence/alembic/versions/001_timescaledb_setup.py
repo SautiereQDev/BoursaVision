@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy import text
 
 from alembic import op
-from src.infrastructure.persistence.alembic.timescaledb_utils import (
+from boursa_vision.infrastructure.persistence.alembic.timescaledb_utils import (
     add_compression_policy,
     add_retention_policy,
     create_hypertable,
