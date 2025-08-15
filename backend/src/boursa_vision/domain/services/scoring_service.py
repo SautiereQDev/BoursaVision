@@ -8,7 +8,7 @@ Provides scoring strategies for investments and other scorable entities.
 from abc import ABC, abstractmethod
 from typing import Protocol
 
-from src.domain.entities.investment import Investment
+from boursa_vision.domain.entities.investment import Investment
 
 
 class Scorable(Protocol):

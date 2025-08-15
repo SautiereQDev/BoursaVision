@@ -18,8 +18,8 @@ from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
 
-from src.domain.events.portfolio_events import InvestmentCreatedEvent
-from src.domain.value_objects.money import Currency, Money
+from boursa_vision.domain.events.portfolio_events import InvestmentCreatedEvent
+from boursa_vision.domain.value_objects.money import Currency, Money
 
 from .base import AggregateRoot
 
@@ -375,7 +375,7 @@ class Investment(AggregateRoot):  # pylint: disable=too-many-instance-attributes
 
     def generate_signal(self):
         """Generate a signal based on the investment's data."""
-        from src.domain.value_objects.signal import SignalAction as VOAction
+        from boursa_vision.domain.value_objects.signal import SignalAction as VOAction
 
         if not self.fundamental_data or not self.technical_data:
             return VOAction.HOLD  # Default to HOLD if data is missing

@@ -57,7 +57,7 @@ class PerformanceAnalyzerService:
         risk_free_rate=0.02,
     ):
         """Stub: returns default PerformanceMetrics for test compatibility."""
-        from src.domain.value_objects.money import Currency, Money
+        from boursa_vision.domain.value_objects.money import Currency, Money
 
         return PerformanceMetrics(
             total_value=Money(10000, Currency.USD),
