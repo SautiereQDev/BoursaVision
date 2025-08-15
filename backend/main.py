@@ -71,7 +71,7 @@ def create_app():
         setup_paths()
 
         # Import de l'application
-        from fastapi_yfinance import app
+        from boursa_vision.presentation.api.v1.market_api import app
 
         print("✅ Application FastAPI chargée avec succès")
         return app
@@ -100,31 +100,15 @@ def main():
             # Mode reload nécessite une chaîne d'import
             print("🔄 Mode développement avec rechargement automatique")
 
-            # Détecter si on est dans Docker pour ajuster le chemin de reload
-            is_docker = (
-                os.path.exists("/.dockerenv") or os.getenv("DOCKER_ENV") == "true"
+            # Pour reload, on utilise la chaîne d'import
+            uvicorn.run(
+                "boursa_vision.presentation.api.v1.market_api:app",
+                host=config["host"],
+                port=config["port"],
+                reload=True,
+                reload_dirs=["src/"],
+                log_level="debug",
             )
-
-            if is_docker:
-                # Dans Docker, on surveille /app/src
-                uvicorn.run(
-                    "src.fastapi_yfinance:app",
-                    host=config["host"],
-                    port=config["port"],
-                    reload=True,
-                    reload_dirs=["/app/src"],
-                    log_level="debug",
-                )
-            else:
-                # Localement, on surveille src/
-                uvicorn.run(
-                    "src.fastapi_yfinance:app",
-                    host=config["host"],
-                    port=config["port"],
-                    reload=True,
-                    reload_dirs=["src/"],
-                    log_level="debug",
-                )
         else:
             # Mode production avec l'objet app directement
             print("🏭 Mode production sans rechargement")
