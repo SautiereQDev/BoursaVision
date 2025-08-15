@@ -33,8 +33,8 @@ except ImportError:
     np = None
     YF_AVAILABLE = False
 
-from src.domain.entities.investment import InvestmentSector, MarketCap
-from src.domain.value_objects.money import Currency, Money
+from boursa_vision.domain.entities.investment import InvestmentSector, MarketCap
+from boursa_vision.domain.value_objects.money import Currency, Money
 
 logger = logging.getLogger(__name__)
 

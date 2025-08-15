@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Optional
 from uuid import UUID
 
-from src.application.common import ICommand
+from boursa_vision.application.common import ICommand
 
 
 @dataclass(frozen=True)

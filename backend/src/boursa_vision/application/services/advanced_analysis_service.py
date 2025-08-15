@@ -11,8 +11,12 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 
-from src.domain.entities.investment import FundamentalData, Investment, TechnicalData
-from src.domain.value_objects.money import Money
+from boursa_vision.domain.entities.investment import (
+    FundamentalData,
+    Investment,
+    TechnicalData,
+)
+from boursa_vision.domain.value_objects.money import Money
 
 
 class AnalysisStrategy(ABC):

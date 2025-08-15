@@ -200,10 +200,10 @@ class ArchiveEnhancedAdvancedAnalyzer:
 def patch_investment_recommendation_service():
     """Patch the existing service to use archive-enhanced analyzer"""
     try:
-        from src.application.services.advanced_analysis_service import (
+        from boursa_vision.application.services.advanced_analysis_service import (
             AdvancedInvestmentAnalyzer,
         )
-        from src.application.services.investment_recommendation_service import (
+        from boursa_vision.application.services.investment_recommendation_service import (
             InvestmentRecommendationService,
         )
 
