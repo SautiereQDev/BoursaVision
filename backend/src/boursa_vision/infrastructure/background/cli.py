@@ -18,8 +18,10 @@ import click
 backend_dir = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from src.core.config import get_settings
-from src.infrastructure.background.market_data_archiver import MarketDataArchiver
+from boursa_vision.core.config import get_settings
+from boursa_vision.infrastructure.background.market_data_archiver import (
+    MarketDataArchiver,
+)
 
 # Configuration du logging
 logging.basicConfig(
@@ -212,7 +214,7 @@ def worker():
     """Start a Celery worker for background tasks."""
     try:
         # Import Celery ici pour éviter les erreurs si Celery n'est pas installé
-        from src.infrastructure.background.celery_app import celery_app
+        from boursa_vision.infrastructure.background.celery_app import celery_app
 
         logger.info("Starting Celery worker...")
         click.echo("🚀 Starting Celery worker for market data archival...")
@@ -244,7 +246,7 @@ def worker():
 def beat():
     """Start Celery beat scheduler for automatic archival."""
     try:
-        from src.infrastructure.background.celery_app import celery_app
+        from boursa_vision.infrastructure.background.celery_app import celery_app
 
         logger.info("Starting Celery beat scheduler...")
         click.echo("⏰ Starting Celery beat scheduler...")
