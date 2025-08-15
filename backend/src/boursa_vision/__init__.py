@@ -9,11 +9,21 @@ __version__ = "2.0.0"
 __author__ = "Boursa Vision Team"
 __email__ = "contact@boursa-vision.com"
 
-# Core exports
-from .core.config import get_settings
-from .core.exceptions import BoursaVisionError
-
+# Core exports - Import only when needed to avoid circular dependencies
 __all__ = [
     "get_settings",
     "BoursaVisionError",
 ]
+
+
+def get_settings():
+    """Lazy import to avoid dependency issues."""
+    from .core.config import get_settings as _get_settings
+
+    return _get_settings()
+
+
+class BoursaVisionError(Exception):
+    """Base exception for Boursa Vision errors."""
+
+    pass
