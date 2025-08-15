@@ -15,7 +15,7 @@ echo "========================================"
 archive_data() {
     echo "🚀 Starting market data archival..."
     
-    if docker exec boursa-backend poetry run python -m boursa_vision.application.services.archiving.market_archiver; then
+    if docker exec boursa-backend /bin/bash -c "cd /app && PYTHONPATH=/app/src poetry run python -m boursa_vision.application.services.archiving.market_archiver"; then
         echo "✅ Market data archival completed successfully"
         return 0
     else
