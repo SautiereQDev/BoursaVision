@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 
 # Import our advanced analysis services
 try:
-    from src.application.services.investment_recommendation_service import (
+    from boursa_vision.application.services.investment_recommendation_service import (
         InvestmentRecommendationService,
         PortfolioRecommendation,
         RecommendationRequest,
@@ -592,7 +592,7 @@ if ADVANCED_ANALYSIS_AVAILABLE:
             None, description="Comma-separated sectors to exclude"
         ),
         min_score: float = Query(
-            60.0, ge=0, le=100, description="Minimum investment score"
+            40.0, ge=0, le=100, description="Minimum investment score"
         ),
         max_risk_level: str = Query(
             "HIGH",
@@ -811,9 +811,7 @@ if ADVANCED_ANALYSIS_AVAILABLE:
                                                 "Historical price stability",
                                                 "Archive data available",
                                             ],
-                                            "weaknesses": [
-                                                "Limited fundamental data"
-                                            ],
+                                            "weaknesses": ["Limited fundamental data"],
                                             "key_insights": [
                                                 f"MA trend: {'Bullish' if ma_5 > ma_10 else 'Bearish'}",
                                                 f"5d change: {price_change_5d:.1f}%",
@@ -832,7 +830,7 @@ if ADVANCED_ANALYSIS_AVAILABLE:
                     )
 
                     # Create a portfolio recommendation-like response using archived data
-                    from src.application.services.investment_recommendation_service import (
+                    from boursa_vision.application.services.investment_recommendation_service import (
                         InvestmentRecommendation,
                         PortfolioRecommendation,
                     )
