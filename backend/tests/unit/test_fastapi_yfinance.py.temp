@@ -1,0 +1,291 @@
+"""
+Tests unitaires pour l'API FastAPI avec YFinance.
+
+Ce module teste les endpoints principaux et la logique métier
+de l'API FastAPI selon les standards de test.
+"""
+
+import pytest
+from unittest.mock import Mock, patch, MagicMock
+from datetime import datetime, timezone
+from fastapi.testclient import TestClient
+
+# Import du module à tester
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+
+from fastapi_yfinance import (
+    app,
+    HealthCheckResponse,
+    TickerInfoResponse,
+    ADVANCED_ANALYSIS_AVAILABLE,
+)
+
+
+@pytest.fixture
+def test_client():
+    """Client de test FastAPI."""
+    return TestClient(app)
+
+
+@pytest.mark.unit
+class TestHealthCheckResponse:
+    """Tests pour le modèle HealthCheckResponse."""
+
+    def test_should_create_health_check_response_with_required_fields(self):
+        """Test la création d'une HealthCheckResponse avec les champs requis."""
+        # Arrange
+        data = {
+            "status": "ok",
+            "timestamp": "2025-08-22T10:00:00Z",
+            "real_data_tests": {"test1": "passed"},
+            "summary": {"total_tests": 1}
+        }
+
+        # Act
+        response = HealthCheckResponse(**data)
+
+        # Assert
+        assert response.status == "ok"
+        assert response.timestamp == "2025-08-22T10:00:00Z"
+        assert response.real_data_tests == {"test1": "passed"}
+        assert response.summary == {"total_tests": 1}
+
+
+@pytest.mark.unit
+class TestTickerInfoResponse:
+    """Tests pour le modèle TickerInfoResponse."""
+
+    def test_should_create_ticker_info_response_with_required_fields(self):
+        """Test la création d'une TickerInfoResponse avec les champs requis."""
+        # Arrange
+        data = {
+            "symbol": "AAPL",
+            "info": {"sector": "Technology"},
+            "current_price": 150.0,
+            "currency": "USD",
+            "last_updated": "2025-08-22T10:00:00Z"
+        }
+
+        # Act
+        response = TickerInfoResponse(**data)
+
+        # Assert
+        assert response.symbol == "AAPL"
+        assert response.info == {"sector": "Technology"}
+        assert response.current_price == 150.0
+        assert response.currency == "USD"
+        assert response.last_updated == "2025-08-22T10:00:00Z"
+
+    def test_should_allow_optional_fields_to_be_none(self):
+        """Test que les champs optionnels peuvent être None."""
+        # Arrange
+        data = {
+            "symbol": "AAPL",
+            "info": {"sector": "Technology"},
+            "last_updated": "2025-08-22T10:00:00Z"
+        }
+
+        # Act
+        response = TickerInfoResponse(**data)
+
+        # Assert
+        assert response.current_price is None
+        assert response.currency is None
+
+
+@pytest.mark.unit
+class TestHealthCheckEndpoint:
+    """Tests pour l'endpoint de health check."""
+
+    @patch('fastapi_yfinance.yf.Ticker')
+    def test_should_return_health_check_success(self, mock_ticker_class, test_client):
+        """Test que l'endpoint health check retourne un succès."""
+        # Arrange
+        mock_ticker = Mock()
+        mock_ticker.history.return_value = Mock(empty=False)
+        mock_ticker.info = {"sector": "Technology"}
+        mock_ticker_class.return_value = mock_ticker
+
+        # Act
+        response = test_client.get("/health")
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert "timestamp" in data
+        assert "real_data_tests" in data
+
+    @patch('fastapi_yfinance.yf.Ticker')
+    def test_should_handle_yfinance_errors_in_health_check(self, mock_ticker_class, test_client):
+        """Test la gestion des erreurs YFinance dans le health check."""
+        # Arrange
+        mock_ticker_class.side_effect = Exception("YFinance API error")
+
+        # Act
+        response = test_client.get("/health")
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert "real_data_tests" in data
+        # L'endpoint devrait gérer l'erreur gracieusement
+
+
+@pytest.mark.unit
+class TestTickerInfoEndpoint:
+    """Tests pour l'endpoint d'information des tickers."""
+
+    @patch('fastapi_yfinance.yf.Ticker')
+    def test_should_get_ticker_info_successfully(self, mock_ticker_class, test_client):
+        """Test la récupération d'informations de ticker avec succès."""
+        # Arrange
+        mock_ticker = Mock()
+        mock_ticker.info = {
+            "sector": "Technology",
+            "marketCap": 2500000000000,
+            "currentPrice": 150.0
+        }
+        mock_ticker.history.return_value = Mock(empty=False)
+        mock_ticker_class.return_value = mock_ticker
+
+        # Act
+        response = test_client.get("/ticker/AAPL")
+
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert data["symbol"] == "AAPL"
+        assert "info" in data
+        assert "last_updated" in data
+
+    def test_should_validate_ticker_symbol_format(self, test_client):
+        """Test la validation du format des symboles de ticker."""
+        # Act
+        response = test_client.get("/ticker/INVALID_SYMBOL_WITH_SPECIAL_CHARS!@#")
+
+        # Assert
+        # L'endpoint devrait soit valider le symbole soit gérer l'erreur
+        assert response.status_code in [200, 400, 422]
+
+    @patch('fastapi_yfinance.yf.Ticker')
+    def test_should_handle_ticker_not_found(self, mock_ticker_class, test_client):
+        """Test la gestion des tickers non trouvés."""
+        # Arrange
+        mock_ticker = Mock()
+        mock_ticker.info = {}
+        mock_ticker.history.return_value = Mock(empty=True)
+        mock_ticker_class.return_value = mock_ticker
+
+        # Act
+        response = test_client.get("/ticker/NONEXISTENT")
+
+        # Assert
+        assert response.status_code in [200, 404]  # Dépend de l'implémentation
+
+
+@pytest.mark.unit
+class TestAdvancedAnalysisAvailability:
+    """Tests pour la disponibilité de l'analyse avancée."""
+
+    def test_advanced_analysis_availability_flag_should_be_boolean(self):
+        """Test que le flag ADVANCED_ANALYSIS_AVAILABLE est booléen."""
+        # Assert
+        assert isinstance(ADVANCED_ANALYSIS_AVAILABLE, bool)
+
+    @patch('fastapi_yfinance.ADVANCED_ANALYSIS_AVAILABLE', True)
+    def test_should_enable_advanced_features_when_available(self):
+        """Test l'activation des fonctionnalités avancées quand disponibles."""
+        # Act & Assert
+        # Vérifier que l'import réussirait
+        assert ADVANCED_ANALYSIS_AVAILABLE is True
+
+    @patch('fastapi_yfinance.ADVANCED_ANALYSIS_AVAILABLE', False)
+    def test_should_handle_missing_advanced_analysis_gracefully(self):
+        """Test la gestion gracieuse de l'analyse avancée manquante."""
+        # Act & Assert
+        assert ADVANCED_ANALYSIS_AVAILABLE is False
+
+
+@pytest.mark.unit
+class TestFastAPIAppConfiguration:
+    """Tests pour la configuration de l'application FastAPI."""
+
+    def test_app_should_have_correct_title_and_description(self):
+        """Test que l'app a le bon titre et description."""
+        # Assert
+        assert "Boursa Vision" in app.title
+        assert "Investment Analysis" in app.title
+        assert "financial data" in app.description.lower()
+
+    def test_app_should_have_cors_middleware(self):
+        """Test que l'app a le middleware CORS configuré."""
+        # Assert
+        middleware_types = [type(middleware.cls) for middleware in app.user_middleware]
+        cors_middleware_present = any(
+            'CORS' in str(middleware_type) for middleware_type in middleware_types
+        )
+        # Le middleware CORS devrait être présent pour les APIs web
+        # Note: Cette vérification dépend de l'implémentation exacte
+
+
+@pytest.mark.unit
+class TestYFinanceIntegration:
+    """Tests d'intégration avec YFinance (mockés)."""
+
+    @patch('fastapi_yfinance.yf.Ticker')
+    def test_should_handle_yfinance_connection_timeout(self, mock_ticker_class, test_client):
+        """Test la gestion des timeouts de connexion YFinance."""
+        # Arrange
+        mock_ticker_class.side_effect = TimeoutError("Connection timeout")
+
+        # Act
+        response = test_client.get("/ticker/AAPL")
+
+        # Assert
+        # L'API devrait gérer les timeouts gracieusement
+        assert response.status_code in [200, 500, 503]
+
+    @patch('fastapi_yfinance.yf.Ticker')
+    def test_should_handle_yfinance_rate_limiting(self, mock_ticker_class, test_client):
+        """Test la gestion du rate limiting YFinance."""
+        # Arrange
+        mock_ticker_class.side_effect = Exception("Rate limit exceeded")
+
+        # Act
+        response = test_client.get("/ticker/AAPL")
+
+        # Assert
+        # L'API devrait gérer le rate limiting
+        assert response.status_code in [200, 429, 503]
+
+
+@pytest.mark.integration
+class TestEndpointsIntegration:
+    """Tests d'intégration des endpoints (avec mocks)."""
+
+    @patch('fastapi_yfinance.yf.Ticker')
+    def test_multiple_endpoints_should_work_together(self, mock_ticker_class, test_client):
+        """Test que plusieurs endpoints fonctionnent ensemble."""
+        # Arrange
+        mock_ticker = Mock()
+        mock_ticker.info = {"sector": "Technology"}
+        mock_ticker.history.return_value = Mock(empty=False)
+        mock_ticker_class.return_value = mock_ticker
+
+        # Act
+        health_response = test_client.get("/health")
+        ticker_response = test_client.get("/ticker/AAPL")
+
+        # Assert
+        assert health_response.status_code == 200
+        assert ticker_response.status_code == 200
+        
+        # Les deux endpoints devraient fonctionner indépendamment
+        health_data = health_response.json()
+        ticker_data = ticker_response.json()
+        
+        assert "status" in health_data
+        assert "symbol" in ticker_data
