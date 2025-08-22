@@ -3,22 +3,5 @@
         "backend"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
-    "dbcode.connections": [
-        {
-            "connectionId": "gvpfR034aoHWw9_LQgloO",
-            "name": "BoursaVision Dev",
-            "driver": "postgres",
-            "color": "#F66675",
-            "connectionType": "host",
-            "host": "localhost",
-            "port": 5432,
-            "ssl": false,
-            "username": "boursa_user",
-            "password": "",
-            "savePassword": "secretStorage",
-            "readOnly": false,
-            "connectionTimeout": 30
-        }
-    ]
+    "python.testing.pytestEnabled": true
 }

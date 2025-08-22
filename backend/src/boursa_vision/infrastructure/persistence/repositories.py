@@ -8,7 +8,7 @@ using SQLAlchemy for PostgreSQL + TimescaleDB persistence.
 from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import and_, delete, desc, select, func
+from sqlalchemy import and_, delete, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -254,7 +254,7 @@ class SqlAlchemyMarketDataRepository(IMarketDataRepository):
 class SqlAlchemyInvestmentRepository(IInvestmentRepository):
     """SQLAlchemy implementation of Investment repository."""
 
-    def __init__(self, session: Optional[AsyncSession] = None):
+    def __init__(self, session: AsyncSession):
         self._session = session
 
     async def find_by_symbol(self, symbol: str) -> Optional[Investment]:
@@ -356,107 +356,4 @@ class SqlAlchemyInvestmentRepository(IInvestmentRepository):
             )
             investments.append(InvestmentMapper.to_domain(model, fundamental_data))
 
-        return investments
-
-    async def find_by_id(self, investment_id: str) -> Optional[Investment]:
-        """Find investment by ID."""
-        if not self._session:
-            raise ValueError("Session is not initialized")
-        
-        stmt = (
-            select(Instrument)
-            .options(selectinload(Instrument.fundamental_data))
-            .where(Instrument.symbol == investment_id)  # Assuming ID is the symbol for now
-        )
-        result = await self._session.execute(stmt)
-        model = result.scalar_one_or_none()
-
-        if model:
-            fundamental_data = (
-                model.fundamental_data[0] if model.fundamental_data else None
-            )
-            return InvestmentMapper.to_domain(model, fundamental_data)
-        return None
-
-    async def find_all(self) -> List[Investment]:
-        """Find all investments."""
-        if not self._session:
-            raise ValueError("Session is not initialized")
-        
-        stmt = (
-            select(Instrument)
-            .options(selectinload(Instrument.fundamental_data))
-        )
-        result = await self._session.execute(stmt)
-        models = result.scalars().all()
-
-        investments = []
-        for model in models:
-            fundamental_data = (
-                model.fundamental_data[0] if model.fundamental_data else None
-            )
-            investments.append(InvestmentMapper.to_domain(model, fundamental_data))
-        return investments
-
-    async def delete(self, investment: Investment) -> None:
-        """Delete investment."""
-        if not self._session:
-            raise ValueError("Session is not initialized")
-        
-        stmt = delete(Instrument).where(Instrument.symbol == investment.symbol)
-        await self._session.execute(stmt)
-        await self._session.flush()
-
-    async def find_by_market_cap(self, market_cap: str) -> List[Investment]:
-        """Find investments by market cap."""
-        if not self._session:
-            raise ValueError("Session is not initialized")
-        
-        stmt = (
-            select(Instrument)
-            .options(selectinload(Instrument.fundamental_data))
-            .join(Instrument.fundamental_data)
-            .where(
-                and_(
-                    # Assuming market_cap is stored in fundamental_data
-                    # This is a placeholder implementation
-                    Instrument.is_active.is_(True)
-                )
-            )
-        )
-        result = await self._session.execute(stmt)
-        models = result.scalars().all()
-
-        investments = []
-        for model in models:
-            fundamental_data = (
-                model.fundamental_data[0] if model.fundamental_data else None
-            )
-            investments.append(InvestmentMapper.to_domain(model, fundamental_data))
-        return investments
-
-    async def search_by_name(self, name_pattern: str) -> List[Investment]:
-        """Search investments by name pattern."""
-        if not self._session:
-            raise ValueError("Session is not initialized")
-        
-        stmt = (
-            select(Instrument)
-            .options(selectinload(Instrument.fundamental_data))
-            .where(
-                and_(
-                    Instrument.name.ilike(f"%{name_pattern}%"),
-                    Instrument.is_active.is_(True)
-                )
-            )
-        )
-        result = await self._session.execute(stmt)
-        models = result.scalars().all()
-
-        investments = []
-        for model in models:
-            fundamental_data = (
-                model.fundamental_data[0] if model.fundamental_data else None
-            )
-            investments.append(InvestmentMapper.to_domain(model, fundamental_data))
         return investments

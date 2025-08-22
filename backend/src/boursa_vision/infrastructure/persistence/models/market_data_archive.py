@@ -24,7 +24,7 @@ class MarketDataArchive(Base):
 
     __tablename__ = "market_data_archive"
 
-    id = Column(BigInteger, nullable=False, primary_key=True, autoincrement=True)
+    id = Column("id", nullable=False, primary_key=True, autoincrement=True)
     symbol = Column(String(20), nullable=False, index=True)
     timestamp = Column(DateTime(timezone=True), nullable=False, index=True)
     open_price = Column(Numeric(20, 8), nullable=True)

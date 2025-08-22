@@ -226,9 +226,6 @@ class OptimizedYFinanceClient:
 
             return result
 
-        except (YFinanceError, RateLimitError, TemporaryFailureError, ConnectionError, TimeoutError, ValueError):
-            # Re-raise specific exceptions that should be handled by callers
-            raise
         except Exception as e:
             self.metrics.failed_requests += 1
             logger.error("Failed to get stock info for %s: %s", symbol, e)
@@ -420,7 +417,7 @@ class OptimizedYFinanceClient:
                 time.sleep(wait_time)
                 if not self.rate_limiter.acquire():
                     self.metrics.rate_limit_errors += 1
-                    raise YFinanceRateLimitError(f"Rate limit exceeded for {symbol}")
+                    raise RateLimitError(f"Rate limit exceeded for {symbol}")
 
         try:
             ticker = yf.Ticker(symbol)
@@ -430,7 +427,7 @@ class OptimizedYFinanceClient:
 
         except RateLimitError as e:
             self.rate_limiter.report_rate_limit_error()
-            raise YFinanceRateLimitError(f"Rate limit error for {symbol}: {e}") from e
+            raise RateLimitError(f"Rate limit error for {symbol}: {e}") from e
 
         except TemporaryFailureError as e:
             self.rate_limiter.report_rate_limit_error()
@@ -438,20 +435,9 @@ class OptimizedYFinanceClient:
                 f"Failed to fetch info for {symbol}: {e}"
             ) from e
 
-        except (ConnectionError, TimeoutError) as e:
-            # Transform standard network errors to YFinance errors
-            if isinstance(e, TimeoutError):
-                raise YFinanceTimeoutError(f"Timeout error for {symbol}: {e}") from e
-            else:
-                raise YFinanceError(f"Network error for {symbol}: {e}") from e
-
-        except ValueError as e:
-            # Transform ValueError to YFinanceError 
-            raise YFinanceError(f"Value error for {symbol}: {e}") from e
-
         except Exception as e:
             logger.error("Unexpected error: %s", e)
-            raise YFinanceError(f"Unexpected error for {symbol}: {e}") from e
+            raise
 
     def _fetch_historical_data_raw(
         self, symbol: str, period: str, interval: str
@@ -463,7 +449,7 @@ class OptimizedYFinanceClient:
                 time.sleep(wait_time)
                 if not self.rate_limiter.acquire():
                     self.metrics.rate_limit_errors += 1
-                    raise YFinanceRateLimitError(f"Rate limit exceeded for {symbol}")
+                    raise RateLimitError(f"Rate limit exceeded for {symbol}")
 
         try:
             ticker = yf.Ticker(symbol)

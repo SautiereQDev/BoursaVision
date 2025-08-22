@@ -41,7 +41,7 @@ class User(Base, DatabaseMixin):
     username = Column(String(100), unique=True, nullable=False, index=True)
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
-    role = Column(String(20), default="BASIC", nullable=False)
+    role = Column(String(20), default="VIEWER", nullable=False)
     first_name = Column(String(100))
     last_name = Column(String(100))
     phone = Column(String(20))
@@ -87,9 +87,6 @@ class User(Base, DatabaseMixin):
     sessions = relationship(
         "UserSession", back_populates="user", cascade=CASCADE_ALL_DELETE_ORPHAN
     )
-    refresh_tokens = relationship(
-        "RefreshToken", back_populates="user", cascade=CASCADE_ALL_DELETE_ORPHAN
-    )
 
     __table_args__ = (
         CheckConstraint(
@@ -101,7 +98,7 @@ class User(Base, DatabaseMixin):
             name="check_investment_experience",
         ),
         CheckConstraint(
-            "role IN ('ADMIN', 'PREMIUM', 'BASIC')",
+            "role IN ('ADMIN', 'TRADER', 'ANALYST', 'VIEWER')",
             name="check_user_role",
         ),
     )

@@ -14,7 +14,7 @@ from .initializer import (
     init_persistence_layer,
     quick_setup,
 )
-# from .mappers import MapperFactory
+from .mappers import MapperFactory
 from .repositories import (
     SQLAlchemyMarketDataRepository,
     SQLAlchemyPortfolioRepository,
@@ -57,7 +57,7 @@ __all__ = [
     "get_market_data_repository",
     "configure_repositories",
     # Mappers
-    # "MapperFactory",
+    "MapperFactory",
     # Unit of Work
     "IUnitOfWork",
     "SQLAlchemyUnitOfWork",

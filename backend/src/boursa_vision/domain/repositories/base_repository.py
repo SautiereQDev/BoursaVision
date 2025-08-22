@@ -25,19 +25,14 @@ class IBaseRepository(ABC, Generic[T]):
     @abstractmethod
     async def find_by_id(self, entity_id: UUID) -> Optional[T]:
         """Find entity by ID"""
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     async def save(self, entity: T) -> T:
         """Save entity (create or update)"""
-        raise NotImplementedError
-    
-    @abstractmethod
-    async def update(self, entity: T) -> T:
-        """Update existing entity"""
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     async def delete(self, entity_id: UUID) -> bool:
         """Delete entity by ID"""
-        raise NotImplementedError
+        pass

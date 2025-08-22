@@ -8,7 +8,7 @@ from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from boursa_vision.application.exceptions import (
+from application.exceptions import (
     BoursaVisionError,
     InvalidSymbolError,
     PortfolioNotFoundError,

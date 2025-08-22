@@ -87,7 +87,7 @@ class SignalGenerator:
                 price=None,
                 target_price=None,
                 stop_loss=None,
-                reason=f"Error generating signal: {str(e)}",
+                reasoning=f"Error generating signal: {str(e)}",
                 metadata={},
                 timestamp=datetime.now(),
             )
@@ -110,7 +110,7 @@ class SignalGenerator:
             try:
                 signal = await self.generate_signal(symbol)
                 # Only add successful signals (exclude error signals)
-                if not signal.reason.startswith("Error:"):
+                if not signal.reasoning.startswith("Error:"):
                     signals[symbol] = signal
             except Exception as e:
                 # Log error but exclude from results for portfolio analysis

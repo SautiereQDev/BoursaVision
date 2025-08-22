@@ -86,7 +86,7 @@ class InvestmentAddedEventHandler(IEventHandler[Any]):
         await self._notification_service.send_notification(
             user_id=getattr(event, "user_id", None),
             message=f"Added {getattr(event, 'quantity', 0)} shares of "
-            f"{getattr(event, 'symbol', '')} to portfolio",
+            "{getattr(event, 'symbol', '')} to portfolio",
             notification_type="INVESTMENT_ADDED",
         )
 

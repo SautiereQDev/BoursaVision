@@ -7,7 +7,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
-from boursa_vision.application.exceptions import DatabaseNotInitializedError
+from application.exceptions import DatabaseNotInitializedError
 from sqlalchemy import MetaData, event, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import (

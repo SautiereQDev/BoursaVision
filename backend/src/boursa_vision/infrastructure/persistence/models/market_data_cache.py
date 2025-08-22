@@ -20,7 +20,6 @@ from sqlalchemy import (
     Index,
     Integer,
     Numeric,
-    PrimaryKeyConstraint,
     String,
     Text,
     UniqueConstraint,
@@ -28,10 +27,11 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
-from ..models.base import Base
+from ..models.base import Base, DatabaseMixin
+from ..models.mixins import TimestampMixin
 
 
-class MarketDataCache(Base):
+class MarketDataCache(Base, DatabaseMixin, TimestampMixin):
     """
     Table principale pour le cache optimisé des données YFinance.
 
@@ -42,9 +42,9 @@ class MarketDataCache(Base):
     __tablename__ = "market_data_cache"
 
     # Clé primaire composite pour TimescaleDB
-    time = Column(TIMESTAMP(timezone=True), nullable=False)
-    symbol = Column(String(20), nullable=False)
-    interval_type = Column(String(5), nullable=False)
+    time = Column(TIMESTAMP(timezone=True), primary_key=True, nullable=False)
+    symbol = Column(String(20), primary_key=True, nullable=False)
+    interval_type = Column(String(5), primary_key=True, nullable=False)
 
     # Données OHLCV avec précision maximale
     open_price = Column(Numeric(20, 8), nullable=False)
@@ -82,19 +82,9 @@ class MarketDataCache(Base):
         default=lambda: datetime.now(timezone.utc),
     )
     data_age_hours = Column(Numeric(10, 2), nullable=True)
-    
-    # Timestamps (remplacent TimestampMixin)
-    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-    )
 
     # Constraints
     __table_args__ = (
-        # Clé primaire composite explicite
-        PrimaryKeyConstraint('time', 'symbol', 'interval_type'),
         # Index optimisés pour TimescaleDB
         Index("idx_market_data_cache_symbol_time", "symbol", "time"),
         Index("idx_market_data_cache_time_desc", "time", postgresql_using="btree"),
@@ -131,7 +121,7 @@ class MarketDataCache(Base):
     )
 
 
-class TimelineMetrics(Base):
+class TimelineMetrics(Base, DatabaseMixin, TimestampMixin):
     """
     Métriques de qualité et performance des timelines par symbole.
 
@@ -148,14 +138,6 @@ class TimelineMetrics(Base):
     data_coverage_percent = Column(Numeric(5, 2), nullable=False, default=0)
     gaps_count = Column(Integer, nullable=False, default=0)
     significant_gaps_count = Column(Integer, nullable=False, default=0)
-
-    # Timestamps (remplacent TimestampMixin)
-    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-    )
 
     # Distribution de précision (JSON)
     precision_distribution = Column(JSONB, nullable=True)
@@ -185,7 +167,7 @@ class TimelineMetrics(Base):
     )
 
 
-class CacheStatistics(Base):
+class CacheStatistics(Base, DatabaseMixin, TimestampMixin):
     """
     Statistiques globales du système de cache.
 
@@ -221,14 +203,6 @@ class CacheStatistics(Base):
     timelines_in_memory = Column(Integer, nullable=False, default=0)
     cache_entries_count = Column(Integer, nullable=False, default=0)
 
-    # Timestamps (remplacent TimestampMixin)
-    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-    )
-
     # Évictions et nettoyage
     evictions_lru = Column(Integer, nullable=False, default=0)
     evictions_expired = Column(Integer, nullable=False, default=0)
@@ -241,7 +215,7 @@ class CacheStatistics(Base):
     )
 
 
-class DataGaps(Base):
+class DataGaps(Base, DatabaseMixin, TimestampMixin):
     """
     Enregistrement des gaps détectés dans les timelines.
 
@@ -261,14 +235,6 @@ class DataGaps(Base):
     # Contexte
     expected_interval = Column(String(5), nullable=False)
     interval_type = Column(String(5), nullable=False)
-
-    # Timestamps (remplacent TimestampMixin)
-    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-    )
 
     # Classification
     is_significant = Column(Boolean, nullable=False, default=False)
@@ -291,7 +257,7 @@ class DataGaps(Base):
     )
 
 
-class PrecisionPolicies(Base):
+class PrecisionPolicies(Base, DatabaseMixin, TimestampMixin):
     """
     Politiques de précision et de rétention par type de données.
 
@@ -311,14 +277,6 @@ class PrecisionPolicies(Base):
     interval_types = Column(JSONB, nullable=True)  # Liste des intervalles
     market_cap_min = Column(BigInteger, nullable=True)
     volume_min = Column(BigInteger, nullable=True)
-
-    # Timestamps (remplacent TimestampMixin)
-    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-    )
 
     # Configuration de précision
     ultra_high_ttl_hours = Column(Integer, nullable=False, default=1)

@@ -27,7 +27,6 @@ from .market_data import MarketData
 from .market_data_archive import MarketDataArchive
 from .performance import PortfolioPerformance
 from .portfolios import Portfolio, Position
-from .refresh_tokens import RefreshToken
 from .system import AuditLog, SystemConfig
 from .transactions import Transaction
 from .users import User, UserSession
@@ -47,7 +46,6 @@ __all__ = [
     # Models
     "User",
     "UserSession",
-    "RefreshToken",
     "Portfolio",
     "Position",
     "Instrument",

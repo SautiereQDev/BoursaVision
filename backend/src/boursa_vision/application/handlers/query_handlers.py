@@ -163,32 +163,20 @@ class GetUserPortfoliosQueryHandler(IQueryHandler[Dict, List[PortfolioDTO]]):
     ) -> PortfolioDTO:
         """Map portfolio entity to DTO"""
         from datetime import datetime
-        from uuid import UUID, uuid4
-
-        # Handle MagicMock values safely
-        def safe_getattr(obj, attr, default):
-            """Get attribute value, handling MagicMock objects"""
-            value = getattr(obj, attr, default)
-            if hasattr(value, "_mock_name"):
-                return default
-            return value
+        from uuid import uuid4
 
         return PortfolioDTO(
-            id=safe_getattr(
-                portfolio, "id", UUID("00000000-0000-0000-0000-000000000000")
-            ),
-            user_id=safe_getattr(
-                portfolio, "user_id", UUID("00000000-0000-0000-0000-000000000000")
-            ),
-            name=str(safe_getattr(portfolio, "name", "Test Portfolio")),
-            description=str(safe_getattr(portfolio, "description", None))
-            if safe_getattr(portfolio, "description", None)
-            else None,
-            currency=str(safe_getattr(portfolio, "currency", "USD")),
-            total_value=None,  # Simplified for handler
-            positions=[] if not include_positions else [],
-            created_at=safe_getattr(portfolio, "created_at", datetime.now()),
-            updated_at=safe_getattr(portfolio, "updated_at", datetime.now()),
+            id=getattr(portfolio, "id", uuid4()),
+            user_id=getattr(portfolio, "user_id", uuid4()),
+            name=getattr(portfolio, "name", ""),
+            description=getattr(portfolio, "description", None),
+            cash_balance={
+                "amount": float(getattr(portfolio, "cash_balance", 0)),
+                "currency": "USD",
+            },
+            positions=[] if not include_positions else [],  # Would map positions
+            created_at=getattr(portfolio, "created_at", datetime.now()),
+            updated_at=getattr(portfolio, "updated_at", datetime.now()),
         )
 
 
