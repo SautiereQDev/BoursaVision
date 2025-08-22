@@ -1,0 +1,571 @@
+"""
+Tests unitaires pour ArchivedMarketDataRepository.
+
+Teste le repository d'accès aux données de marché archivées 
+avec conformité à l'Architecture Clean.
+"""
+
+import pytest
+from datetime import datetime, timezone, timedelta
+from decimal import Decimal
+from typing import Dict, List, Optional
+from unittest.mock import MagicMock, Mock, patch, call
+import pandas as pd
+
+from boursa_vision.infrastructure.persistence.repositories.archived_market_data_repository import (
+    ArchivedMarketDataRepository,
+    ArchiveMarketDataAdapter,
+    execute_sql_query,
+)
+
+
+@pytest.mark.unit
+class TestExecuteSqlQuery:
+    """Tests pour la fonction execute_sql_query."""
+
+    @patch('boursa_vision.infrastructure.persistence.repositories.archived_market_data_repository.psycopg2')
+    def test_execute_sql_query_success(self, mock_psycopg2):
+        """Test l'exécution réussie d'une requête SQL."""
+        # Arrange
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.fetchall.return_value = [
+            {"symbol": "AAPL", "count": 100},
+            {"symbol": "MSFT", "count": 150}
+        ]
+        
+        mock_connection.__enter__.return_value = mock_connection
+        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+        mock_psycopg2.connect.return_value = mock_connection
+        
+        database_url = "postgresql://test:test@localhost:5432/test"
+        query = "SELECT symbol, count FROM test_table"
+        params = ("param1",)
+        
+        # Act
+        result = execute_sql_query(database_url, query, params)
+        
+        # Assert
+        assert len(result) == 2
+        assert result[0]["symbol"] == "AAPL"
+        assert result[1]["symbol"] == "MSFT"
+        mock_cursor.execute.assert_called_once_with(query, params)
+        mock_cursor.fetchall.assert_called_once()
+
+    @patch('boursa_vision.infrastructure.persistence.repositories.archived_market_data_repository.psycopg2', side_effect=ImportError)
+    @patch('boursa_vision.infrastructure.persistence.repositories.archived_market_data_repository.logger')
+    def test_execute_sql_query_psycopg2_unavailable(self, mock_logger, mock_psycopg2):
+        """Test le fallback quand psycopg2 n'est pas disponible."""
+        # Arrange
+        database_url = "postgresql://test:test@localhost:5432/test"
+        query = "SELECT * FROM test"
+        
+        # Act
+        result = execute_sql_query(database_url, query)
+        
+        # Assert
+        assert result == []
+        mock_logger.error.assert_called_once_with(
+            "psycopg2 not available, cannot execute database queries"
+        )
+
+    @patch('boursa_vision.infrastructure.persistence.repositories.archived_market_data_repository.psycopg2')
+    def test_execute_sql_query_database_error(self, mock_psycopg2):
+        """Test la gestion d'erreurs de base de données."""
+        # Arrange
+        class MockOperationalError(Exception):
+            pass
+        
+        mock_psycopg2.connect.side_effect = MockOperationalError("Connection failed")
+        
+        database_url = "postgresql://user:pass@localhost:5432/testdb"
+        query = "SELECT * FROM test"
+        
+        # Act & Assert
+        with pytest.raises(MockOperationalError, match="Connection failed"):
+            execute_sql_query(database_url, query)
+
+
+@pytest.mark.unit
+class TestArchivedMarketDataRepository:
+    """Tests pour ArchivedMarketDataRepository."""
+
+    def setup_method(self):
+        """Configuration pour chaque test."""
+        self.database_url: str = "postgresql://test:test@localhost:5432/test"
+        self.repository = ArchivedMarketDataRepository(self.database_url)
+
+    @patch('psycopg2.connect')
+    def test_get_connection(self, mock_connect):
+        """Test l'obtention d'une connexion à la base de données."""
+        # Arrange
+        mock_connection = MagicMock()
+        mock_connect.return_value = mock_connection
+        
+        # Act
+        connection = self.repository.get_connection()
+        
+        # Assert
+        assert connection == mock_connection
+        mock_connect.assert_called_once()
+
+    @patch.object(ArchivedMarketDataRepository, 'get_connection')
+    def test_get_available_symbols(self, mock_get_connection):
+        """Test la récupération des symboles disponibles."""
+        # Arrange
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.fetchall.return_value = [
+            {"symbol": "AAPL"},
+            {"symbol": "MSFT"},
+            {"symbol": "GOOGL"}
+        ]
+        
+        mock_connection.__enter__.return_value = mock_connection
+        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+        mock_get_connection.return_value = mock_connection
+        
+        # Act
+        symbols = self.repository.get_available_symbols()
+        
+        # Assert
+        assert symbols == ["AAPL", "MSFT", "GOOGL"]
+        mock_cursor.execute.assert_called_once()
+        assert "SELECT DISTINCT i.symbol" in mock_cursor.execute.call_args[0][0]
+
+    @patch.object(ArchivedMarketDataRepository, 'get_connection')
+    @patch('pandas.DataFrame')
+    @patch('pandas.to_datetime')
+    def test_get_symbol_data_success(self, mock_to_datetime, mock_dataframe, mock_get_connection):
+        """Test la récupération réussie de données pour un symbole."""
+        # Arrange
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        
+        sample_data = [
+            {
+                "time": datetime.now(timezone.utc),
+                "open_price": Decimal("150.00"),
+                "high_price": Decimal("155.00"),
+                "low_price": Decimal("149.00"),
+                "close_price": Decimal("154.00"),
+                "adjusted_close": Decimal("153.50"),
+                "volume": 1000000,
+                "symbol": "AAPL",
+                "name": "Apple Inc."
+            }
+        ]
+        
+        mock_cursor.fetchall.return_value = sample_data
+        mock_connection.__enter__.return_value = mock_connection
+        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+        mock_get_connection.return_value = mock_connection
+        
+        mock_df = MagicMock()
+        mock_dataframe.return_value = mock_df
+        
+        # Act
+        result = self.repository.get_symbol_data("AAPL", 30)
+        
+        # Assert
+        assert result == mock_df
+        mock_cursor.execute.assert_called_once()
+        mock_df.set_index.assert_called_once_with("time", inplace=True)
+        mock_df.sort_index.assert_called_once_with(inplace=True)
+        mock_df.rename.assert_called_once()
+
+    @patch.object(ArchivedMarketDataRepository, 'get_connection')
+    @patch('boursa_vision.infrastructure.persistence.repositories.archived_market_data_repository.logger')
+    def test_get_symbol_data_no_data(self, mock_logger, mock_get_connection):
+        """Test la gestion du cas où aucune donnée n'est trouvée."""
+        # Arrange
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.fetchall.return_value = []
+        
+        mock_connection.__enter__.return_value = mock_connection
+        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+        mock_get_connection.return_value = mock_connection
+        
+        # Act
+        result = self.repository.get_symbol_data("NONEXISTENT")
+        
+        # Assert
+        assert result is None
+        mock_logger.warning.assert_called_once_with(
+            "No archived data found for symbol NONEXISTENT"
+        )
+
+    @patch.object(ArchivedMarketDataRepository, 'get_connection')
+    def test_get_latest_price_data_success(self, mock_get_connection):
+        """Test la récupération du dernier prix d'un symbole."""
+        # Arrange
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        
+        latest_data = {
+            "current_price": Decimal("154.00"),
+            "volume": 1000000,
+            "last_updated": datetime.now(timezone.utc),
+            "name": "Apple Inc.",
+            "currency": "USD"
+        }
+        
+        mock_cursor.fetchone.return_value = latest_data
+        mock_connection.__enter__.return_value = mock_connection
+        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+        mock_get_connection.return_value = mock_connection
+        
+        # Act
+        result = self.repository.get_latest_price_data("AAPL")
+        
+        # Assert
+        assert result == latest_data
+        mock_cursor.execute.assert_called_once()
+        assert "SELECT" in mock_cursor.execute.call_args[0][0]
+        assert "ORDER BY md.time DESC" in mock_cursor.execute.call_args[0][0]
+
+    @patch.object(ArchivedMarketDataRepository, 'get_connection')
+    def test_get_latest_price_data_no_data(self, mock_get_connection):
+        """Test la gestion du cas où aucun prix récent n'est trouvé."""
+        # Arrange
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.fetchone.return_value = None
+        
+        mock_connection.__enter__.return_value = mock_connection
+        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+        mock_get_connection.return_value = mock_connection
+        
+        # Act
+        result = self.repository.get_latest_price_data("NONEXISTENT")
+        
+        # Assert
+        assert result is None
+
+    @patch.object(ArchivedMarketDataRepository, 'get_connection')
+    def test_get_symbols_with_sufficient_data(self, mock_get_connection):
+        """Test la récupération des symboles avec suffisamment de données."""
+        # Arrange
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        
+        symbols_data = [
+            {"symbol": "AAPL"},
+            {"symbol": "MSFT"},
+            {"symbol": "GOOGL"}
+        ]
+        
+        mock_cursor.fetchall.return_value = symbols_data
+        mock_connection.__enter__.return_value = mock_connection
+        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+        mock_get_connection.return_value = mock_connection
+        
+        # Act
+        result = self.repository.get_symbols_with_sufficient_data(50)
+        
+        # Assert
+        assert result == ["AAPL", "MSFT", "GOOGL"]
+        mock_cursor.execute.assert_called_once()
+        assert "HAVING COUNT(*) >= %s" in mock_cursor.execute.call_args[0][0]
+        assert mock_cursor.execute.call_args[0][1] == (50,)
+
+    @patch.object(ArchivedMarketDataRepository, 'get_symbol_data')
+    @patch.object(ArchivedMarketDataRepository, 'get_latest_price_data')
+    def test_get_market_data_for_analysis_success(self, mock_get_latest, mock_get_symbol):
+        """Test la récupération de données formatées pour l'analyse."""
+        # Arrange
+        mock_df = pd.DataFrame({
+            'Open': [150.0, 151.0],
+            'High': [155.0, 156.0],
+            'Low': [149.0, 150.0],
+            'Close': [154.0, 155.0],
+            'Volume': [1000000, 1100000]
+        })
+        mock_get_symbol.return_value = mock_df
+        
+        mock_latest = {
+            "current_price": Decimal("155.00"),
+            "name": "Apple Inc.",
+            "currency": "USD",
+            "volume": 1100000,
+            "last_updated": datetime.now(timezone.utc)
+        }
+        mock_get_latest.return_value = mock_latest
+        
+        # Act
+        result = self.repository.get_market_data_for_analysis("AAPL")
+        
+        # Assert
+        assert result is not None
+        assert "history" in result
+        assert "info" in result
+        assert result["info"]["symbol"] == "AAPL"
+        assert result["info"]["shortName"] == "Apple Inc."
+        assert abs(result["info"]["currentPrice"] - 155.00) < 0.01
+
+    @patch.object(ArchivedMarketDataRepository, 'get_symbol_data')
+    def test_get_market_data_for_analysis_insufficient_data(self, mock_get_symbol):
+        """Test la gestion des données insuffisantes pour l'analyse."""
+        # Arrange - DataFrame avec moins de 20 enregistrements
+        mock_df = pd.DataFrame({
+            'Close': [100.0] * 10  # Seulement 10 enregistrements
+        })
+        mock_get_symbol.return_value = mock_df
+        
+        # Act
+        result = self.repository.get_market_data_for_analysis("INSUFFICIENT")
+        
+        # Assert
+        assert result is None
+
+    @patch.object(ArchivedMarketDataRepository, 'get_market_data_for_analysis')
+    @patch('boursa_vision.infrastructure.persistence.repositories.archived_market_data_repository.logger')
+    def test_get_bulk_analysis_data_success(self, mock_logger, mock_get_analysis):
+        """Test la récupération en lot de données d'analyse."""
+        # Arrange
+        symbols = ["AAPL", "MSFT", "GOOGL"]
+        
+        def mock_analysis_side_effect(symbol):
+            if symbol == "AAPL":
+                return {"history": pd.DataFrame(), "info": {"symbol": symbol}}
+            elif symbol == "MSFT":
+                return {"history": pd.DataFrame(), "info": {"symbol": symbol}}
+            else:  # GOOGL
+                return None  # Pas de données suffisantes
+        
+        mock_get_analysis.side_effect = mock_analysis_side_effect
+        
+        # Act
+        result = self.repository.get_bulk_analysis_data(symbols)
+        
+        # Assert
+        assert len(result) == 2  # AAPL et MSFT seulement
+        assert "AAPL" in result
+        assert "MSFT" in result
+        assert "GOOGL" not in result
+        mock_logger.info.assert_called_once()
+        assert "2/3 symbols" in mock_logger.info.call_args[0][0]
+
+    @patch.object(ArchivedMarketDataRepository, 'get_market_data_for_analysis')
+    @patch('boursa_vision.infrastructure.persistence.repositories.archived_market_data_repository.logger')
+    def test_get_bulk_analysis_data_with_errors(self, mock_logger, mock_get_analysis):
+        """Test la gestion d'erreurs lors de la récupération en lot."""
+        # Arrange
+        symbols = ["AAPL", "ERROR_SYMBOL"]
+        
+        def mock_analysis_side_effect(symbol):
+            if symbol == "AAPL":
+                return {"history": pd.DataFrame(), "info": {"symbol": symbol}}
+            else:
+                class MockOperationalError(Exception):
+                    pass
+                raise MockOperationalError("Database error")
+        
+        mock_get_analysis.side_effect = mock_analysis_side_effect
+        
+        # Act
+        result = self.repository.get_bulk_analysis_data(symbols)
+        
+        # Assert
+        assert len(result) == 1  # Seulement AAPL
+        assert "AAPL" in result
+        mock_logger.error.assert_called_once()
+        assert "ERROR_SYMBOL" in mock_logger.error.call_args[0][0]
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+class TestArchiveMarketDataAdapter:
+    """Tests pour ArchiveMarketDataAdapter."""
+
+    def setup_method(self):
+        """Configuration pour chaque test."""
+        self.mock_archive_repo: Mock = Mock(spec=ArchivedMarketDataRepository)
+        self.adapter = ArchiveMarketDataAdapter(self.mock_archive_repo)
+
+    async def test_find_by_symbol_and_timerange_success(self):
+        """Test la recherche de données par symbole et plage temporelle."""
+        # Arrange
+        symbol = "AAPL"
+        start_time = datetime.now(timezone.utc) - timedelta(days=30)
+        end_time = datetime.now(timezone.utc)
+        
+        mock_df = pd.DataFrame({
+            'Open': [150.0, 151.0],
+            'High': [155.0, 156.0],
+            'Low': [149.0, 150.0],
+            'Close': [154.0, 155.0],
+            'Volume': [1000000, 1100000]
+        }, index=[
+            datetime.now(timezone.utc) - timedelta(days=2),
+            datetime.now(timezone.utc) - timedelta(days=1)
+        ])
+        
+        self.mock_archive_repo.get_symbol_data.return_value = mock_df
+        
+        # Act
+        result = await self.adapter.find_by_symbol_and_timerange(
+            symbol, start_time, end_time, "1d", limit=10
+        )
+        
+        # Assert
+        assert len(result) == 2
+        assert all(data.symbol == symbol for data in result)
+        assert all(hasattr(data, 'open_price') for data in result)
+        self.mock_archive_repo.get_symbol_data.assert_called_once_with(symbol, 30)
+
+    async def test_find_by_symbol_and_timerange_no_data(self):
+        """Test la gestion du cas sans données."""
+        # Arrange
+        self.mock_archive_repo.get_symbol_data.return_value = None
+        
+        # Act
+        result = await self.adapter.find_by_symbol_and_timerange(
+            "NONEXISTENT", datetime.now(timezone.utc), datetime.now(timezone.utc)
+        )
+        
+        # Assert
+        assert result == []
+
+    async def test_find_latest_by_symbol_success(self):
+        """Test la recherche de données les plus récentes par symbole."""
+        # Arrange
+        symbol = "MSFT"
+        latest_data = {
+            "current_price": Decimal("300.00"),
+            "volume": 2000000,
+            "last_updated": datetime.now(timezone.utc)
+        }
+        
+        self.mock_archive_repo.get_latest_price_data.return_value = latest_data
+        
+        # Act
+        result = await self.adapter.find_latest_by_symbol(symbol, "1d")
+        
+        # Assert
+        assert result is not None
+        assert result.symbol == symbol
+        assert abs(result.close_price - 300.00) < 0.01
+        assert result.volume == 2000000
+        self.mock_archive_repo.get_latest_price_data.assert_called_once_with(symbol)
+
+    async def test_find_latest_by_symbol_no_data(self):
+        """Test la gestion du cas sans données récentes."""
+        # Arrange
+        self.mock_archive_repo.get_latest_price_data.return_value = None
+        
+        # Act
+        result = await self.adapter.find_latest_by_symbol("NONEXISTENT")
+        
+        # Assert
+        assert result is None
+
+    async def test_save_raises_not_implemented(self):
+        """Test que la méthode save lève NotImplementedError."""
+        # Arrange - créer un mock pour MarketData
+        mock_market_data = Mock()
+        
+        # Act & Assert
+        with pytest.raises(NotImplementedError, match="Archive repository is read-only"):
+            await self.adapter.save(mock_market_data)
+
+    async def test_find_by_symbols_success(self):
+        """Test la recherche de données pour plusieurs symboles."""
+        # Arrange
+        symbols = ["AAPL", "MSFT", "GOOGL"]
+        
+        def mock_latest_side_effect(symbol, _interval):
+            if symbol in ["AAPL", "MSFT"]:
+                return Mock(symbol=symbol)
+            else:
+                return None  # GOOGL pas de données
+        
+        with patch.object(self.adapter, 'find_latest_by_symbol', side_effect=mock_latest_side_effect):
+            # Act
+            result = await self.adapter.find_by_symbols(symbols, "1d", limit=100)
+            
+            # Assert
+            assert len(result) == 2  # AAPL et MSFT seulement
+            assert result[0].symbol == "AAPL"
+            assert result[1].symbol == "MSFT"
+
+    async def test_delete_old_data_raises_not_implemented(self):
+        """Test que la méthode delete_old_data lève NotImplementedError."""
+        # Act & Assert
+        with pytest.raises(NotImplementedError, match="Archive repository is read-only"):
+            await self.adapter.delete_old_data(30)
+
+
+@pytest.mark.integration
+class TestArchivedMarketDataRepositoryIntegration:
+    """Tests d'intégration pour ArchivedMarketDataRepository."""
+
+    @patch('psycopg2.connect')
+    def test_repository_full_workflow(self, mock_connect):
+        """Test du workflow complet du repository."""
+        # Arrange
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_connect.return_value = mock_connection
+        mock_connection.__enter__.return_value = mock_connection
+        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+        
+        # Mock pour get_available_symbols
+        mock_cursor.fetchall.side_effect = [
+            [{"symbol": "AAPL"}, {"symbol": "MSFT"}],  # get_available_symbols
+            [{"symbol": "AAPL"}, {"symbol": "MSFT"}],  # get_symbols_with_sufficient_data
+        ]
+        
+        repository = ArchivedMarketDataRepository("postgresql://test:test@localhost/test")
+        
+        # Act
+        symbols = repository.get_available_symbols()
+        sufficient_symbols = repository.get_symbols_with_sufficient_data(30)
+        
+        # Assert
+        assert symbols == ["AAPL", "MSFT"]
+        assert sufficient_symbols == ["AAPL", "MSFT"]
+        assert mock_cursor.execute.call_count == 2
+
+    def test_repository_initialization(self):
+        """Test l'initialisation du repository."""
+        # Arrange & Act
+        database_url = "postgresql://user:pass@host:port/db"
+        repository = ArchivedMarketDataRepository(database_url)
+        
+        # Assert
+        assert repository.database_url == database_url
+
+    @patch.object(ArchivedMarketDataRepository, 'get_market_data_for_analysis')
+    @patch('boursa_vision.infrastructure.persistence.repositories.archived_market_data_repository.logger')
+    def test_error_handling_in_bulk_operations(self, mock_logger, mock_get_analysis):
+        """Test la gestion d'erreurs dans les opérations en lot."""
+        # Arrange
+        repository = ArchivedMarketDataRepository("postgresql://test/test")
+        symbols = ["VALID", "INVALID"]
+        
+        def mock_side_effect(symbol):
+            if symbol == "VALID":
+                return {"history": pd.DataFrame({"Close": range(30)}), "info": {}}
+            else:
+                # Simule une erreur de base de données avec une exception custom
+                class DatabaseConnectionError(Exception):
+                    """Erreur de connexion à la base de données."""
+                
+                raise DatabaseConnectionError("Database connection lost")
+        
+        mock_get_analysis.side_effect = mock_side_effect
+        
+        # Act
+        result = repository.get_bulk_analysis_data(symbols)
+        
+        # Assert
+        assert len(result) == 1
+        assert "VALID" in result
+        mock_logger.error.assert_called_once()
+        mock_logger.info.assert_called_once()
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])
