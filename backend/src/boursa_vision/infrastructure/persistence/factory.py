@@ -7,7 +7,7 @@ enabling easy dependency injection and testability.
 
 from typing import Protocol
 
-from application.exceptions import FactoryProviderError
+from boursa_vision.application.exceptions import FactoryProviderError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...domain.repositories.investment_repository import IInvestmentRepository
