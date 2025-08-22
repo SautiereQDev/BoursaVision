@@ -1,0 +1,128 @@
+# Configuration Pytest pour BoursaVision Backend
+# ==============================================
+
+[tool.pytest.ini_options]
+# Répertoires de tests
+testpaths = ["tests"]
+
+# Patterns des fichiers de tests
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+# Marqueurs personnalisés pour organiser les tests
+markers = [
+    # Marqueurs de vitesse
+    "fast: tests rapides (< 1 seconde)",
+    "slow: tests lents (> 5 secondes)",
+    
+    # Marqueurs de type
+    "unit: tests unitaires isolés",
+    "integration: tests d'intégration avec base de données",
+    "e2e: tests end-to-end complets",
+    
+    # Marqueurs de couche architecturale  
+    "domain: tests de la couche domaine",
+    "application: tests de la couche application",
+    "infrastructure: tests de la couche infrastructure",
+    "interfaces: tests des interfaces/API",
+    
+    # Marqueurs de composants
+    "database: tests nécessitant une base de données",
+    "external_api: tests avec APIs externes", 
+    "filesystem: tests avec le système de fichiers",
+    "network: tests nécessitant le réseau",
+    
+    # Marqueurs de criticité
+    "critical: tests critiques pour le business",
+    "smoke: tests de fumée essentiels",
+    
+    # Marqueurs temporaires
+    "skip: tests temporairement désactivés",
+    "wip: work in progress - tests en cours de développement",
+]
+
+# Options d'exécution
+addopts = [
+    # Verbosité et format de sortie
+    "-v",                           # Mode verbose
+    "--strict-markers",             # Marqueurs stricts (erreur si marqueur non défini)
+    "--tb=short",                   # Format court pour les tracebacks
+    "--disable-warnings",           # Désactiver les warnings Python
+    
+    # Configuration de couverture
+    "--cov=src",                    # Répertoire source pour la couverture
+    "--cov-branch",                 # Couverture des branches
+    "--cov-report=term-missing",    # Afficher lignes manquantes dans le terminal
+    "--cov-report=html:htmlcov",    # Rapport HTML
+    "--cov-report=xml",             # Rapport XML (pour CI/CD)
+    
+    # Objectifs de couverture progressive
+    "--cov-fail-under=25",          # Échouer si couverture < 25% (objectif initial)
+    
+    # Gestion des tests
+    "--maxfail=5",                  # Arrêter après 5 échecs
+    "--durations=10",               # Afficher les 10 tests les plus lents
+]
+
+# Configuration de la collecte des tests
+collect_ignore = [
+    # Ignorer ces répertoires lors de la collecte
+    "scripts/",
+    "migrations/",
+    "htmlcov/",
+    "build/",
+    "dist/",
+    ".venv/",
+    "__pycache__/",
+]
+
+# Options pour les tests asynchrones
+asyncio_mode = "auto"              # Détection automatique des tests async
+
+# Filtres pour les warnings
+filterwarnings = [
+    # Ignorer les warnings de dépendances tierces
+    "ignore::DeprecationWarning:sqlalchemy.*",
+    "ignore::DeprecationWarning:alembic.*",
+    "ignore::PendingDeprecationWarning:factory.*",
+    
+    # Warnings spécifiques à transformer en erreurs
+    "error::UserWarning:tests.*",
+    
+    # Ignorer les warnings de tests
+    "ignore::pytest.PytestUnraisableExceptionWarning",
+]
+
+# Configuration des fixtures
+usefixtures = []
+
+# Minimum version de Python
+minversion = "3.11"
+
+# Configuration des logs lors des tests
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+# Logs dans fichier
+log_file = "tests.log"
+log_file_level = "DEBUG"
+log_file_format = "%(asctime)s [%(levelname)8s] %(filename)s:%(lineno)d %(name)s: %(message)s"
+log_file_date_format = "%Y-%m-%d %H:%M:%S"
+
+# Configuration des timeouts pour éviter les tests qui traînent
+timeout = 300                      # 5 minutes max par test
+timeout_method = "thread"
+
+# Paramètres spécifiques aux plugins
+# Plugin pytest-mock
+mock_use_standalone_module = true
+
+# Plugin pytest-cov
+cov_config = ".coveragerc"
+
+# Configuration pour l'exécution en parallèle (pytest-xdist)
+# Décommenter si pytest-xdist est installé
+# addopts += ["-n", "auto"]        # Utiliser tous les CPU disponibles

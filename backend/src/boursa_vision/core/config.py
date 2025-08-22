@@ -15,6 +15,22 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import json
+
+
+def parse_list_env(value: str) -> List[str]:
+    """Parse une liste depuis une variable d'environnement."""
+    if not value or value == "":
+        return []
+    # Essaye d'abord JSON
+    try:
+        parsed = json.loads(value)
+        if isinstance(parsed, list):
+            return parsed
+    except json.JSONDecodeError:
+        pass
+    # Sinon, split par virgules
+    return [item.strip() for item in value.split(",") if item.strip()]
 
 
 class GlobalSettings(BaseSettings):
@@ -82,12 +98,22 @@ class GlobalSettings(BaseSettings):
     # API CONFIGURATION
     # =====================================
     api_v1_str: str = Field(default="/api/v1", env="API_V1_STR")
-    allowed_hosts: List[str] = Field(
-        default=["localhost", "127.0.0.1"], env="ALLOWED_HOSTS"
-    )
-    cors_origins: List[str] = Field(
-        default=["http://localhost:3000"], env="CORS_ORIGINS"
-    )
+    allowed_hosts_env: Optional[str] = Field(default=None, env="ALLOWED_HOSTS")
+    cors_origins_env: Optional[str] = Field(default=None, env="CORS_ORIGINS")
+
+    @property
+    def allowed_hosts(self) -> List[str]:
+        """Liste des hôtes autorisés."""
+        if self.allowed_hosts_env:
+            return parse_list_env(self.allowed_hosts_env)
+        return ["localhost", "127.0.0.1"]
+
+    @property  
+    def cors_origins(self) -> List[str]:
+        """Liste des origines CORS autorisées."""
+        if self.cors_origins_env:
+            return parse_list_env(self.cors_origins_env)
+        return ["http://localhost:3000"]
 
     # =====================================
     # FRONTEND CONFIGURATION
@@ -160,6 +186,7 @@ class GlobalSettings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
         env_list_separator=",",
+        env_parse_none_str="empty",
     )
 
     @field_validator("database_url", mode="before")
@@ -246,6 +273,41 @@ class GlobalSettings(BaseSettings):
             return v
         values = info.data if hasattr(info, "data") else {}
         return values.get("secret_key", "")
+
+    @field_validator(
+        "archival_frequent_interval", "archival_daily_hour", "archival_weekly_day", 
+        "archival_weekly_hour", "archival_batch_size", "archival_concurrent_workers",
+        "archival_retention_days", "archival_max_retries", "archival_retry_delay", 
+        "archival_error_threshold", mode="before"
+    )
+    @classmethod
+    def clean_numeric_env_vars(cls, v: Any) -> Any:
+        """Nettoie les commentaires des variables d'environnement numériques."""
+        if isinstance(v, str):
+            # Retire tout ce qui vient après un #
+            cleaned = v.split('#')[0].strip()
+            try:
+                # Essaye de convertir en int si c'est possible
+                if '.' in cleaned:
+                    return float(cleaned)
+                else:
+                    return int(cleaned)
+            except ValueError:
+                return cleaned
+        return v
+
+    @field_validator("archival_request_delay", mode="before")
+    @classmethod
+    def clean_float_env_vars(cls, v: Any) -> Any:
+        """Nettoie les commentaires des variables d'environnement flottantes."""
+        if isinstance(v, str):
+            # Retire tout ce qui vient après un #
+            cleaned = v.split('#')[0].strip()
+            try:
+                return float(cleaned)
+            except ValueError:
+                return cleaned
+        return v
 
     @property
     def is_development(self) -> bool:

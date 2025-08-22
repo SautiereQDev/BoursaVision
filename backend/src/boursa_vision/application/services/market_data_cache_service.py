@@ -22,13 +22,14 @@ from uuid import uuid4
 # Mock YFinance pour l'instant
 try:
     import yfinance as yf
-
+    import pandas as pd
     YF_AVAILABLE = True
 except ImportError:
     yf = None
+    pd = None
     YF_AVAILABLE = False
 
-from ..entities.market_data_timeline import (
+from ...domain.entities.market_data_timeline import (
     Currency,
     DataSource,
     IntervalType,
@@ -37,7 +38,7 @@ from ..entities.market_data_timeline import (
     PrecisionLevel,
     TimelinePoint,
 )
-from ..services.cache_strategies import (
+from ...domain.services.cache_strategies import (
     CacheConfig,
     MarketDataCacheManager,
     PrecisionStrategyFactory,
@@ -105,7 +106,7 @@ class YFinanceDataFetcher:
                         amount=Decimal(str(row.get("Adj Close", row["Close"]))),
                         currency=currency,
                     ),
-                    volume=int(row["Volume"]) if not pd.isna(row["Volume"]) else 0,
+                    volume=int(row["Volume"]) if (pd and not pd.isna(row["Volume"])) else 0,
                     interval_type=interval_type,
                     source=DataSource.YFINANCE,
                     precision_level=precision_level,
@@ -132,7 +133,7 @@ class YFinanceDataFetcher:
         self.last_request_time = datetime.now().timestamp()
 
     def _generate_mock_data(
-        self, symbol: str, period: str, interval: str
+        self, symbol: str, period: str, interval: str  # period utilisé dans la logique
     ) -> List[TimelinePoint]:
         """Génère des données mock pour les tests"""
         points = []
@@ -456,7 +457,7 @@ class MarketDataCacheService:
                 results[symbol] = False
                 logger.error(f"Error refreshing {symbol}: {result}")
             else:
-                results[symbol] = result
+                results[symbol] = bool(result)
 
         return results
 
@@ -487,6 +488,10 @@ class MarketDataCacheService:
             self._timelines.clear()
             self.cache_manager.clear_all()
 
+    def get_loaded_symbols(self) -> List[str]:
+        """Retourne la liste des symboles actuellement chargés en mémoire"""
+        return list(self._timelines.keys())
+
     async def cleanup_old_data(
         self,
         older_than_days: int = 30,
@@ -494,7 +499,7 @@ class MarketDataCacheService:
     ) -> Dict[str, int]:
         """Nettoie les anciennes données selon les critères"""
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=older_than_days)
-        results = {}
+        results: Dict[str, int] = {}
 
         if not self.timeline_repository:
             logger.warning("No repository available for cleanup")

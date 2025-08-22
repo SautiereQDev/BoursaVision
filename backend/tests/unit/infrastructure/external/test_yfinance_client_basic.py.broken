@@ -1,0 +1,294 @@
+"""
+Tests for YFinance Client
+========================
+
+Comprehensive test suite for the optimized YFinance client.
+"""
+
+import pytest
+from unittest.mock import Mock, patch
+
+# Try to import - if fails, skip all tests in this mo    def test_yfinance_not_available_error(self):
+        """Test proper error when yfinance is not available."""
+        # Temporarily make yfinance unavailable by patching it to None
+        with patch('boursa_vision.infrastructure.external.yfinance_client.yf', None):
+            config = YFinanceConfig()
+            
+            # The constructor should raise ImportError when yf is None
+            with pytest.raises(ImportError, match="yfinance package is required"):
+                OptimizedYFinanceClient(config):
+    from boursa_vision.infrastructure.external.yfinance_client import (
+        YFinanceConfig,
+        RequestMetrics,
+        YFinanceError,
+        YFinanceRateLimitError,
+        YFinanceTimeoutError,
+        OptimizedYFinanceClient,
+    )
+    HAS_YFINANCE_CLIENT = True
+except ImportError:
+    HAS_YFINANCE_CLIENT = False
+    # Create dummy classes to prevent NameError
+    YFinanceConfig = object
+    RequestMetrics = object
+    YFinanceError = Exception
+    YFinanceRateLimitError = Exception
+    YFinanceTimeoutError = Exception
+    OptimizedYFinanceClient = object
+
+pytestmark = pytest.mark.skipif(not HAS_YFINANCE_CLIENT, reason="YFinance client module not available")
+
+
+class TestYFinanceConfig:
+    """Test YFinanceConfig configuration dataclass."""
+
+    def test_yfinance_config_default_values(self):
+        """Test YFinanceConfig with default values."""
+        # Act
+        config = YFinanceConfig()
+
+        # Assert
+        assert config.max_requests_per_minute == 2000
+        assert config.rate_limit_window == 60
+        assert config.max_concurrent_requests == 50
+        assert config.request_timeout == 30.0
+        assert config.max_retries == 3
+        assert config.retry_base_delay == 1.0
+        assert config.retry_max_delay == 60.0
+        assert config.circuit_breaker_failure_threshold == 5
+        assert config.circuit_breaker_recovery_timeout == 60.0
+        assert config.enable_cache is True
+
+    def test_yfinance_config_custom_values(self):
+        """Test YFinanceConfig with custom values."""
+        # Act
+        config = YFinanceConfig(
+            max_requests_per_minute=1000,
+            rate_limit_window=30,
+            max_concurrent_requests=25,
+            request_timeout=15.0,
+            max_retries=5,
+            enable_cache=False
+        )
+
+        # Assert
+        assert config.max_requests_per_minute == 1000
+        assert config.rate_limit_window == 30
+        assert config.max_concurrent_requests == 25
+        assert config.request_timeout == 15.0
+        assert config.max_retries == 5
+        assert config.enable_cache is False
+
+
+class TestRequestMetrics:
+    """Test RequestMetrics tracking and calculations."""
+
+    def test_request_metrics_initialization(self):
+        """Test RequestMetrics default initialization."""
+        # Act
+        metrics = RequestMetrics()
+
+        # Assert
+        assert metrics.total_requests == 0
+        assert metrics.successful_requests == 0
+        assert metrics.failed_requests == 0
+        assert metrics.cache_hits == 0
+        assert metrics.cache_misses == 0
+        assert metrics.rate_limit_errors == 0
+        assert metrics.circuit_breaker_trips == 0
+        assert abs(metrics.average_response_time - 0.0) < 0.01
+
+    def test_success_rate_calculation_zero_requests(self):
+        """Test success rate with zero requests."""
+        # Arrange
+        metrics = RequestMetrics()
+
+        # Act
+        success_rate = metrics.success_rate()
+
+        # Assert
+        assert abs(success_rate - 0.0) < 0.01
+
+    def test_success_rate_calculation_with_requests(self):
+        """Test success rate with actual requests."""
+        # Arrange
+        metrics = RequestMetrics()
+        metrics.total_requests = 100
+        metrics.successful_requests = 85
+
+        # Act
+        success_rate = metrics.success_rate()
+
+        # Assert
+        assert abs(success_rate - 85.0) < 0.01
+
+    def test_cache_hit_rate_calculation_zero_cache_requests(self):
+        """Test cache hit rate with no cache requests."""
+        # Arrange
+        metrics = RequestMetrics()
+
+        # Act
+        hit_rate = metrics.cache_hit_rate()
+
+        # Assert
+        assert abs(hit_rate - 0.0) < 0.01
+
+    def test_cache_hit_rate_calculation_with_cache_requests(self):
+        """Test cache hit rate with actual cache usage."""
+        # Arrange
+        metrics = RequestMetrics()
+        metrics.cache_hits = 30
+        metrics.cache_misses = 20
+
+        # Act
+        hit_rate = metrics.cache_hit_rate()
+
+        # Assert
+        assert abs(hit_rate - 60.0) < 0.01
+
+
+class TestYFinanceExceptions:
+    """Test YFinance custom exceptions."""
+
+    def test_yfinance_error_inheritance(self):
+        """Test YFinanceError is properly inherited from Exception."""
+        # Act
+        error = YFinanceError("Test error")
+
+        # Assert
+        assert isinstance(error, Exception)
+        assert str(error) == "Test error"
+
+    def test_yfinance_rate_limit_error_inheritance(self):
+        """Test YFinanceRateLimitError inheritance."""
+        # Act
+        error = YFinanceRateLimitError("Rate limit exceeded")
+
+        # Assert
+        assert isinstance(error, YFinanceError)
+        assert isinstance(error, Exception)
+        assert str(error) == "Rate limit exceeded"
+
+    def test_yfinance_timeout_error_inheritance(self):
+        """Test YFinanceTimeoutError inheritance."""
+        # Act
+        error = YFinanceTimeoutError("Request timeout")
+
+        # Assert
+        assert isinstance(error, YFinanceError)
+        assert isinstance(error, Exception)
+        assert str(error) == "Request timeout"
+
+
+class TestOptimizedYFinanceClientBasics:
+    """Test basic OptimizedYFinanceClient functionality."""
+
+    @patch('boursa_vision.infrastructure.external.yfinance_client.yf')
+    @patch('boursa_vision.infrastructure.external.yfinance_client.ThreadPoolExecutor')
+    def test_client_initialization_mocked(self, mock_thread_pool, mock_yf):
+        """Test client initialization with full mocking."""
+        # Arrange
+        mock_executor = Mock()
+        mock_thread_pool.return_value = mock_executor
+
+        # Mock all initialization methods
+        with patch.object(OptimizedYFinanceClient, '_init_rate_limiter') as mock_rate_limiter, \
+             patch.object(OptimizedYFinanceClient, '_init_circuit_breaker') as mock_circuit_breaker, \
+             patch.object(OptimizedYFinanceClient, '_init_retry_handler') as mock_retry_handler, \
+             patch.object(OptimizedYFinanceClient, '_init_cache') as mock_cache:
+            
+            # Act
+            client = OptimizedYFinanceClient(YFinanceConfig())
+
+            # Assert
+            assert client is not None
+            assert isinstance(client.config, YFinanceConfig)
+            assert isinstance(client.metrics, RequestMetrics)
+            mock_rate_limiter.assert_called_once()
+            mock_circuit_breaker.assert_called_once()
+            mock_retry_handler.assert_called_once()
+            mock_cache.assert_called_once()
+
+    @patch('boursa_vision.infrastructure.external.yfinance_client.yf')
+    @patch('boursa_vision.infrastructure.external.yfinance_client.ThreadPoolExecutor')
+    def test_client_with_custom_config(self, mock_thread_pool, mock_yf):
+        """Test client with custom configuration."""
+        # Arrange
+        custom_config = YFinanceConfig(max_requests_per_minute=1000)
+        mock_executor = Mock()
+        mock_thread_pool.return_value = mock_executor
+
+        # Mock all initialization methods
+        with patch.object(OptimizedYFinanceClient, '_init_rate_limiter'), \
+             patch.object(OptimizedYFinanceClient, '_init_circuit_breaker'), \
+             patch.object(OptimizedYFinanceClient, '_init_retry_handler'), \
+             patch.object(OptimizedYFinanceClient, '_init_cache'):
+            
+            # Act
+            client = OptimizedYFinanceClient(custom_config)
+
+            # Assert
+            assert client.config == custom_config
+            assert client.config.max_requests_per_minute == 1000
+
+    @patch('boursa_vision.infrastructure.external.yfinance_client.yf')
+    def test_yfinance_not_available_error(self, mock_yf):
+        """Test error when yfinance is not available."""
+        # Arrange
+        mock_yf.__bool__ = Mock(return_value=False)
+        
+        # Act & Assert
+        with pytest.raises((ImportError, AttributeError)):
+            OptimizedYFinanceClient(YFinanceConfig())
+
+
+# Simple integration-style tests that don't require complex mocking
+class TestYFinanceClientIntegration:
+    """Integration-style tests for YFinance client."""
+
+    def test_config_dataclass_functionality(self):
+        """Test that YFinanceConfig behaves as expected dataclass."""
+        # Act
+        config1 = YFinanceConfig()
+        config2 = YFinanceConfig()
+        config3 = YFinanceConfig(max_requests_per_minute=1000)
+
+        # Assert
+        assert config1 == config2  # Same default values
+        assert config1 != config3  # Different values
+        assert hasattr(config1, '__dataclass_fields__')  # Is a dataclass
+
+    def test_metrics_calculations(self):
+        """Test metrics calculations work correctly."""
+        # Arrange
+        metrics = RequestMetrics()
+        
+        # Test zero division safety
+        assert metrics.success_rate() == 0.0
+        assert metrics.cache_hit_rate() == 0.0
+        
+        # Test actual calculations
+        metrics.total_requests = 100
+        metrics.successful_requests = 90
+        metrics.cache_hits = 60
+        metrics.cache_misses = 40
+        
+        # Act & Assert
+        assert metrics.success_rate() == 90.0
+        assert metrics.cache_hit_rate() == 60.0
+
+    def test_exception_hierarchy(self):
+        """Test exception hierarchy is correct."""
+        # Test hierarchy
+        assert issubclass(YFinanceRateLimitError, YFinanceError)
+        assert issubclass(YFinanceTimeoutError, YFinanceError)
+        assert issubclass(YFinanceError, Exception)
+        
+        # Test instantiation
+        base_error = YFinanceError("Base error")
+        rate_error = YFinanceRateLimitError("Rate limit error")
+        timeout_error = YFinanceTimeoutError("Timeout error")
+        
+        assert isinstance(base_error, Exception)
+        assert isinstance(rate_error, YFinanceError)
+        assert isinstance(timeout_error, YFinanceError)

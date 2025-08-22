@@ -5,8 +5,10 @@ from typing import Optional
 
 import structlog
 from fastapi import APIRouter, HTTPException, Query, status
+from typing import Any
 
-from ..dependencies import Container, CurrentUserOptional
+# TODO: Fix circular import issue
+# from ..dependencies import Any, Any
 from ..exceptions import ExternalServiceError, NotFoundError
 from ..schemas import MarketDataResponse
 
@@ -30,8 +32,8 @@ router = APIRouter(
 )
 async def get_market_data(
     symbol: str,
-    container: Container,
-    current_user: CurrentUserOptional,
+    container: Any,
+    current_user: Any,
     period: Optional[str] = Query(
         "1d",
         description="Time period (1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max)",
@@ -88,8 +90,8 @@ async def get_market_data(
 )
 async def get_latest_price(
     symbol: str,
-    container: Container,
-    current_user: CurrentUserOptional,
+    container: Any,
+    current_user: Any,
 ):
     """Get latest price for a symbol."""
     try:
@@ -137,8 +139,8 @@ async def get_latest_price(
 )
 async def search_symbols(
     query: str,
-    container: Container,
-    current_user: CurrentUserOptional,
+    container: Any,
+    current_user: Any,
     limit: int = Query(10, ge=1, le=50, description="Maximum number of results"),
 ):
     """Search for symbols by query."""
