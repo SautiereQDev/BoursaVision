@@ -17,10 +17,23 @@ try:
 except ImportError:
     CELERY_AVAILABLE = False
 
+# Force mock mode during testing
+USE_MOCK_CELERY = os.getenv("USE_MOCK_CELERY", "false").lower() == "true"
+
+if not CELERY_AVAILABLE or USE_MOCK_CELERY:
     # Mock pour développement
+    class MockSignal:
+        def connect(self, func):
+            return func
+
+    class MockSignals:
+        def __init__(self):
+            self.task_failure = MockSignal()
+            self.task_success = MockSignal()
+
     class MockCelery:
         def __init__(self, *args, **kwargs):
-            pass
+            self.signals = MockSignals()
 
         def task(self, *args, **kwargs):
             def decorator(func):
@@ -177,19 +190,25 @@ def monitor_task_success(self, task_id: str, result: Dict[str, Any]):
     logger.info(f"Task {task_id} completed successfully: {result}")
 
 
-if CELERY_AVAILABLE:
-    # Hooks pour le monitoring
-    @celery_app.signals.task_failure.connect
-    def task_failure_handler(
-        sender=None, task_id=None, exception=None, einfo=None, **kwds
-    ):
-        """Handler pour les échecs de tâches."""
-        logger.error(f"Task failure: {task_id} - {exception}")
+if CELERY_AVAILABLE and not USE_MOCK_CELERY:
+    try:
+        # Vérifier que l'objet signals est disponible sur l'instance Celery
+        if hasattr(celery_app, 'signals'):
+            # Hooks pour le monitoring
+            @celery_app.signals.task_failure.connect
+            def task_failure_handler(
+                sender=None, task_id=None, exception=None, einfo=None, **kwds
+            ):
+                """Handler pour les échecs de tâches."""
+                logger.error(f"Task failure: {task_id} - {exception}")
 
-    @celery_app.signals.task_success.connect
-    def task_success_handler(sender=None, task_id=None, result=None, **kwds):
-        """Handler pour les succès de tâches."""
-        logger.info(f"Task success: {task_id}")
+            @celery_app.signals.task_success.connect
+            def task_success_handler(sender=None, task_id=None, result=None, **kwds):
+                """Handler pour les succès de tâches."""
+                logger.info(f"Task success: {task_id}")
+    except (AttributeError, ImportError) as e:
+        logger.warning(f"Could not set up Celery signal handlers: {e}")
+        logger.info("Running in mock mode - signal handlers disabled")
 
 
 if __name__ == "__main__":

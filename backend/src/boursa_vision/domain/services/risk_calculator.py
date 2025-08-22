@@ -9,7 +9,7 @@ Pure business logic without external dependencies.
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from ..entities.investment import Investment, InvestmentSector, MarketCap
 from ..entities.portfolio import Portfolio, Position, RiskLimits
@@ -127,7 +127,7 @@ class RiskCalculatorService:
             data.positions, data.current_prices
         )
         sector_concentration = self._calculate_sector_concentration(
-            data.positions, data.investments, data.current_prices
+            data.positions, data.investments, data.current_prices, portfolio_value
         )
         largest_position = self._get_largest_position_weight(
             data.positions, data.current_prices
@@ -179,7 +179,7 @@ class RiskCalculatorService:
 
         # Check sector concentration
         sector_weights = self._calculate_sector_concentration(
-            positions, investments, current_prices
+            positions, investments, current_prices, portfolio_value
         )
 
         for sector, weight in sector_weights.items():
@@ -229,7 +229,7 @@ class RiskCalculatorService:
         )
         suggestions.extend(
             self._suggest_reduce_sector_concentration(
-                positions, investments, current_prices, risk_limits
+                positions, investments, current_prices, risk_limits, portfolio_value
             )
         )
         suggestions.extend(
@@ -262,10 +262,10 @@ class RiskCalculatorService:
         return suggestions
 
     def _suggest_reduce_sector_concentration(
-        self, positions, investments, current_prices, risk_limits
+        self, positions, investments, current_prices, risk_limits, portfolio_value
     ):
         sector_weights = self._calculate_sector_concentration(
-            positions, investments, current_prices
+            positions, investments, current_prices, portfolio_value
         )
         suggestions = []
         for sector, weight in sector_weights.items():
@@ -318,38 +318,38 @@ class RiskCalculatorService:
     def _get_market_cap_risk(self, market_cap: MarketCap) -> float:
         """Get risk score based on market cap (0-100)"""
         risk_scores = {
-            MarketCap.MEGA: 10,
-            MarketCap.LARGE: 20,
-            MarketCap.MID: 40,
-            MarketCap.SMALL: 60,
-            MarketCap.MICRO: 80,
-            MarketCap.NANO: 100,
+            MarketCap.MEGA: 10.0,
+            MarketCap.LARGE: 20.0,
+            MarketCap.MID: 40.0,
+            MarketCap.SMALL: 60.0,
+            MarketCap.MICRO: 80.0,
+            MarketCap.NANO: 100.0,
         }
-        return risk_scores.get(market_cap, 50)
+        return risk_scores.get(market_cap, 50.0)
 
     def _get_sector_risk(self, sector: InvestmentSector) -> float:
         """Get risk score based on sector (0-100)"""
         # High volatility sectors
         high_risk_sectors = {
-            InvestmentSector.TECHNOLOGY: 70,
-            InvestmentSector.ENERGY: 80,
-            InvestmentSector.TELECOMMUNICATIONS: 60,
+            InvestmentSector.TECHNOLOGY: 70.0,
+            InvestmentSector.ENERGY: 80.0,
+            InvestmentSector.TELECOMMUNICATIONS: 60.0,
         }
 
         # Medium volatility sectors
         medium_risk_sectors = {
-            InvestmentSector.HEALTHCARE: 45,
-            InvestmentSector.FINANCIAL: 50,
-            InvestmentSector.CONSUMER_DISCRETIONARY: 55,
-            InvestmentSector.INDUSTRIALS: 40,
-            InvestmentSector.MATERIALS: 60,
+            InvestmentSector.HEALTHCARE: 45.0,
+            InvestmentSector.FINANCIAL: 50.0,
+            InvestmentSector.CONSUMER_DISCRETIONARY: 55.0,
+            InvestmentSector.INDUSTRIALS: 40.0,
+            InvestmentSector.MATERIALS: 60.0,
         }
 
         # Low volatility sectors
         low_risk_sectors = {
-            InvestmentSector.UTILITIES: 20,
-            InvestmentSector.CONSUMER_STAPLES: 25,
-            InvestmentSector.REAL_ESTATE: 35,
+            InvestmentSector.UTILITIES: 20.0,
+            InvestmentSector.CONSUMER_STAPLES: 25.0,
+            InvestmentSector.REAL_ESTATE: 35.0,
         }
 
         if sector in high_risk_sectors:
@@ -523,10 +523,19 @@ class RiskCalculatorService:
         positions: List[Position],
         investments: Dict[str, Investment],
         current_prices: Dict[str, Money],
+        portfolio_value: Optional[Money] = None,
     ) -> Dict[str, float]:
-        """Calculate sector concentration percentages"""
+        """Calculate sector concentration percentages
+        
+        Args:
+            positions: List of positions to analyze
+            investments: Investment data
+            current_prices: Current market prices
+            portfolio_value: Total portfolio value for percentage calculation.
+                           If None, uses sum of position values (less accurate)
+        """
         sector_values: Dict[str, Decimal] = {}
-        total_value = Decimal("0")
+        position_total_value = Decimal("0")
 
         for position in positions:
             in_investments = position.symbol in investments
@@ -539,13 +548,16 @@ class RiskCalculatorService:
                 sector = investment.sector.value
                 current_sector_value = sector_values.get(sector, Decimal("0"))
                 sector_values[sector] = current_sector_value + value
-                total_value += value
+                position_total_value += value
 
-        if total_value == 0:
+        # Use portfolio_value if provided, otherwise fall back to sum of positions
+        total_for_percentage = portfolio_value.amount if portfolio_value else position_total_value
+        
+        if total_for_percentage == 0:
             return {}
 
         return {
-            sector: float(value / total_value * 100)
+            sector: float(value / total_for_percentage * 100)
             for sector, value in sector_values.items()
         }
 

@@ -32,7 +32,7 @@ class UserMapper:
             username=model.username,
             first_name=model.first_name,
             last_name=model.last_name,
-            role=UserRole(model.role.lower()) if model.role else UserRole.VIEWER,
+            role=UserRole(model.role.lower()) if model.role else UserRole.BASIC,
             preferred_currency=Currency.USD,  # Default for now
             is_active=model.is_active,
             email_verified=model.is_verified,
@@ -72,6 +72,11 @@ class UserMapper:
         model.email_verified = entity.email_verified
         model.two_factor_enabled = entity.two_factor_enabled
         model.last_login = entity.last_login
+
+    @staticmethod
+    def to_model(entity: DomainUser) -> User:
+        """Alias for to_persistence method (compatibility with tests)."""
+        return UserMapper.to_persistence(entity)
 
 
 class PortfolioMapper:
@@ -164,27 +169,28 @@ class MarketDataMapper:
             source=entity.source,
         )
 
+    @classmethod
+    def to_persistence(cls, entity: DomainMarketData) -> MarketData:
+        """Alias for to_model for test compatibility."""
+        return cls.to_model(entity)
+
 
 class InvestmentMapper:
-    """Mapper for Investment domain entity ↔ SQLAlchemy models."""
+    """Mapper for Investment domain entity ↔ SQLAlchemy InvestmentModel."""
 
-    @staticmethod
-    def to_domain(instrument_model: Instrument, fundamental_data=None) -> Investment:
-        """Convert SQLAlchemy models to domain Investment entity."""
+    def to_domain(self, model: "InvestmentModel") -> Investment:
+        """Convert SQLAlchemy InvestmentModel to domain Investment entity."""
+        from .models.investment import InvestmentModel
+        
         return Investment.create(
-            symbol=instrument_model.symbol,
-            name=instrument_model.name,
-            instrument_type=instrument_model.instrument_type,
-            exchange=instrument_model.exchange,
-            currency=Currency(instrument_model.currency)
-            if instrument_model.currency
-            else Currency.USD,
-            sector=instrument_model.sector,
-            industry=instrument_model.industry,
+            symbol=model.symbol,
+            name=model.name,
+            exchange=model.exchange,
+            sector=model.sector or "Unknown",
+            industry=model.industry or "Unknown",
         )
 
-    @staticmethod
-    def to_persistence(entity: Investment) -> "InvestmentModel":
+    def to_persistence(self, entity: Investment) -> "InvestmentModel":
         """Convert domain Investment entity to SQLAlchemy InvestmentModel."""
         from .models.investment import InvestmentModel
 

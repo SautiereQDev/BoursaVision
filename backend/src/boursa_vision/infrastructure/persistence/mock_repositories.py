@@ -21,26 +21,45 @@ from boursa_vision.domain.repositories.user_repository import IUserRepository
 class MockUserRepository(IUserRepository):
     """Mock implementation for testing."""
 
-    async def save(self, entity: DomainUser) -> DomainUser:
-        """Save a user entity."""
-        return entity
-
     async def find_by_id(self, entity_id: UUID) -> Optional[DomainUser]:
         """Find a user by their ID."""
         return None
 
-    async def delete(self, entity: DomainUser) -> None:
-        """Delete a user entity."""
-        # Mock implementation - no actual deletion
-        pass
+    async def save(self, entity: DomainUser) -> DomainUser:
+        """Save a user entity."""
+        return entity
+
+    async def update(self, entity: DomainUser) -> DomainUser:
+        """Update existing entity"""
+        return entity
+
+    async def delete(self, entity_id: UUID) -> bool:
+        """Delete entity by ID"""
+        return True
 
     async def find_by_email(self, email: str) -> Optional[DomainUser]:
         """Find a user by email."""
         return None
 
+    async def find_by_email_for_auth(self, email: str) -> Optional[DomainUser]:
+        """Find a user by email for authentication."""
+        return None
+
+    async def find_by_username_for_auth(self, username: str) -> Optional[DomainUser]:
+        """Find a user by username for authentication."""
+        return None
+
     async def find_by_username(self, username: str) -> Optional[DomainUser]:
         """Find a user by username."""
         return None
+
+    async def find_by_role(self, role: str) -> List[DomainUser]:
+        """Find users by role."""
+        return []
+
+    async def find_active_users(self) -> List[DomainUser]:
+        """Find all active users."""
+        return []
 
     async def exists_by_email(self, email: str) -> bool:
         """Check if a user exists by email."""
@@ -54,14 +73,6 @@ class MockUserRepository(IUserRepository):
         """Find all users with pagination."""
         return []
 
-    async def find_by_role(self, role: str) -> List[DomainUser]:
-        """Find users by role."""
-        return []
-
-    async def find_active_users(self) -> List[DomainUser]:
-        """Find all active users."""
-        return []
-
     async def count_by_role(self, role: str) -> int:
         """Count users by role."""
         return 0
@@ -70,15 +81,19 @@ class MockUserRepository(IUserRepository):
 class MockPortfolioRepository(IPortfolioRepository):
     """Mock implementation for testing."""
 
+    async def find_by_id(self, entity_id: UUID) -> Optional[DomainPortfolio]:
+        """Find a portfolio by ID."""
+        return None
+
     async def save(self, entity: DomainPortfolio) -> DomainPortfolio:
         """Save a portfolio entity."""
         return entity
 
-    async def find_by_id(self, portfolio_id: UUID) -> Optional[DomainPortfolio]:
-        """Find a portfolio by ID."""
-        return None
+    async def update(self, entity: DomainPortfolio) -> DomainPortfolio:
+        """Update existing entity"""
+        return entity
 
-    async def delete(self, portfolio_id: UUID) -> bool:
+    async def delete(self, entity_id: UUID) -> bool:
         """Delete a portfolio by ID."""
         return True
 
@@ -112,18 +127,21 @@ class MockPortfolioRepository(IPortfolioRepository):
 class MockMarketDataRepository(IMarketDataRepository):
     """Mock implementation for testing."""
 
+    async def find_by_id(self, entity_id: UUID) -> Optional[DomainMarketData]:
+        """Find market data by ID."""
+        return None
+
     async def save(self, entity: DomainMarketData) -> DomainMarketData:
         """Save market data."""
         return entity
 
-    async def find_by_id(self, market_data_id: UUID) -> Optional[DomainMarketData]:
-        """Find market data by ID."""
-        return None
+    async def update(self, entity: DomainMarketData) -> DomainMarketData:
+        """Update existing entity"""
+        return entity
 
-    async def delete(self, entity: DomainMarketData) -> None:
-        """Delete market data."""
-        # Mock implementation - no actual deletion
-        pass
+    async def delete(self, entity_id: UUID) -> bool:
+        """Delete market data by ID."""
+        return True
 
     async def find_by_symbol_and_timestamp(
         self, symbol: str, timestamp: datetime, timeframe: Timeframe = Timeframe.DAY_1

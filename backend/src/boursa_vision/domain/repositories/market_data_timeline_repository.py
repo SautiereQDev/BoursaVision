@@ -15,47 +15,20 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Protocol
 
+try:
+    from sqlalchemy.ext.asyncio import AsyncSession
+    from sqlalchemy import select, and_, func, desc
+    from sqlalchemy.exc import IntegrityError
+    from sqlalchemy.orm import selectinload
+    from boursa_vision.infrastructure.persistence.models.market_data import MarketData
+    SQLALCHEMY_AVAILABLE = True
+except ImportError:
+    # Fallback quand SQLAlchemy n'est pas disponible - pour les tests unitaires purs
+    SQLALCHEMY_AVAILABLE = False
+    AsyncSession = object  # Type placeholder
+    MarketData = object    # Type placeholder
+    IntegrityError = Exception  # Fallback exception type
 
-# Mock SQLAlchemy imports for now
-class AsyncSession:
-    """Mock AsyncSession"""
-
-    async def execute(self, query):
-        pass
-
-    async def merge(self, obj):
-        pass
-
-    async def flush(self):
-        pass
-
-    async def rollback(self):
-        pass
-
-
-class IntegrityError(Exception):
-    """Mock IntegrityError"""
-
-    pass
-
-
-def and_(*args):
-    pass
-
-
-def desc(col):
-    pass
-
-
-def func():
-    pass
-
-
-def select(model):
-    pass
-
-
-from ...infrastructure.persistence.models.market_data import MarketData
 from ..entities.market_data_timeline import (
     DataSource,
     IntervalType,
@@ -114,6 +87,9 @@ class SqlAlchemyMarketDataTimelineRepository:
 
     async def get_timeline(self, symbol: str) -> Optional[MarketDataTimeline]:
         """Récupère la timeline complète d'un symbole"""
+        if not SQLALCHEMY_AVAILABLE:
+            return None
+            
         # Requête optimisée avec index sur symbol + time
         query = (
             select(MarketData)
@@ -130,7 +106,7 @@ class SqlAlchemyMarketDataTimelineRepository:
         # Reconstruit la timeline depuis les données DB
         timeline = MarketDataTimeline(
             symbol=symbol.upper(),
-            currency=self._get_currency_from_symbol(symbol),  # TODO: implémenter
+            currency=self._get_currency_from_symbol(symbol),
         )
 
         points = [self._db_to_timeline_point(db_point) for db_point in db_points]

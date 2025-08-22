@@ -28,7 +28,7 @@ from .middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
 )
-from .routers import investments, market_data, portfolio, websocket
+from .routers import investments, market_data, portfolio, websocket, auth
 
 # Configure structured logging
 structlog.configure(
@@ -148,7 +148,8 @@ def create_application() -> FastAPI:
     application.include_router(portfolio.router)
     application.include_router(investments.router)
     application.include_router(market_data.router)
-    application.include_router(websocket.router)
+    application.include_router(auth.router)
+    # application.include_router(websocket.router)  # Keep commented for now
 
     # Root endpoints
     @application.get("/", tags=["root"])

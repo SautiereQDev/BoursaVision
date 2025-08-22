@@ -153,7 +153,7 @@ api-dev: ## Start Development API with Hot-reload
 .PHONY: dev
 dev: ## Start all services with Hot Reload (Docker)
 	@echo "$(YELLOW)🔥 Starting Development with Hot Reload...$(NC)"
-	@docker/dev-hot-reload.sh start
+	@docker/dev-hot-reload.sh start &
 
 .PHONY: dev-restart
 dev-restart: ## Restart backend with Hot Reload

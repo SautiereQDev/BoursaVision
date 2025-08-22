@@ -57,6 +57,31 @@ class SQLAlchemyRepositoryFactory(IRepositoryFactory):
         return SQLAlchemyMarketDataRepository()
 
 
+class MockRepositoryFactory(IRepositoryFactory):
+    """Mock implementation of repository factory for testing."""
+
+    def create_user_repository(self) -> IUserRepository:
+        """Create mock user repository."""
+        from boursa_vision.infrastructure.persistence.mock_repositories import (
+            MockUserRepository,
+        )
+        return MockUserRepository()
+
+    def create_portfolio_repository(self) -> IPortfolioRepository:
+        """Create mock portfolio repository."""
+        from boursa_vision.infrastructure.persistence.mock_repositories import (
+            MockPortfolioRepository,
+        )
+        return MockPortfolioRepository()
+
+    def create_market_data_repository(self) -> IMarketDataRepository:
+        """Create mock market data repository."""
+        from boursa_vision.infrastructure.persistence.mock_repositories import (
+            MockMarketDataRepository,
+        )
+        return MockMarketDataRepository()
+
+
 class RepositoryRegistry:
     """
     Registry for managing repository instances.

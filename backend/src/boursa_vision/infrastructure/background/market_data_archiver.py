@@ -38,7 +38,7 @@ from ...domain.entities.market_data import (
 )
 from ...domain.value_objects.money import Currency
 from ...infrastructure.persistence import get_db_session, get_market_data_repository
-from ...infrastructure.persistence.mappers_new import MarketDataMapper
+from ...infrastructure.persistence.mappers import MarketDataMapper
 
 logger = logging.getLogger(__name__)
 settings = get_settings()

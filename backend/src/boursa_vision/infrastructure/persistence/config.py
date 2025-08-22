@@ -12,7 +12,7 @@ from typing import Optional
 
 import sqlalchemy
 
-from ...core.config_simple import settings
+from ...core.config import settings
 from .database import DatabaseConfig, DatabaseManager
 
 logger = logging.getLogger(__name__)

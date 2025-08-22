@@ -8,6 +8,21 @@ import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
+
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+except ImportError:
+    psycopg2 = None
+    RealDictCursor = None
+
+from boursa_vision.domain.entities.market_data import MarketData as DomainMarketData
+from boursa_vision.domain.repositories.market_data_repository import IMarketDataRepository
+
 logger = logging.getLogger(__name__)
 
 
