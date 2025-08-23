@@ -1,12 +1,12 @@
 """FastAPI application with real YFinance data and advanced investment analysis."""
 
 from datetime import UTC, datetime
-from typing import Annotated, Any
+from typing import Any
 
 import yfinance as yf
-from fastapi import FastAPI, HTTPException, Path, Query
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel
 
 # Import our advanced analysis services
 try:
@@ -25,82 +25,33 @@ except ImportError as e:
 class HealthCheckResponse(BaseModel):
     """Health check response model."""
 
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "status": "healthy",
-                "timestamp": "2024-01-01T12:00:00Z",
-                "real_data_tests": {"test_passed": True},
-                "summary": {"message": "All systems operational"}
-            }
-        }
-    )
-
-    status: str = Field(description="Service health status")
-    timestamp: str = Field(description="Health check timestamp")
-    real_data_tests: dict[str, Any] = Field(description="Real data connectivity tests")
-    summary: dict[str, Any] = Field(description="Health check summary")
+    status: str
+    timestamp: str
+    real_data_tests: dict[str, Any]
+    summary: dict[str, Any]
 
 
 class TickerInfoResponse(BaseModel):
     """Ticker information response model."""
 
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "symbol": "AAPL",
-                "info": {"companyName": "Apple Inc."},
-                "current_price": 150.25,
-                "currency": "USD",
-                "last_updated": "2024-01-01T12:00:00Z"
-            }
-        }
-    )
-
-    symbol: str = Field(description="Ticker symbol")
-    info: dict[str, Any] = Field(description="Detailed ticker information")
-    current_price: float | None = Field(default=None, description="Current stock price")
-    currency: str | None = Field(default=None, description="Price currency")
-    last_updated: str = Field(description="Last data update timestamp")
+    symbol: str
+    info: dict[str, Any]
+    current_price: float | None = None
+    currency: str | None = None
+    last_updated: str
 
 
 # Initialize FastAPI app
-def create_app() -> FastAPI:
-    """Create FastAPI application with modern configuration."""
-    app = FastAPI(
-        title="BoursaVision Market Data API",
-        description=(
-            "Advanced market data API providing real-time financial information, "
-            "technical analysis, and investment recommendations using YFinance data "
-            "with sophisticated pattern recognition and portfolio optimization."
-        ),
-        version="2.0.0",
-        docs_url="/docs",
-        redoc_url="/redoc",
-        # FastAPI 0.116+ performance optimizations
-        generate_unique_id_function=lambda route: f"{route.tags[0] if route.tags else 'default'}-{route.name}",
-        responses={
-            422: {"description": "Validation Error"},
-            500: {"description": "Internal Server Error"},
-        }
-    )
-
-    # Add CORS middleware with proper configuration
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[
-            "http://localhost:3000",
-            "http://localhost:8080",
-        ],  # Specific origins only
-        allow_credentials=True,
-        allow_methods=["GET", "POST"],
-        allow_headers=["*"],
-    )
-
-    return app
-
-
-app = create_app()
+app = FastAPI(
+    title="Boursa Vision - Advanced Investment Analysis API",
+    description=(
+        "Real financial data with comprehensive analysis using "
+        "YFinance and advanced algorithms"
+    ),
+    version="2.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
 
 # Add CORS middleware with proper configuration
 app.add_middleware(
@@ -408,16 +359,8 @@ def health_check():
     )
 
 
-@app.get(
-    "/ticker/{symbol}/info",
-    response_model=TickerInfoResponse,
-    tags=["ticker"],
-    summary="Get ticker information",
-    response_description="Detailed ticker information with current metrics",
-)
-def get_ticker_info(
-    symbol: Annotated[str, Path(description="Stock ticker symbol (e.g., AAPL, GOOGL)", min_length=1, max_length=10)]
-) -> TickerInfoResponse:
+@app.get("/ticker/{symbol}/info", response_model=TickerInfoResponse)
+def get_ticker_info(symbol: str):
     """Get detailed information for a specific ticker."""
     try:
         ticker = yf.Ticker(symbol)
@@ -445,12 +388,12 @@ def get_ticker_info(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error fetching data for {symbol}: {e!s}"
-        )
+        ) from e
 
 
 @app.get("/ticker/{symbol}/history")
 def get_ticker_history(
-    symbol: Annotated[str, Path(description="Stock ticker symbol")],
+    symbol: str,
     period: str = Query(
         "1mo", description="Period: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max"
     ),
@@ -488,7 +431,7 @@ def get_ticker_history(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error fetching history for {symbol}: {e!s}"
-        )
+        ) from e
 
 
 @app.get("/indices")
@@ -624,7 +567,7 @@ def get_archived_recommendations(
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Archive error: {e!s}")
+        raise HTTPException(status_code=500, detail=f"Archive error: {e!s}") from e
 
 
 if ADVANCED_ANALYSIS_AVAILABLE:
@@ -1060,10 +1003,10 @@ if ADVANCED_ANALYSIS_AVAILABLE:
             raise HTTPException(
                 status_code=500,
                 detail=f"Error generating investment recommendations: {e!s}",
-            )
+            ) from e
 
     @app.get("/recommendations/quick-analysis/{symbol}")
-    def get_quick_symbol_analysis(symbol: Annotated[str, Path(description="Stock ticker symbol")]) -> dict[str, Any]:
+    def get_quick_symbol_analysis(symbol: str) -> dict[str, Any]:
         """Get quick analysis for a single symbol."""
         try:
             # Use the recommendation service to analyze single symbol
@@ -1117,7 +1060,7 @@ if ADVANCED_ANALYSIS_AVAILABLE:
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Error analyzing symbol {symbol}: {e!s}"
-            )
+            ) from e
 
 
 if not ADVANCED_ANALYSIS_AVAILABLE:

@@ -68,12 +68,12 @@ async def get_current_user(
         return user
     except HTTPException:
         raise
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
             headers={"WWW-Authenticate": "Bearer"},
-        ) from None
+        ) from e
 
 
 async def get_current_active_user(

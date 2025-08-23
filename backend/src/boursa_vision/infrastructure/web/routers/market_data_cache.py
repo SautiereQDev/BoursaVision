@@ -306,7 +306,7 @@ async def get_timeline_metrics(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur interne lors du calcul des métriques",
-        )
+        ) from e
 
 
 @router.post("/bulk-refresh", response_model=BulkRefreshResponse)
@@ -361,7 +361,7 @@ async def bulk_refresh_symbols(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur interne lors du rafraîchissement",
-        )
+        ) from e
 
 
 @router.get("/stats", response_model=CacheStatsResponse)
@@ -400,7 +400,7 @@ async def get_cache_statistics(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur interne lors de la récupération des statistiques",
-        )
+        ) from e
 
 
 @router.delete("/clear/{symbol}")
@@ -425,7 +425,7 @@ async def clear_symbol_cache(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur interne lors du vidage du cache",
-        )
+        ) from e
 
 
 @router.delete("/clear-all")
@@ -448,7 +448,7 @@ async def clear_all_cache(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur interne lors du vidage du cache",
-        )
+        ) from e
 
 
 @router.get("/latest-price/{symbol}")
@@ -482,4 +482,4 @@ async def get_latest_price(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur interne lors de la récupération du prix",
-        )
+        ) from e
