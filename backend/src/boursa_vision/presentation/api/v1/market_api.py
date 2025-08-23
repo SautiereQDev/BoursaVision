@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from typing import Annotated, Any
 
 import yfinance as yf
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Path, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -416,7 +416,7 @@ def health_check():
     response_description="Detailed ticker information with current metrics",
 )
 def get_ticker_info(
-    symbol: Annotated[str, Query(description="Stock ticker symbol (e.g., AAPL, GOOGL)", min_length=1, max_length=10)]
+    symbol: Annotated[str, Path(description="Stock ticker symbol (e.g., AAPL, GOOGL)", min_length=1, max_length=10)]
 ) -> TickerInfoResponse:
     """Get detailed information for a specific ticker."""
     try:
@@ -450,7 +450,7 @@ def get_ticker_info(
 
 @app.get("/ticker/{symbol}/history")
 def get_ticker_history(
-    symbol: str,
+    symbol: Annotated[str, Path(description="Stock ticker symbol")],
     period: str = Query(
         "1mo", description="Period: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max"
     ),
@@ -1063,7 +1063,7 @@ if ADVANCED_ANALYSIS_AVAILABLE:
             )
 
     @app.get("/recommendations/quick-analysis/{symbol}")
-    def get_quick_symbol_analysis(symbol: str) -> dict[str, Any]:
+    def get_quick_symbol_analysis(symbol: Annotated[str, Path(description="Stock ticker symbol")]) -> dict[str, Any]:
         """Get quick analysis for a single symbol."""
         try:
             # Use the recommendation service to analyze single symbol

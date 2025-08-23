@@ -22,6 +22,12 @@ from ..value_objects.money import Currency, Money
 from .base import AggregateRoot
 
 
+class InvestmentValidationException(ValueError):
+    """Exception raised when investment data validation fails."""
+
+    pass
+
+
 @dataclass
 class InvestmentCreateParams:
     """Paramètres pour la création d'un investissement."""
