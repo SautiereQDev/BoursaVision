@@ -22,16 +22,16 @@ from .signal.get_signals_query import GetSignalsQuery
 from .signal.get_technical_analysis_query import GetTechnicalAnalysisQuery
 
 __all__ = [
+    # Portfolio queries
+    "AnalyzePortfolioQuery",
     # Investment queries
     "FindInvestmentsQuery",
     "GetInvestmentByIdQuery",
     "GetInvestmentBySymbolQuery",
     "GetMarketDataQuery",
-    # Portfolio queries
-    "AnalyzePortfolioQuery",
     "GetPortfolioByIdQuery",
-    "GetUserPortfoliosQuery",
     # Signal queries
     "GetSignalsQuery",
     "GetTechnicalAnalysisQuery",
+    "GetUserPortfoliosQuery",
 ]

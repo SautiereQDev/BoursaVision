@@ -492,7 +492,7 @@ class FundamentalAnalysisStrategy(AnalysisStrategy):
 
         scores = []
 
-        for margin_type, margin in [
+        for _margin_type, margin in [
             ("gross", gross_margin),
             ("operating", operating_margin),
             ("profit", profit_margin),

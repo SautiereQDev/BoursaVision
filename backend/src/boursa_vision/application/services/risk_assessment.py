@@ -286,7 +286,6 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
             ticker = yf.Ticker(symbol)
             info = ticker.info
             financials = ticker.financials
-            balance_sheet = ticker.balance_sheet
 
             # Analyse du ratio d'endettement
             debt_risk = self._assess_debt_risk(info)
@@ -339,7 +338,7 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
     def _assess_debt_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer le risque d'endettement"""
         debt_to_equity = info.get("debtToEquity")
-        total_debt = info.get("totalDebt")
+        info.get("totalDebt")
 
         if debt_to_equity is None:
             return None
@@ -376,7 +375,7 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
     def _assess_liquidity_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer le risque de liquidité"""
         current_ratio = info.get("currentRatio")
-        quick_ratio = info.get("quickRatio")
+        info.get("quickRatio")
 
         if current_ratio is None:
             return None
@@ -413,7 +412,7 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
     def _assess_profitability_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer le risque de rentabilité"""
         roe = info.get("returnOnEquity")
-        profit_margin = info.get("profitMargins")
+        info.get("profitMargins")
 
         if roe is None:
             return None
@@ -449,7 +448,7 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
     def _assess_valuation_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer le risque de valorisation"""
         pe_ratio = info.get("trailingPE")
-        pb_ratio = info.get("priceToBook")
+        info.get("priceToBook")
 
         if pe_ratio is None:
             return None
@@ -486,7 +485,7 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
     def _assess_growth_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer le risque de croissance"""
         revenue_growth = info.get("revenueGrowth")
-        earnings_growth = info.get("earningsGrowth")
+        info.get("earningsGrowth")
 
         if revenue_growth is None:
             return None

@@ -27,75 +27,77 @@ class ArchiveDataProvider:
             import psycopg2
             from psycopg2.extras import RealDictCursor
 
-            with psycopg2.connect(
-                self.database_url, cursor_factory=RealDictCursor
-            ) as conn:
-                with conn.cursor() as cur:
-                    # Get historical data
-                    cur.execute(
-                        """
-                        SELECT 
+            with (
+                psycopg2.connect(
+                    self.database_url, cursor_factory=RealDictCursor
+                ) as conn,
+                conn.cursor() as cur,
+            ):
+                # Get historical data
+                cur.execute(
+                    """
+                        SELECT
                             md.time,
                             md.open_price as "Open",
-                            md.high_price as "High", 
+                            md.high_price as "High",
                             md.low_price as "Low",
                             md.close_price as "Close",
                             md.adjusted_close as "Adj Close",
                             md.volume as "Volume"
                         FROM market_data md
                         JOIN instruments i ON md.instrument_id = i.id
-                        WHERE i.symbol = %s 
+                        WHERE i.symbol = %s
                         AND md.interval_type = 'archiver'
                         ORDER BY md.time DESC
                         LIMIT 252
                     """,
-                        (symbol,),
-                    )
+                    (symbol,),
+                )
 
-                    rows = cur.fetchall()
-                    if len(rows) < 20:  # Need minimum data for analysis
-                        return None
+                rows = cur.fetchall()
+                if len(rows) < 20:  # Need minimum data for analysis
+                    return None
 
-                    # Convert to DataFrame-like structure
-                    import pandas as pd
+                # Convert to DataFrame-like structure
+                import pandas as pd
 
-                    df = pd.DataFrame(rows)
-                    df["time"] = pd.to_datetime(df["time"])
-                    df = df.set_index("time")
-                    df = df.sort_index()  # Sort chronologically (fixed inplace issue)
+                df = pd.DataFrame(rows)
+                df["time"] = pd.to_datetime(df["time"])
+                df = df.set_index("time")
+                df = df.sort_index()  # Sort chronologically (fixed inplace issue)
 
-                    # Get latest price and info
-                    cur.execute(
-                        """
-                        SELECT 
+                # Get latest price and info
+                cur.execute(
+                    """
+                        SELECT
                             md.close_price as current_price,
                             i.name,
                             i.currency
                         FROM market_data md
                         JOIN instruments i ON md.instrument_id = i.id
-                        WHERE i.symbol = %s 
+                        WHERE i.symbol = %s
                         AND md.interval_type = 'archiver'
                         ORDER BY md.time DESC
                         LIMIT 1
                     """,
-                        (symbol,),
-                    )
+                    (symbol,),
+                )
 
-                    latest = cur.fetchone()
-                    if not latest:
-                        return None
+                latest = cur.fetchone()
+                if not latest:
+                    return None
 
-                    # Return in format compatible with existing analyzer
-                    return {
-                        "history": df,
-                        "info": {
-                            "symbol": symbol,
-                            "shortName": latest["name"] or symbol,
-                            "currency": latest["currency"] or "USD",
-                            "currentPrice": float(latest["current_price"]),
-                            "regularMarketPrice": float(latest["current_price"]),
-                        },
-                    }
+                # Return in format compatible with existing analyzer
+                return {
+                    "history": df,
+                    "info": {
+                        "symbol": symbol,
+                        "shortName": latest["name"] or symbol,
+                        "currency": latest["currency"] or "USD",
+                        "currentPrice": float(latest["current_price"]),
+                        "regularMarketPrice": float(latest["current_price"]),
+                    },
+                }
 
         except Exception as e:
             logger.error(f"Error getting archive data for {symbol}: {e}")
@@ -107,12 +109,14 @@ class ArchiveDataProvider:
             import psycopg2
             from psycopg2.extras import RealDictCursor
 
-            with psycopg2.connect(
-                self.database_url, cursor_factory=RealDictCursor
-            ) as conn:
-                with conn.cursor() as cur:
-                    cur.execute(
-                        """
+            with (
+                psycopg2.connect(
+                    self.database_url, cursor_factory=RealDictCursor
+                ) as conn,
+                conn.cursor() as cur,
+            ):
+                cur.execute(
+                    """
                         SELECT i.symbol, COUNT(*) as record_count
                         FROM instruments i
                         JOIN market_data md ON md.instrument_id = i.id
@@ -122,9 +126,9 @@ class ArchiveDataProvider:
                         HAVING COUNT(*) >= 30
                         ORDER BY COUNT(*) DESC
                     """
-                    )
+                )
 
-                    return [row["symbol"] for row in cur.fetchall()]
+                return [row["symbol"] for row in cur.fetchall()]
 
         except Exception as e:
             logger.error(f"Error getting available symbols: {e}")

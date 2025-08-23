@@ -184,7 +184,7 @@ class GetUserPortfoliosQueryHandler(IQueryHandler[dict, list[PortfolioDTO]]):
             else None,
             currency=str(safe_getattr(portfolio, "currency", "USD")),
             total_value=None,  # Simplified for handler
-            positions=[] if not include_positions else [],
+            positions=[],
             created_at=safe_getattr(portfolio, "created_at", datetime.now()),
             updated_at=safe_getattr(portfolio, "updated_at", datetime.now()),
         )

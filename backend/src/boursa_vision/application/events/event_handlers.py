@@ -6,6 +6,7 @@ Handlers for processing domain events raised by aggregates.
 These handlers implement cross-cutting concerns and side effects.
 """
 
+import contextlib
 from typing import Any
 
 from ..common import IEventHandler
@@ -115,11 +116,8 @@ class InvestmentCreatedEventHandler(IEventHandler[Any]):
         await self._cache_service.invalidate_pattern("search:*")
 
         # Pre-load initial market data
-        try:
+        with contextlib.suppress(Exception):
             await self._market_data_service.fetch_current_price(symbol)
-        except Exception:
-            # Don't fail if market data unavailable
-            pass
 
 
 class SignalGeneratedEventHandler(IEventHandler[Any]):

@@ -60,24 +60,23 @@ class ArchiveDataRepository:
 
     def get_available_symbols(self) -> list[str]:
         """Get all symbols with archived data"""
-        with self.get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
+        with self.get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
                     SELECT DISTINCT i.symbol
                     FROM instruments i
                     JOIN market_data md ON i.id = md.instrument_id
                     WHERE md.interval_type = 'archiver'
                     ORDER BY i.symbol
                 """
-                )
-                return [row[0] for row in cur.fetchall()]
+            )
+            return [row[0] for row in cur.fetchall()]
 
     def get_market_data(self, symbol: str, days: int = 30) -> pd.DataFrame:
         """Get market data for a symbol"""
         with self.get_connection() as conn:
             query = """
-                SELECT 
+                SELECT
                     md.time,
                     md.open_price as open,
                     md.high_price as high,
@@ -86,7 +85,7 @@ class ArchiveDataRepository:
                     md.volume
                 FROM market_data md
                 JOIN instruments i ON md.instrument_id = i.id
-                WHERE i.symbol = %s 
+                WHERE i.symbol = %s
                 AND md.interval_type = 'archiver'
                 AND md.time >= NOW() - INTERVAL '%s days'
                 ORDER BY md.time
@@ -100,26 +99,25 @@ class ArchiveDataRepository:
 
     def get_symbol_info(self, symbol: str) -> dict[str, Any]:
         """Get basic symbol information"""
-        with self.get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
+        with self.get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
                     SELECT symbol, name, instrument_type, currency
                     FROM instruments
                     WHERE symbol = %s
                 """,
-                    (symbol,),
-                )
+                (symbol,),
+            )
 
-                result = cur.fetchone()
-                if result:
-                    return {
-                        "symbol": result[0],
-                        "name": result[1] or f"{result[0]} Security",
-                        "instrument_type": result[2] or "stock",
-                        "currency": result[3] or "USD",
-                    }
-                return {}
+            result = cur.fetchone()
+            if result:
+                return {
+                    "symbol": result[0],
+                    "name": result[1] or f"{result[0]} Security",
+                    "instrument_type": result[2] or "stock",
+                    "currency": result[3] or "USD",
+                }
+            return {}
 
 
 class TechnicalAnalyzer:

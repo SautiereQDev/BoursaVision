@@ -1,29 +1,5 @@
 """
-Signfrom datetime import datetime
-from typing import Dict, List, Tup            return SignalDTO(
-                symbol=symbol,
-                action="ERROR",
-                confidence=0.0,
-                price=None,
-                target_price=None,
-                stop_loss=None,
-                reason=f"Error generating signal: {str(e)}",
-                metadata={},
-                timestamp=datetime.now()
-            )l, Any
-
-# Imports avec gestion d'erreur pour éviter les dépendances circulaires
-try:
-    from ..dtos import SignalDTO, TechnicalAnalysisDTO
-except ImportError:
-    # Types temporaires pour éviter les erreurs d'import
-    SignalDTO = Any
-    TechnicalAnalysisDTO = Any
-
-try:
-    from .technical_analyzer import TechnicalAnalyzer
-except ImportError:
-    TechnicalAnalyzer = Anynerator Application Service
+Signal Generator Application Service
 ===================================
 
 Application service that generates trading signals based on
@@ -184,12 +160,16 @@ class SignalGenerator:
                 reasons.append("Near upper Bollinger band")
 
         # Volume Analysis
-        if analysis.volume_trend is not None and analysis.volume_trend > 0.2:
+        if (
+            analysis.volume_trend is not None
+            and analysis.volume_trend > 0.2
+            and signals
+            and signals[-1][0] in ["BUY", "SELL"]
+        ):
             # Increase confidence if volume supports the trend
-            if signals and signals[-1][0] in ["BUY", "SELL"]:
-                last_signal = signals[-1]
-                signals[-1] = (last_signal[0], min(1.0, last_signal[1] + 0.1))
-                reasons.append("Strong volume trend")
+            last_signal = signals[-1]
+            signals[-1] = (last_signal[0], min(1.0, last_signal[1] + 0.1))
+            reasons.append("Strong volume trend")
 
         # Aggregate signals
         if not signals:

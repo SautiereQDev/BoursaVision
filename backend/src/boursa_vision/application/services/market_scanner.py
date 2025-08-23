@@ -19,7 +19,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
+from typing import Any, ClassVar
 
 try:
     import numpy as np
@@ -145,7 +145,7 @@ class FullMarketStrategy(MarketScannerStrategy):
     """Stratégie de scan complet du marché"""
 
     # Listes prédéfinies de symboles populaires par secteur
-    SECTOR_SYMBOLS = {
+    SECTOR_SYMBOLS: ClassVar[dict[str, list[str]]] = {
         "technology": [
             "AAPL",
             "MSFT",

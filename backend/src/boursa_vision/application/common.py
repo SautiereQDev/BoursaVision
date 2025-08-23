@@ -18,9 +18,19 @@ TResult = TypeVar("TResult")
 class ICommand(ABC):
     """Marker interface for commands"""
 
+    @abstractmethod
+    def __repr__(self) -> str:
+        """Required abstract method for command identification"""
+        ...
+
 
 class IQuery(ABC):
     """Marker interface for queries"""
+
+    @abstractmethod
+    def __repr__(self) -> str:
+        """Required abstract method for query identification"""
+        ...
 
 
 class ICommandHandler(ABC, Generic[TCommand, TResult]):
