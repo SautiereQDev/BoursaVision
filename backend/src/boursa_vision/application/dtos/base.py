@@ -2,13 +2,17 @@
 Base DTO and shared constants for Application DTOs
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from decimal import Decimal
+from typing import ClassVar
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-# Import exceptions for DTO validation
+# Re-export common exceptions for convenience
+from ..exceptions import InvalidSymbolError, PriceRangeError
 
 # Constants to avoid string duplication
 ASSET_SYMBOL_DESC = "Asset symbol"
@@ -30,11 +34,10 @@ CURRENT_PRICE_DESC = "Current market price"
 class BaseDTO(BaseModel):
     """Base DTO with common configuration."""
 
-    model_config = ConfigDict(
-        from_attributes=True,
-        json_encoders={
+    class Config:
+        from_attributes = True
+        json_encoders: ClassVar[dict] = {
             UUID: str,
             datetime: lambda v: v.isoformat(),
             Decimal: float,
-        },
-    )
+        }

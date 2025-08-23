@@ -30,8 +30,6 @@ CURRENCY_CODE_DESC = "Currency code"
 QUANTITY_DESC = "Quantity of the position"
 AVERAGE_PRICE_DESC = "Average purchase price"
 CURRENT_PRICE_DESC = "Current market price"
-CREATION_TIMESTAMP_DESC = "Creation timestamp"
-UPDATE_TIMESTAMP_DESC = "Last update timestamp"
 
 
 class BaseDTO(BaseModel):
@@ -39,7 +37,7 @@ class BaseDTO(BaseModel):
 
     class Config:
         from_attributes = True
-        json_encoders: ClassVar = {
+        json_encoders: ClassVar[dict] = {
             UUID: str,
             datetime: lambda v: v.isoformat(),
             Decimal: float,
@@ -109,8 +107,8 @@ class InvestmentDTO(BaseDTO):
         ..., min_length=1, max_length=50, description=EXCHANGE_NAME_DESC
     )
     current_price: MoneyDTO | None = Field(None, description="Current market price")
-    created_at: datetime = Field(..., description=CREATION_TIMESTAMP_DESC)
-    updated_at: datetime = Field(..., description=UPDATE_TIMESTAMP_DESC)
+    created_at: datetime = Field(..., description="Creation timestamp")
+    updated_at: datetime = Field(..., description="Last update timestamp")
 
 
 class PositionDTO(BaseDTO):
@@ -123,8 +121,8 @@ class PositionDTO(BaseDTO):
     current_price: MoneyDTO | None = Field(None, description=CURRENT_PRICE_DESC)
     market_value: MoneyDTO | None = Field(None, description="Current market value")
     unrealized_pnl: MoneyDTO | None = Field(None, description="Unrealized profit/loss")
-    created_at: datetime = Field(..., description=CREATION_TIMESTAMP_DESC)
-    updated_at: datetime = Field(..., description=UPDATE_TIMESTAMP_DESC)
+    created_at: datetime = Field(..., description="Creation timestamp")
+    updated_at: datetime = Field(..., description="Last update timestamp")
 
 
 class PortfolioDTO(BaseDTO):
@@ -143,8 +141,8 @@ class PortfolioDTO(BaseDTO):
     )
     total_value: MoneyDTO | None = Field(None, description="Total portfolio value")
     currency: str = Field(..., description="Base currency")
-    created_at: datetime = Field(..., description=CREATION_TIMESTAMP_DESC)
-    updated_at: datetime = Field(..., description=UPDATE_TIMESTAMP_DESC)
+    created_at: datetime = Field(..., description="Creation timestamp")
+    updated_at: datetime = Field(..., description="Last update timestamp")
 
 
 class PerformanceMetricsDTO(BaseDTO):
