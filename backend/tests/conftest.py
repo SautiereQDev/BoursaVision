@@ -16,15 +16,15 @@ src_dir = backend_dir / "src"
 if str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
-import pytest
-import pytest_asyncio
-from faker import Faker
-from fastapi import FastAPI
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+import pytest  # noqa: E402
+import pytest_asyncio  # noqa: E402
+from faker import Faker  # noqa: E402
+from fastapi import FastAPI  # noqa: E402
+from httpx import AsyncClient  # noqa: E402
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
 
-from boursa_vision.infrastructure.web.main import create_application
+from boursa_vision.infrastructure.web.main import create_application  # noqa: E402
 
 # Configuration Faker pour des données cohérentes
 fake = Faker("fr_FR")
@@ -195,7 +195,7 @@ async def reset_mock_data():
 
 
 @pytest_asyncio.fixture
-async def test_client(test_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
+async def test_client(test_app: FastAPI) -> AsyncGenerator[AsyncClient]:
     """Client HTTP de test pour l'API FastAPI."""
     async with AsyncClient(app=test_app, base_url="http://testserver") as client:
         yield client

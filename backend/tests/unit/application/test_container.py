@@ -101,7 +101,6 @@ class TestApplicationContainer:
         try:
             from boursa_vision.application.container import (
                 ApplicationContainer,
-                ApplicationContainerProtocol,
             )
         except ImportError:
             pytest.skip("Module container non accessible - test ignoré")

@@ -5,6 +5,7 @@ Tests unitaires pour RiskCalculatorService
 Tests unitaires complets pour le service de calcul des risques du domaine.
 """
 
+import contextlib
 from decimal import Decimal
 from unittest.mock import Mock, patch
 
@@ -780,11 +781,8 @@ class TestRiskCalculatorEdgeCases:
 
         # Act
         # Cela pourrait lever une exception selon l'implémentation
-        try:
+        with contextlib.suppress(ZeroDivisionError, ValueError):
             risk_calculator._calculate_position_weight(position, zero_value)
-        except (ZeroDivisionError, ValueError):
-            # Comportement attendu pour valeur nulle
-            pass
 
     def test_should_handle_missing_investment_data(
         self, risk_calculator, sample_positions, sample_current_prices

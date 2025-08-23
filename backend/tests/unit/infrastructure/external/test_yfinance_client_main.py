@@ -309,16 +309,17 @@ class TestClientLifecycle:
 
     def test_client_context_manager(self, basic_config):
         """Test client can be used as context manager."""
-        with patch.multiple(
-            "boursa_vision.infrastructure.external.yfinance_client",
-            yf=MagicMock(),
-            AdaptiveRateLimiter=MagicMock(),
-            CircuitBreaker=MagicMock(),
-            RetryHandler=MagicMock(),
-            ThreadPoolExecutor=MagicMock(),
+        with (
+            patch.multiple(
+                "boursa_vision.infrastructure.external.yfinance_client",
+                yf=MagicMock(),
+                AdaptiveRateLimiter=MagicMock(),
+                CircuitBreaker=MagicMock(),
+                RetryHandler=MagicMock(),
+                ThreadPoolExecutor=MagicMock(),
+            ),
+            OptimizedYFinanceClient(basic_config) as client
         ):
-            # Act & Assert
-            with OptimizedYFinanceClient(basic_config) as client:
                 assert client is not None
                 client.executor = MagicMock()  # Mock executor for cleanup
                 client.executor.shutdown = MagicMock()

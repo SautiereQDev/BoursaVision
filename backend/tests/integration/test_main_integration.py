@@ -61,13 +61,15 @@ class TestMainIntegration:
         except ImportError:
             pytest.skip("Module main.py non accessible - test ignoré")
 
-        with patch.dict(os.environ, {}, clear=False):
-            with patch("os.path.exists", return_value=False):
-                config = detect_environment()
+        with (
+            patch.dict(os.environ, {}, clear=False),
+            patch("os.path.exists", return_value=False),
+        ):
+            config = detect_environment()
 
-                assert config["host"] == "0.0.0.0"
-                assert config["port"] == 8000  # Valeur par défaut
-                assert config["reload"] is True  # Mode local par défaut
+            assert config["host"] == "0.0.0.0"
+            assert config["port"] == 8000  # Valeur par défaut
+            assert config["reload"] is True  # Mode local par défaut
 
     def test_detect_environment_docker_mode(self):
         """Test la détection d'environnement en mode Docker."""
@@ -79,13 +81,15 @@ class TestMainIntegration:
             pytest.skip("Module main.py non accessible - test ignoré")
 
         # Simuler environnement Docker
-        with patch("os.path.exists", return_value=True):  # /.dockerenv existe
-            with patch.dict(os.environ, {"API_PORT": "9000", "API_RELOAD": "false"}):
-                config = detect_environment()
+        with (
+            patch("os.path.exists", return_value=True),  # /.dockerenv existe
+            patch.dict(os.environ, {"API_PORT": "9000", "API_RELOAD": "false"}),
+        ):
+            config = detect_environment()
 
-                assert config["host"] == "0.0.0.0"
-                assert config["port"] == 9000
-                assert config["reload"] is False
+            assert config["host"] == "0.0.0.0"
+            assert config["port"] == 9000
+            assert config["reload"] is False
 
     def test_detect_environment_docker_env_variable(self):
         """Test la détection Docker via variable d'environnement."""
@@ -96,8 +100,10 @@ class TestMainIntegration:
         except ImportError:
             pytest.skip("Module main.py non accessible - test ignoré")
 
-        with patch("os.path.exists", return_value=False):
-            with patch.dict(os.environ, {"DOCKER_ENV": "true", "API_PORT": "8080"}):
+        with (
+            patch("os.path.exists", return_value=False),
+            patch.dict(os.environ, {"DOCKER_ENV": "true", "API_PORT": "8080"})
+        ):
                 config = detect_environment()
 
                 assert config["host"] == "0.0.0.0"
@@ -113,8 +119,10 @@ class TestMainIntegration:
         except ImportError:
             pytest.skip("Module main.py non accessible - test ignoré")
 
-        with patch("os.path.exists", return_value=False):
-            with patch.dict(os.environ, {"API_PORT": "8001"}, clear=False):
+        with (
+            patch("os.path.exists", return_value=False),
+            patch.dict(os.environ, {"API_PORT": "8001"}, clear=False)
+        ):
                 config = detect_environment()
 
                 assert config["host"] == "0.0.0.0"
@@ -171,9 +179,11 @@ class TestMainIntegration:
         # Mock de l'app et de la configuration
         mock_app = MagicMock()
 
-        with patch("boursa_vision.main.detect_environment") as mock_detect_env:
-            with patch("boursa_vision.main.create_app", return_value=mock_app):
-                with patch("os.path.exists", return_value=False):
+        with (
+            patch("boursa_vision.main.detect_environment") as mock_detect_env,
+            patch("boursa_vision.main.create_app", return_value=mock_app),
+            patch("os.path.exists", return_value=False)
+        ):
                     # Configuration mode production (reload=False)
                     mock_detect_env.return_value = {
                         "host": "0.0.0.0",
@@ -198,8 +208,10 @@ class TestMainIntegration:
         except ImportError:
             pytest.skip("Module main.py non accessible - test ignoré")
 
-        with patch("boursa_vision.main.detect_environment") as mock_detect_env:
-            with patch("os.path.exists", return_value=False):  # Pas dans Docker
+        with (
+            patch("boursa_vision.main.detect_environment") as mock_detect_env,
+            patch("os.path.exists", return_value=False)  # Pas dans Docker
+        ):
                 # Configuration mode développement local
                 mock_detect_env.return_value = {
                     "host": "0.0.0.0",
@@ -229,8 +241,10 @@ class TestMainIntegration:
         except ImportError:
             pytest.skip("Module main.py non accessible - test ignoré")
 
-        with patch("boursa_vision.main.detect_environment") as mock_detect_env:
-            with patch("os.path.exists", return_value=True):  # Dans Docker
+        with (
+            patch("boursa_vision.main.detect_environment") as mock_detect_env,
+            patch("os.path.exists", return_value=True)  # Dans Docker
+        ):
                 # Configuration mode développement Docker
                 mock_detect_env.return_value = {
                     "host": "0.0.0.0",
@@ -278,14 +292,18 @@ class TestMainIntegration:
             pytest.skip("Module main.py non accessible - test ignoré")
 
         # Test avec port valide
-        with patch.dict(os.environ, {"API_PORT": "3000"}):
-            with patch("os.path.exists", return_value=False):
+        with (
+            patch.dict(os.environ, {"API_PORT": "3000"}),
+            patch("os.path.exists", return_value=False)
+        ):
                 config = detect_environment()
                 assert config["port"] == 3000
 
         # Test avec port invalide (devrait lever une exception)
-        with patch.dict(os.environ, {"API_PORT": "invalid"}):
-            with patch("os.path.exists", return_value=False):
+        with (
+            patch.dict(os.environ, {"API_PORT": "invalid"}),
+            patch("os.path.exists", return_value=False)
+        ):
                 with pytest.raises(ValueError):
                     detect_environment()
 
@@ -355,8 +373,10 @@ class TestMainIntegrationEnvironmentDetection:
             pytest.skip("Module main.py non accessible - test ignoré")
 
         # File existe ET variable d'environnement
-        with patch("os.path.exists", return_value=True):
-            with patch.dict(os.environ, {"DOCKER_ENV": "false"}):
+        with (
+            patch("os.path.exists", return_value=True),
+            patch.dict(os.environ, {"DOCKER_ENV": "false"})
+        ):
                 config = detect_environment()
                 # Le fichier /.dockerenv a priorité
                 assert config["reload"] is False  # Mode Docker détecté

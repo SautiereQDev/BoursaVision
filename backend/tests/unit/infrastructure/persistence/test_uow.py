@@ -13,7 +13,7 @@ sys.modules["sqlalchemy"] = Mock()
 sys.modules["sqlalchemy.ext"] = Mock()
 sys.modules["sqlalchemy.ext.asyncio"] = Mock()
 
-from boursa_vision.infrastructure.persistence.uow import (
+from boursa_vision.infrastructure.persistence.uow import (  # noqa: E402
     AutoTransaction,
     UnitOfWork,
     UnitOfWorkFactory,
@@ -409,7 +409,7 @@ class TestUnitOfWorkIntegration:
         ) as mock_user_repo:
             async with uow as tx:
                 # Access repository during transaction
-                tx.users
+                tx.users  # noqa: B018
                 mock_user_repo.assert_called_once_with(mock_session)
 
         mock_session.commit.assert_called_once()
@@ -444,8 +444,8 @@ class TestUnitOfWorkIntegration:
         with patch(
             "boursa_vision.infrastructure.persistence.uow.SQLAlchemyUserRepository"
         ) as mock_repo:
-            uow1.users
-            uow2.users
+            uow1.users  # noqa: B018
+            uow2.users  # noqa: B018
 
             # Should create separate repository instances
             assert mock_repo.call_count == 2

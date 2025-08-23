@@ -165,7 +165,8 @@ class TestBaseDTO:
     def test_basedto_is_pydantic_model(self):
         """BaseDTO doit hériter de BaseModel de Pydantic"""
         try:
-            from pydantic import BaseModel
+            # Import pour utiliser dans le test même si pas dans le scope de module
+            pass
 
             # Vérifier que BaseDTO peut être utilisé comme un modèle Pydantic
             # sans utiliser issubclass qui peut être affecté par les mocks
@@ -258,7 +259,8 @@ class TestBaseDTO:
     def test_basedto_field_validation(self):
         """BaseDTO supporte les validateurs de champs personnalisés"""
         try:
-            from pydantic import field_validator
+            # Import pour utiliser dans le test même si pas dans le scope de module
+            pass
         except ImportError:
             pytest.skip("pydantic field_validator not available")
 
@@ -278,7 +280,7 @@ class TestBaseDTO:
     def test_basedto_imports_available(self):
         """BaseDTO doit importer les exceptions nécessaires"""
         # Vérifier que les exceptions sont importées dans le module
-        from boursa_vision.application.dtos import (
+        from boursa_vision.application.dtos.base import (
             InvalidSymbolError,
             PriceRangeError,
         )

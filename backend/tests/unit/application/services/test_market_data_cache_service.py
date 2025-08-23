@@ -261,8 +261,10 @@ class TestMarketDataCacheServiceIntegration:
         service = MarketDataCacheService()
         symbols = ["BULK1", "BULK2"]
 
-        with patch.object(service, "_refresh_timeline_data", return_value=None):
-            with patch.object(service, "get_timeline") as mock_get_timeline:
+        with (
+            patch.object(service, "_refresh_timeline_data", return_value=None),
+            patch.object(service, "get_timeline") as mock_get_timeline
+        ):
                 mock_timeline = Mock()
                 mock_timeline.needs_refresh.return_value = True
                 mock_get_timeline.return_value = mock_timeline

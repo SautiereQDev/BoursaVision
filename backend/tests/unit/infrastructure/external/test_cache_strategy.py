@@ -435,8 +435,10 @@ class TestRedisCache:
 
             test_data = {"symbol": "AAPL", "price": 150.0}
 
-            with patch.object(strategy, "should_cache", return_value=True):
-                with patch.object(strategy, "get_ttl", return_value=3600):
+            with (
+                patch.object(strategy, "should_cache", return_value=True),
+                patch.object(strategy, "get_ttl", return_value=3600)
+            ):
                     result = cache.set("test_key", test_data, DataFrequency.DAILY)
 
                     assert result is True

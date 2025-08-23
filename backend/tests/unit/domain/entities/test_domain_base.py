@@ -62,12 +62,7 @@ class TestAggregateRoot:
         """Test AggregateRoot initialization."""
 
         class ConcreteAggregate(AggregateRoot):
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, type(self))
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, ConcreteAggregate)
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, ConcreteAggregate)
+            pass
 
         aggregate = ConcreteAggregate()
 
@@ -79,13 +74,6 @@ class TestAggregateRoot:
         """Test adding domain events."""
 
         class ConcreteAggregate(AggregateRoot):
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, type(self))
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, ConcreteAggregate)
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, ConcreteAggregate)
-
             def add_event(self):
                 event = DomainEvent()
                 self._add_domain_event(event)
@@ -101,13 +89,6 @@ class TestAggregateRoot:
         """Test that get_domain_events returns a copy."""
 
         class ConcreteAggregate(AggregateRoot):
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, type(self))
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, ConcreteAggregate)
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, ConcreteAggregate)
-
             def add_event(self):
                 event = DomainEvent()
                 self._add_domain_event(event)
@@ -127,10 +108,6 @@ class TestAggregateRoot:
         """Test clearing domain events."""
 
         class ConcreteAggregate(AggregateRoot):
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, type(self))
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, ConcreteAggregate)
             def add_event(self):
                 event = DomainEvent()
                 self._add_domain_event(event)
@@ -151,10 +128,6 @@ class TestAggregateRoot:
         """Test managing multiple domain events."""
 
         class ConcreteAggregate(AggregateRoot):
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, type(self))
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, ConcreteAggregate)
             def add_event(self):
                 event = DomainEvent()
                 self._add_domain_event(event)
@@ -183,10 +156,6 @@ class TestAggregateRoot:
         """Test that domain events are isolated between instances."""
 
         class ConcreteAggregate(AggregateRoot):
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, type(self))
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, ConcreteAggregate)
             def add_event(self):
                 event = DomainEvent()
                 self._add_domain_event(event)
@@ -264,8 +233,6 @@ class TestBaseClassesInteraction:
                 self.data = data
 
         class TestAggregate(AggregateRoot):
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, type(self))
             def trigger_event(self, data: str):
                 event = TestEvent(data=data)
                 self._add_domain_event(event)
@@ -288,8 +255,6 @@ class TestBaseClassesInteraction:
             pass
 
         class MyTestAggregate(AggregateRoot):
-            def __eq__(self, other: object) -> bool:
-                return isinstance(other, type(self))
             pass
 
         entity = MyTestEntity()

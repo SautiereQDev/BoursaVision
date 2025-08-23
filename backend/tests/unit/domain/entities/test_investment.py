@@ -14,7 +14,7 @@ from boursa_vision.domain.entities.investment import (
     Investment,
     InvestmentSector,
     InvestmentType,
-    InvestmentValidationException,
+    InvestmentValidationError,
     MarketCap,
 )
 from boursa_vision.domain.value_objects.money import Currency
@@ -173,7 +173,7 @@ class TestInvestmentValidation:
         """Devrait lever une erreur pour un symbole vide."""
         # Act & Assert
         with pytest.raises(
-            InvestmentValidationException, match="Symbol cannot be empty"
+            InvestmentValidationError, match="Symbol cannot be empty"
         ):
             Investment.create(
                 symbol="",
@@ -188,7 +188,7 @@ class TestInvestmentValidation:
     def test_should_raise_error_for_empty_name(self):
         """Devrait lever une erreur pour un nom vide."""
         # Act & Assert
-        with pytest.raises(InvestmentValidationException, match="Name cannot be empty"):
+        with pytest.raises(InvestmentValidationError, match="Name cannot be empty"):
             Investment.create(
                 symbol="TEST",
                 name="",
@@ -218,7 +218,7 @@ class TestInvestmentValidation:
     def test_should_validate_symbol_format(self):
         """Devrait valider le format du symbole."""
         # Test avec un symbole invalide contenant des caractères spéciaux
-        with pytest.raises(InvestmentValidationException):
+        with pytest.raises(InvestmentValidationError):
             Investment.create(
                 symbol="AAPL@123",
                 name="Test Company",
@@ -251,7 +251,7 @@ class TestInvestmentValidation:
             assert investment.symbol == symbol
         else:
             # Act & Assert - Symbole invalide
-            with pytest.raises(InvestmentValidationException):
+            with pytest.raises(InvestmentValidationError):
                 Investment.create(
                     symbol=symbol,
                     name="Test Company",

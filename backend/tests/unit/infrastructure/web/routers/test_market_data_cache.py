@@ -465,7 +465,7 @@ async def test_error_handling_comprehensive(mock_cache_service):
     # Test erreur générique
     mock_cache_service.clear_cache.side_effect = Exception("Generic error")
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017
         await mock_cache_service.clear_cache()
 
 

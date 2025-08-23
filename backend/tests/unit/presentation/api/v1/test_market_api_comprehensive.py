@@ -141,7 +141,7 @@ def test_recommendations_advanced(client):
 
 @pytest.mark.unit
 def test_app_title():
-    assert "BoursaVision" in app.title
+    assert "Boursa Vision" in app.title
 
 
 @pytest.mark.unit

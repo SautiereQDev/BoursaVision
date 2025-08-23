@@ -3,9 +3,9 @@ Tests unitaires pour le service d'archivage de données de marché.
 Conformément à l'architecture de tests avec patterns AAA et markers appropriés.
 """
 
-import typing
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import ClassVar
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -87,7 +87,7 @@ except ImportError:
             return MarketDataProcessor(config)
 
     class EnhancedMarketDataArchiver:
-        SYMBOLS: typing.ClassVar[list[str]] = ["AAPL", "MSFT", "GOOGL"]
+        SYMBOLS: ClassVar[list[str]] = ["AAPL", "MSFT", "GOOGL"]
 
         def __init__(self, database_url=None, use_fuzzy_detection=True):
             self.database_url = database_url
@@ -225,7 +225,7 @@ class TestMarketDataProcessor:
         invalid_raw_data = {}  # Missing required fields
 
         # Act & Assert
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             processor.process_data(invalid_raw_data)
 
         assert processor.stats["errors"] == 1

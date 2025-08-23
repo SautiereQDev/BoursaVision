@@ -148,8 +148,10 @@ class TestArchiveServiceRealImports:
             mock_cursor.fetchall.return_value = historical_data
             mock_cursor.fetchone.return_value = latest_data
 
-            with patch("psycopg2.connect", return_value=mock_conn):
-                with patch("pandas.DataFrame") as mock_df_class:
+            with (
+                patch("psycopg2.connect", return_value=mock_conn),
+                patch("pandas.DataFrame") as mock_df_class
+            ):
                     mock_df = Mock()
                     mock_df_class.return_value = mock_df
 

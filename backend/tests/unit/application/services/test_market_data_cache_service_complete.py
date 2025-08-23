@@ -13,6 +13,7 @@ Architecture suivant TESTS.md:
 """
 
 import asyncio
+import contextlib
 from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, Mock, patch
@@ -212,11 +213,8 @@ class TestYFinanceDataFetcher:
 
         # Act & Assert - Should handle gracefully
         # Result depends on implementation - either empty list or exception handling
-        try:
+        with contextlib.suppress(KeyError, ValueError):
             fetcher._convert_dataframe_to_timeline_points(symbol, incomplete_df)
-        except (KeyError, ValueError):
-            # Expected behavior for missing columns
-            pass
 
 
 @pytest.mark.unit
