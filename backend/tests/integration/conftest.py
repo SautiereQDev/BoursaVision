@@ -7,6 +7,7 @@ Utilise SQLite en mémoire pour des tests rapides et isolés.
 """
 
 import asyncio
+import contextlib
 from collections.abc import AsyncGenerator
 
 import pytest
@@ -92,7 +93,7 @@ async def test_db_engine() -> AsyncGenerator[AsyncEngine, None]:
                     name VARCHAR(255) NOT NULL,
                     exchange VARCHAR(50) NOT NULL,
                     sector VARCHAR(100),
-                    industry VARCHAR(100), 
+                    industry VARCHAR(100),
                     market_cap DECIMAL(20, 2),
                     description TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -108,10 +109,8 @@ async def test_db_engine() -> AsyncGenerator[AsyncEngine, None]:
         # Nettoyer l'engine
         await engine.dispose()
         # Supprimer le fichier temporaire
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(db_path)
-        except OSError:
-            pass
 
 
 @pytest_asyncio.fixture

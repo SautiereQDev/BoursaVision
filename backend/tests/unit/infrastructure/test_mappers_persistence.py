@@ -396,7 +396,7 @@ class TestInvestmentMapper:
             except ImportError:
                 pytest.skip("Investment domain entity non disponible")
 
-            domain_investment = investment_mapper.to_domain(mock_investment_model)
+            investment_mapper.to_domain(mock_investment_model)
 
             mock_create.assert_called_once_with(
                 symbol="AAPL",

@@ -192,7 +192,7 @@ class TestGetMultipleStockInfo:
             client = OptimizedYFinanceClient(basic_config)
 
             # Mock the _process_batch_parallel method directly
-            expected_results = {symbol: sample_stock_info for symbol in symbols}
+            expected_results = dict.fromkeys(symbols, sample_stock_info)
             client._process_batch_parallel = MagicMock(return_value=expected_results)
 
             # Act

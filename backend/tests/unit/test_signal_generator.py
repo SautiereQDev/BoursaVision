@@ -94,9 +94,9 @@ class TestSignalGenerator:
         assert result.action == "BUY"
         assert result.confidence > 0.5  # Should have high confidence
         assert "RSI oversold" in result.reason
-        assert isinstance(result.metadata["rsi"], (int, float))
+        assert isinstance(result.metadata["rsi"], int | float)
         assert abs(float(result.metadata["rsi"]) - 25.0) < FLOAT_TOLERANCE
-        assert isinstance(result.metadata["macd"], (int, float))
+        assert isinstance(result.metadata["macd"], int | float)
         assert abs(float(result.metadata["macd"]) - 0.15) < FLOAT_TOLERANCE
         assert isinstance(result.timestamp, datetime)
 
@@ -131,7 +131,7 @@ class TestSignalGenerator:
         assert result.action == "SELL"
         assert result.confidence > 0.5
         assert "RSI overbought" in result.reason
-        assert isinstance(result.metadata["rsi"], (int, float))
+        assert isinstance(result.metadata["rsi"], int | float)
         assert abs(float(result.metadata["rsi"]) - 75.0) < FLOAT_TOLERANCE
 
     @pytest.mark.unit

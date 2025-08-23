@@ -267,7 +267,7 @@ class TestRiskAssessmentServiceIntegration:
         result = await service.assess_comprehensive_risk("TEST", {})
 
         # Assert - Vérifier la structure des résultats
-        assert isinstance(result.overall_risk_score, (int, float))
+        assert isinstance(result.overall_risk_score, int | float)
         assert 0 <= result.overall_risk_score <= 100
 
         # Vérifier les catégories de risques

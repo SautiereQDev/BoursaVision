@@ -249,16 +249,15 @@ class TestArchiveServiceRealImports:
                 enhanced_analyzer.archive_provider,
                 "get_market_data_for_symbol",
                 return_value=mock_archive_data,
-            ):
-                with patch("yfinance.Ticker"):
-                    # Second call should succeed with archive data
-                    mock_original_analyzer.analyze_investment.side_effect = [
-                        Exception("Live data failed"),
-                        archive_result,
-                    ]
+            ), patch("yfinance.Ticker"):
+                # Second call should succeed with archive data
+                mock_original_analyzer.analyze_investment.side_effect = [
+                    Exception("Live data failed"),
+                    archive_result,
+                ]
 
-                    # Act
-                    result = enhanced_analyzer.analyze_investment("ARCHIVE_SYMBOL")
+                # Act
+                result = enhanced_analyzer.analyze_investment("ARCHIVE_SYMBOL")
 
             # Assert
             assert result is archive_result

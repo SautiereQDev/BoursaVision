@@ -278,7 +278,7 @@ class TestBaseDTO:
     def test_basedto_imports_available(self):
         """BaseDTO doit importer les exceptions nécessaires"""
         # Vérifier que les exceptions sont importées dans le module
-        from boursa_vision.application.dtos.base import (
+        from boursa_vision.application.dtos import (
             InvalidSymbolError,
             PriceRangeError,
         )

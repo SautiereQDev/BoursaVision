@@ -132,13 +132,12 @@ class TestMainIntegration:
             pytest.skip("Module main.py non accessible - test ignoré")
 
         # Simuler une erreur d'import dans create_app
-        with patch("boursa_vision.main.setup_paths"):
-            with patch(
-                "builtins.__import__", side_effect=ImportError("Module not found")
-            ):
-                create_app()
+        with patch("boursa_vision.main.setup_paths"), patch(
+            "builtins.__import__", side_effect=ImportError("Module not found")
+        ):
+            create_app()
 
-                mock_exit.assert_called_once_with(1)
+            mock_exit.assert_called_once_with(1)
 
     def test_create_app_success(self):
         """Test la création réussie de l'application."""
@@ -152,13 +151,12 @@ class TestMainIntegration:
         # Mock du module fastapi_yfinance
         mock_app = MagicMock()
 
-        with patch("boursa_vision.main.setup_paths"):
-            with patch.dict(
-                "sys.modules", {"fastapi_yfinance": MagicMock(app=mock_app)}
-            ):
-                app = create_app()
+        with patch("boursa_vision.main.setup_paths"), patch.dict(
+            "sys.modules", {"fastapi_yfinance": MagicMock(app=mock_app)}
+        ):
+            app = create_app()
 
-                assert app is mock_app
+            assert app is mock_app
 
     @patch("uvicorn.run")
     def test_main_production_mode(self, mock_uvicorn_run):

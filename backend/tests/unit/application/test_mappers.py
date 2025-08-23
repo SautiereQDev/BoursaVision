@@ -55,7 +55,7 @@ class TestInvestmentMapper:
     def mock_investment_list(self):
         """Mock list of investments"""
         investments = []
-        for i, symbol in enumerate(["AAPL", "GOOGL", "MSFT"]):
+        for _i, symbol in enumerate(["AAPL", "GOOGL", "MSFT"]):
             inv = MagicMock()
             inv.id = uuid4()
             inv.symbol = symbol

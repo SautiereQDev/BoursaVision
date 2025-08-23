@@ -253,7 +253,7 @@ class TestFullMarketStrategy:
         assert "industrials" in strategy.SECTOR_SYMBOLS
 
         # Vérifier que chaque secteur a des symboles
-        for sector, symbols in strategy.SECTOR_SYMBOLS.items():
+        for _sector, symbols in strategy.SECTOR_SYMBOLS.items():
             assert isinstance(symbols, list)
             assert len(symbols) > 0
             for symbol in symbols:

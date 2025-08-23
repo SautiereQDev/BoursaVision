@@ -78,7 +78,7 @@ class TestInvestmentRepositoryPersistence:
         )
 
         # Act
-        saved_investment = await repository.save(investment)
+        await repository.save(investment)
         retrieved_investment = await repository.find_by_symbol("MSFT")
 
         # Assert
@@ -111,7 +111,7 @@ class TestInvestmentRepositoryPersistence:
         investment.update_price(Money(Decimal("2550.75"), Currency.USD))
 
         # Act
-        updated_investment = await repository.save(investment)
+        await repository.save(investment)
         retrieved_investment = await repository.find_by_symbol("GOOGL")
 
         # Assert - Le prix n'est pas persisté dans le modèle actuel
@@ -235,7 +235,7 @@ class TestInvestmentRepositoryQueries:
             symbol="JNJ", name="Johnson & Johnson", sector=InvestmentSector.HEALTHCARE
         )
 
-        for investment in tech_investments + [healthcare_investment]:
+        for investment in [*tech_investments, healthcare_investment]:
             await repository.save(investment)
 
         # Act
@@ -341,7 +341,7 @@ class TestInvestmentRepositoryEdgeCases:
         await repository.save(investment1)
 
         # Sauvegarder le second (devrait mettre à jour le premier)
-        result = await repository.save(investment2)
+        await repository.save(investment2)
 
         # Assert
         retrieved = await repository.find_by_symbol("AAPL")
@@ -362,7 +362,7 @@ class TestInvestmentRepositoryEdgeCases:
         )
 
         # Act & Assert - Ne devrait pas lever d'exception
-        saved_investment = await repository.save(investment)
+        await repository.save(investment)
         retrieved_investment = await repository.find_by_symbol("LONGCO")
 
         assert retrieved_investment is not None
@@ -401,7 +401,7 @@ class TestInvestmentRepositoryEdgeCases:
         )
 
         # Act - Sauvegarder dans une transaction
-        saved = await repository.save(investment)
+        await repository.save(investment)
 
         # Récupérer dans une nouvelle "transaction"
         retrieved = await repository.find_by_symbol("INTEGRITY")

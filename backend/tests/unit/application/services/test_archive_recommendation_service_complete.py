@@ -41,9 +41,8 @@ class TestArchiveDataProvider:
         mock_conn.cursor.return_value.__exit__.return_value = None
 
         # Act
-        with mock_conn as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT 1")
+        with mock_conn as conn, conn.cursor() as cursor:
+            cursor.execute("SELECT 1")
 
         # Assert
         mock_cursor.execute.assert_called_once_with("SELECT 1")

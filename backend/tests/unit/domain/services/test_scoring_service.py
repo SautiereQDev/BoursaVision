@@ -243,7 +243,7 @@ class TestFundamentalScoringStrategy:
 
         # With normal implementation, this should never hit the fallback
         # But ensures score is valid
-        assert isinstance(score, (int, float))
+        assert isinstance(score, int | float)
         assert 0.0 <= score <= 100.0
 
     def test_calculate_score_perfect_scores(self):

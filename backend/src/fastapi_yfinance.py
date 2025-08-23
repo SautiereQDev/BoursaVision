@@ -12,7 +12,6 @@ from pydantic import BaseModel
 try:
     from src.application.services.investment_recommendation_service import (
         InvestmentRecommendationService,
-        PortfolioRecommendation,
         RecommendationRequest,
     )
 

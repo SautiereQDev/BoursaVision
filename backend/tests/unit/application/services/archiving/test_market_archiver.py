@@ -3,6 +3,7 @@ Tests unitaires pour le service d'archivage de données de marché.
 Conformément à l'architecture de tests avec patterns AAA et markers appropriés.
 """
 
+import typing
 from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import Mock, call, patch
@@ -86,7 +87,7 @@ except ImportError:
             return MarketDataProcessor(config)
 
     class EnhancedMarketDataArchiver:
-        SYMBOLS = ["AAPL", "MSFT", "GOOGL"]
+        SYMBOLS: typing.ClassVar[list[str]] = ["AAPL", "MSFT", "GOOGL"]
 
         def __init__(self, database_url=None, use_fuzzy_detection=True):
             self.database_url = database_url
