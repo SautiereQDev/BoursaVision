@@ -3,7 +3,7 @@ version: "3.8"
 services:
   # PostgreSQL Database with TimescaleDB
   postgres:
-    image: timescale/timescaledb:latest-pg15
+    image: timescale/timescaledb:latest-pg17
     container_name: boursa-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -26,7 +26,7 @@ services:
 
   # Redis Cache
   redis:
-    image: redis:7-alpine
+    image: redis:7.6-alpine
     container_name: boursa-redis
     ports:
       - "6379:6379"

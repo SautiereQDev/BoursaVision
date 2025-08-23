@@ -1,5 +1,5 @@
 # Backend Dockerfile - Multi-stage build for production
-FROM python:3.11-slim AS base
+FROM python:3.13-slim AS base
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
