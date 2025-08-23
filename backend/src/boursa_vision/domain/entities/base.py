@@ -11,7 +11,7 @@ Classes:
     Entity: Base class for domain entities.
 """
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -49,6 +49,11 @@ class AggregateRoot(ABC):
         """Clear domain events after publishing"""
         self._domain_events.clear()
 
+    @abstractmethod
+    def __eq__(self, other: object) -> bool:
+        """Required abstract method for entity comparison"""
+        ...
+
 
 class Entity(ABC):
     """
@@ -58,4 +63,7 @@ class Entity(ABC):
     like aggregate roots do.
     """
 
-    pass
+    @abstractmethod
+    def __eq__(self, other: object) -> bool:
+        """Required abstract method for entity comparison"""
+        ...

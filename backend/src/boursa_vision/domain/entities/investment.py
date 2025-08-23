@@ -280,23 +280,23 @@ class Investment(AggregateRoot):  # pylint: disable=too-many-instance-attributes
 
         # Validations
         if not symbol or symbol.strip() == "":
-            raise InvestmentValidationException("Symbol cannot be empty")
+            raise InvestmentValidationError("Symbol cannot be empty")
 
         if not name or name.strip() == "":
-            raise InvestmentValidationException("Name cannot be empty")
+            raise InvestmentValidationError("Name cannot be empty")
 
         # Normaliser le symbole en majuscules
         symbol = symbol.strip().upper()
 
         symbol_len = len(symbol)
         if symbol_len < 3 or symbol_len > 10:
-            raise InvestmentValidationException(
+            raise InvestmentValidationError(
                 f"Symbol length must be between 3 and 10 characters, got {symbol_len}"
             )
 
         # Valider le format du symbole (lettres et chiffres uniquement)
         if not symbol.isalnum():
-            raise InvestmentValidationException(
+            raise InvestmentValidationError(
                 f"Symbol must contain only letters and numbers, got '{symbol}'"
             )
 
@@ -438,11 +438,11 @@ class Investment(AggregateRoot):  # pylint: disable=too-many-instance-attributes
 
 
 # Business Exceptions
-class InvestmentValidationException(Exception):
+class InvestmentValidationError(Exception):
     """Raised when investment validation fails"""
 
 
-class AnalysisDataMissingException(Exception):
+class AnalysisDataMissingError(Exception):
     """Raised when required analysis data is missing"""
 
 

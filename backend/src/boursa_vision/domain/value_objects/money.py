@@ -141,7 +141,7 @@ class Money:
 
     def __mul__(self, multiplier: Decimal) -> "Money":
         """Multiply by a factor"""
-        if not isinstance(multiplier, (Decimal, int, float)):
+        if not isinstance(multiplier, Decimal | int | float):
             raise TypeError("Multiplier must be numeric")
 
         multiplier_decimal = Decimal(str(multiplier))
@@ -149,7 +149,7 @@ class Money:
 
     def __truediv__(self, divisor: Decimal) -> "Money":
         """Divide by a factor"""
-        if not isinstance(divisor, (Decimal, int, float)):
+        if not isinstance(divisor, Decimal | int | float):
             raise TypeError("Divisor must be numeric")
 
         divisor_decimal = Decimal(str(divisor))

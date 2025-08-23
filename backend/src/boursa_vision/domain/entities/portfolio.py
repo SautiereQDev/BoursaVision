@@ -169,7 +169,7 @@ class Portfolio(AggregateRoot):
         # Rule: Sufficient funds
         total_cost = Money(price.amount * Decimal(quantity), price.currency)
         if total_cost > self.cash_balance:
-            raise InsufficientFundsException(
+            raise InsufficientFundsError(
                 f"Insufficient funds. Required: {total_cost}, "
                 f"Available: {self.cash_balance}"
             )
@@ -178,7 +178,7 @@ class Portfolio(AggregateRoot):
         portfolio_value = self.calculate_total_value({symbol: price})
         position_percentage = (total_cost.amount / portfolio_value.amount) * 100
         if position_percentage > self._risk_limits.max_position_percentage:
-            raise PositionLimitExceededException(
+            raise PositionLimitExceededError(
                 f"Position would exceed "
                 f"{self._risk_limits.max_position_percentage}% limit"
             )
@@ -340,13 +340,13 @@ class Portfolio(AggregateRoot):
 
 
 # Business Exceptions
-class PortfolioException(Exception):
+class PortfolioError(Exception):
     """Base portfolio exception"""
 
 
-class InsufficientFundsException(PortfolioException):
-    """Raised when insufficient funds for operation"""
+class InsufficientFundsError(PortfolioError):
+    """Raised when trying to buy investment without sufficient funds"""
 
 
-class PositionLimitExceededException(PortfolioException):
-    """Raised when position would exceed risk limits"""
+class PositionLimitExceededError(PortfolioError):
+    """Raised when trying to exceed position limits"""

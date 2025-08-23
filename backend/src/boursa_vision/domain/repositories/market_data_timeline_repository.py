@@ -18,7 +18,6 @@ try:
     from sqlalchemy import and_, desc, func, select
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.ext.asyncio import AsyncSession
-    from sqlalchemy.orm import selectinload
 
     from boursa_vision.infrastructure.persistence.models.market_data import MarketData
 

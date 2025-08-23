@@ -579,10 +579,7 @@ class RiskCalculatorService:
         if total_value == 0:
             return 0.0
 
-        if position_values:
-            largest_value = max(position_values)
-        else:
-            largest_value = Decimal("0")
+        largest_value = max(position_values) if position_values else Decimal("0")
         return float(largest_value / total_value * 100)
 
 
