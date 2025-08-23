@@ -8,6 +8,9 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+# Import exceptions for DTO validation
+from ..exceptions import InvalidSymbolError, PriceRangeError
+
 # Constants to avoid string duplication
 ASSET_SYMBOL_DESC = "Asset symbol"
 INVESTMENT_NAME_DESC = "Investment name"

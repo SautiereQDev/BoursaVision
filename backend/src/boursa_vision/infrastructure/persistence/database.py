@@ -8,6 +8,7 @@ optimized for PostgreSQL + TimescaleDB with SQLAlchemy 2.0.
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import TYPE_CHECKING
 
 from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import (
@@ -16,6 +17,9 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import async_sessionmaker as AsyncSessionMaker
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +111,7 @@ class DatabaseManager:
             """Log slow queries for performance monitoring."""
             logger.debug(f"Executing query: {statement[:100]}...")
 
-    def create_session_factory(self) -> async_sessionmaker[AsyncSession]:
+    def create_session_factory(self):
         """Create the async session factory."""
         if self._session_factory is not None:
             return self._session_factory

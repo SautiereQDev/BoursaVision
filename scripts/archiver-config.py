@@ -108,7 +108,7 @@ def update_archiver_config(interval='1d', period='30d'):
             with open(archiver_path, 'w') as f:
                 f.write('\n'.join(lines))
             
-            print(f"✅ Updated archiver configuration:")
+            print("✅ Updated archiver configuration:")
             print(f"   Interval: {interval}")
             print(f"   Period: {period}")
             print(f"   File: {archiver_path}")
