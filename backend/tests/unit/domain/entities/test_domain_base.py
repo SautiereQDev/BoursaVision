@@ -85,7 +85,7 @@ class TestAggregateRoot:
                 return isinstance(other, ConcreteAggregate)
             def __eq__(self, other: object) -> bool:
                 return isinstance(other, ConcreteAggregate)
-                
+
             def add_event(self):
                 event = DomainEvent()
                 self._add_domain_event(event)
@@ -107,7 +107,7 @@ class TestAggregateRoot:
                 return isinstance(other, ConcreteAggregate)
             def __eq__(self, other: object) -> bool:
                 return isinstance(other, ConcreteAggregate)
-                
+
             def add_event(self):
                 event = DomainEvent()
                 self._add_domain_event(event)
