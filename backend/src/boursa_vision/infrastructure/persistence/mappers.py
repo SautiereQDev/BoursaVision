@@ -4,6 +4,10 @@ Domain to Persistence mappers for the trading platform.
 This module provides mapping between domain entities and SQLAlchemy models,
 ensuring clean separation between business logic and persistence concerns.
 """
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .models.investment import InvestmentModel
 
 from ...domain.entities.investment import Investment
 from ...domain.entities.market_data import MarketData as DomainMarketData
@@ -24,13 +28,16 @@ class UserMapper:
             id=model.id,
             email=model.email,
             username=model.username,
+            password_hash=getattr(model, 'password_hash', ''),  # ✅ Nouveau champ ajouté
             first_name=model.first_name,
             last_name=model.last_name,
             role=UserRole(model.role.lower()) if model.role else UserRole.VIEWER,
             preferred_currency=Currency.USD,  # Default for now
             is_active=model.is_active,
             email_verified=model.is_verified,
+            two_factor_enabled=getattr(model, 'two_factor_enabled', False),  # ✅ Nouveau champ
             created_at=model.created_at,
+            updated_at=getattr(model, 'updated_at', model.created_at),  # ✅ Nouveau champ  
             last_login=model.last_login_at,
         )
 

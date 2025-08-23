@@ -8,6 +8,7 @@ SQLAlchemy models for market data, indicators, and signals (TimescaleDB).
 
 import uuid
 from datetime import UTC, datetime
+from typing import ClassVar
 
 from sqlalchemy import (
     BigInteger,
@@ -66,7 +67,7 @@ class TechnicalIndicator(Base, DatabaseMixin):
     parameters = Column(JSONB)  # Paramètres de calcul ex: {"period": 14}
     created_at = Column(TIMESTAMP, default=lambda: datetime.now(UTC))
 
-    __table_args__ = {"extend_existing": True}  # noqa: RUF012
+    __table_args__: ClassVar[dict[str, bool]] = {"extend_existing": True}  # Ajout pour éviter les conflits
 
 
 # Clear the registry to avoid duplicate registration
