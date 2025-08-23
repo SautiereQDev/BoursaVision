@@ -124,7 +124,7 @@ def archive_market_data_task(self, interval: str = "1d") -> dict[str, Any]:
         # Retry automatique pour certaines erreurs
         if self.request.retries < self.max_retries:
             logger.info(f"Retrying archive task (attempt {self.request.retries + 1})")
-            raise self.retry(exc=exc)
+            raise self.retry(exc=exc)  # noqa: B904
 
         # Maximum de retries atteint
         return {

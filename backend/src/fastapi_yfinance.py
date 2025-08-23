@@ -388,7 +388,7 @@ def get_ticker_info(symbol: str):
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error fetching data for {symbol}: {e!s}"
-        )
+        ) from e
 
 
 @app.get("/ticker/{symbol}/history")
@@ -431,7 +431,7 @@ def get_ticker_history(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error fetching history for {symbol}: {e!s}"
-        )
+        ) from e
 
 
 @app.get("/indices")
@@ -567,7 +567,7 @@ def get_archived_recommendations(
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Archive error: {e!s}")
+        raise HTTPException(status_code=500, detail=f"Archive error: {e!s}") from e
 
 
 if ADVANCED_ANALYSIS_AVAILABLE:
@@ -1003,7 +1003,7 @@ if ADVANCED_ANALYSIS_AVAILABLE:
             raise HTTPException(
                 status_code=500,
                 detail=f"Error generating investment recommendations: {e!s}",
-            )
+            ) from e
 
     @app.get("/recommendations/quick-analysis/{symbol}")
     def get_quick_symbol_analysis(symbol: str) -> dict[str, Any]:
@@ -1060,7 +1060,7 @@ if ADVANCED_ANALYSIS_AVAILABLE:
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Error analyzing symbol {symbol}: {e!s}"
-            )
+            ) from e
 
 
 if not ADVANCED_ANALYSIS_AVAILABLE:

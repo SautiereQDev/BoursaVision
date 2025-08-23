@@ -17,8 +17,8 @@ import click
 backend_dir = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from boursa_vision.core.config import get_settings
-from boursa_vision.infrastructure.background.market_data_archiver import (
+from boursa_vision.core.config import get_settings  # noqa: E402
+from boursa_vision.infrastructure.background.market_data_archiver import (  # noqa: E402
     MarketDataArchiver,
 )
 
