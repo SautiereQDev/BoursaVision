@@ -6,5 +6,4 @@ Subpackages:
     infrastructure: Adapters and infrastructure code (persistence, web).
 """
 
-
 __all__ = []

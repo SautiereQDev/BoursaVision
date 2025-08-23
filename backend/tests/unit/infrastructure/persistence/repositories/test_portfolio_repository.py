@@ -374,9 +374,11 @@ class TestPortfolioRepositoryCRUDOperations:
     async def test_full_crud_workflow(self, portfolio_repo):
         """Test du workflow complet CRUD."""
         # Mock pour simuler un workflow complet
-        with patch.object(portfolio_repo, "save") as mock_save, patch.object(
-            portfolio_repo, "find_by_id"
-        ) as mock_find, patch.object(portfolio_repo, "delete") as mock_delete:
+        with (
+            patch.object(portfolio_repo, "save") as mock_save,
+            patch.object(portfolio_repo, "find_by_id") as mock_find,
+            patch.object(portfolio_repo, "delete") as mock_delete,
+        ):
             # 1. Créer un portfolio
             portfolio = MagicMock()
             portfolio.id = uuid4()

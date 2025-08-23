@@ -6,9 +6,7 @@ ainsi que le respect des patterns Singleton et la gestion des dépendances.
 """
 
 import sys
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest

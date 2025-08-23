@@ -6,7 +6,7 @@ Factory classes using factory_boy pour créer des instances de test
 cohérentes et réalistes des entités du domaine.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from decimal import Decimal
 from uuid import uuid4
 
@@ -147,11 +147,9 @@ class PositionFactory(factory.Factory):
     quantity = factory.Faker("random_int", min=1, max=1000)
     average_price = factory.SubFactory(MoneyFactory)
     first_purchase_date = factory.LazyFunction(
-        lambda: fake.date_time_between(
-            start_date="-1y", end_date="now", tzinfo=timezone.utc
-        )
+        lambda: fake.date_time_between(start_date="-1y", end_date="now", tzinfo=UTC)
     )
-    last_update = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    last_update = factory.LazyFunction(lambda: datetime.now(UTC))
 
     @classmethod
     def create_apple_position(cls, quantity: int = 100):
@@ -178,14 +176,10 @@ class UserFactory(factory.Factory):
     is_active = True
     is_verified = True
     created_at = factory.LazyFunction(
-        lambda: fake.date_time_between(
-            start_date="-1y", end_date="now", tzinfo=timezone.utc
-        )
+        lambda: fake.date_time_between(start_date="-1y", end_date="now", tzinfo=UTC)
     )
     last_login_at = factory.LazyFunction(
-        lambda: fake.date_time_between(
-            start_date="-30d", end_date="now", tzinfo=timezone.utc
-        )
+        lambda: fake.date_time_between(start_date="-30d", end_date="now", tzinfo=UTC)
     )
 
     @classmethod
@@ -283,11 +277,9 @@ class UserModelFactory(factory.Factory):
     is_active = True
     is_verified = True
     created_at = factory.LazyFunction(
-        lambda: fake.date_time_between(
-            start_date="-1y", end_date="now", tzinfo=timezone.utc
-        )
+        lambda: fake.date_time_between(start_date="-1y", end_date="now", tzinfo=UTC)
     )
-    updated_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    updated_at = factory.LazyFunction(lambda: datetime.now(UTC))
 
 
 class InvestmentModelFactory(factory.Factory):
@@ -346,11 +338,9 @@ class PortfolioModelFactory(factory.Factory):
     )
     is_active = True
     created_at = factory.LazyFunction(
-        lambda: fake.date_time_between(
-            start_date="-1y", end_date="now", tzinfo=timezone.utc
-        )
+        lambda: fake.date_time_between(start_date="-1y", end_date="now", tzinfo=UTC)
     )
-    updated_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    updated_at = factory.LazyFunction(lambda: datetime.now(UTC))
 
 
 # ================================================================

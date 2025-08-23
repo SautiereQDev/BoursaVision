@@ -4,8 +4,7 @@ Additional comprehensive tests covering internal methods and edge cases.
 Continuing Priority #3 - Testing recommendation service for maximum coverage.
 """
 
-from typing import Any, Dict, List
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -16,9 +15,7 @@ except ImportError:
 
 from boursa_vision.application.services.recommendation.recommendation_service import (
     ArchiveBasedRecommendationService,
-    ArchiveDataRepository,
     ArchivedRecommendation,
-    TechnicalAnalyzer,
 )
 
 

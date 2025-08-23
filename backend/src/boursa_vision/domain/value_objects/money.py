@@ -13,7 +13,6 @@ import re
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 from enum import Enum
-from typing import Dict, Optional
 
 # Constants
 _CURRENCY_COMPARISON_ERROR = "Cannot compare different currencies"
@@ -213,7 +212,7 @@ class Money:
         return (self.amount / total.amount) * 100
 
     def format(
-        self, include_symbol: bool = True, decimal_places: Optional[int] = None
+        self, include_symbol: bool = True, decimal_places: int | None = None
     ) -> str:
         """Format the amount for display"""
         places = decimal_places or self.currency.decimal_places
@@ -225,12 +224,12 @@ class Money:
             return f"{self.currency.symbol}{amount_str}"
         return f"{amount_str} {self.currency.value}"
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Serialization"""
         return {"amount": str(self.amount), "currency": self.currency.value}
 
     @classmethod
-    def from_dict(cls, data: Dict) -> "Money":
+    def from_dict(cls, data: dict) -> "Money":
         """Deserialization"""
         return cls(amount=Decimal(data["amount"]), currency=Currency(data["currency"]))
 

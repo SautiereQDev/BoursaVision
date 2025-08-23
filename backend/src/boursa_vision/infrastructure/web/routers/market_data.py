@@ -1,14 +1,15 @@
 """
 Market data endpoints
 """
-from typing import Any, Optional
+
+from typing import Any
 
 import structlog
 from fastapi import APIRouter, HTTPException, Query, status
 
 # TODO: Fix circular import issue
 # from ..dependencies import Any, Any
-from ..exceptions import ExternalServiceError, NotFoundError
+from ..exceptions import ExternalServiceError
 from ..schemas import MarketDataResponse
 
 logger = structlog.get_logger(__name__)
@@ -33,12 +34,12 @@ async def get_market_data(
     symbol: str,
     container: Any,
     current_user: Any,
-    period: Optional[str] = Query(
+    period: str | None = Query(
         "1d",
         description="Time period (1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max)",
         regex="^(1d|5d|1mo|3mo|6mo|1y|2y|5y|10y|ytd|max)$",
     ),
-    interval: Optional[str] = Query(
+    interval: str | None = Query(
         "1h",
         description="Data interval (1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo)",
         regex="^(1m|2m|5m|15m|30m|60m|90m|1h|1d|5d|1wk|1mo|3mo)$",

@@ -7,7 +7,7 @@ SQLAlchemy models for market data, indicators, and signals (TimescaleDB).
 # ================================================================
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     BigInteger,
@@ -39,7 +39,7 @@ class MarketData(Base, DatabaseMixin):
     adjusted_close = Column(Numeric(15, 4))
     volume = Column(BigInteger)
     source = Column(String(20), default="yfinance")
-    created_at = Column(TIMESTAMP, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP, default=lambda: datetime.now(UTC))
 
     __table_args__ = (
         Index("idx_market_data_symbol_time", "symbol", "time"),
@@ -64,7 +64,7 @@ class TechnicalIndicator(Base, DatabaseMixin):
     value_secondary = Column(Numeric(15, 6))
     value_tertiary = Column(Numeric(15, 6))
     parameters = Column(JSONB)  # Paramètres de calcul ex: {"period": 14}
-    created_at = Column(TIMESTAMP, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP, default=lambda: datetime.now(UTC))
 
     __table_args__ = {"extend_existing": True}  # Ajout pour éviter les conflits
 
@@ -93,7 +93,7 @@ class Signal(Base, DatabaseMixin):
     signal_metadata = Column(JSONB)
     is_active = Column(Boolean, default=True)
     expires_at = Column(TIMESTAMP)
-    created_at = Column(TIMESTAMP, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP, default=lambda: datetime.now(UTC))
 
     __table_args__ = (
         CheckConstraint(

@@ -31,7 +31,6 @@ technical analysis and market conditions.
 """
 
 from datetime import datetime
-from typing import Dict, List
 
 from ..dtos import SignalDTO, TechnicalAnalysisDTO
 from .technical_analyzer import TechnicalAnalyzer
@@ -87,14 +86,14 @@ class SignalGenerator:
                 price=None,
                 target_price=None,
                 stop_loss=None,
-                reason=f"Error generating signal: {str(e)}",
+                reason=f"Error generating signal: {e!s}",
                 metadata={},
                 timestamp=datetime.now(),
             )
 
     async def generate_signals_for_portfolio(
-        self, symbols: List[str]
-    ) -> Dict[str, SignalDTO]:
+        self, symbols: list[str]
+    ) -> dict[str, SignalDTO]:
         """
         Generate trading signals for multiple investments.
 
@@ -216,7 +215,7 @@ class SignalGenerator:
 
     def _create_signal_metadata(
         self, analysis: TechnicalAnalysisDTO
-    ) -> Dict[str, str | float | int]:
+    ) -> dict[str, str | float | int]:
         """Create metadata for the signal."""
         metadata = {}
 

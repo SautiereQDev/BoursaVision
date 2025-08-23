@@ -6,7 +6,6 @@ Tests unitaires complets couvrant l'analyseur d'investissement avancé
 avec focus sur les stratégies d'analyse et les métriques critiques.
 """
 
-from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
 import numpy as np

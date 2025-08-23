@@ -6,10 +6,8 @@ Domain service for calculating various risk metrics and validating risk limits.
 Pure business logic without external dependencies.
 """
 
-
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, List, Optional
 
 from ..entities.investment import Investment, InvestmentSector, MarketCap
 from ..entities.portfolio import Portfolio, Position, RiskLimits
@@ -22,10 +20,10 @@ class PortfolioRiskInput:
     """Input data for portfolio risk calculation."""
 
     portfolio: Portfolio
-    positions: List[Position]
-    investments: Dict[str, Investment]
-    current_prices: Dict[str, Money]
-    historical_returns: Dict[str, List[float]]
+    positions: list[Position]
+    investments: dict[str, Investment]
+    current_prices: dict[str, Money]
+    historical_returns: dict[str, list[float]]
 
 
 @dataclass(frozen=True)  # pylint: disable=too-many-instance-attributes
@@ -39,7 +37,7 @@ class RiskMetrics:
     portfolio_volatility: float
     maximum_drawdown: float
     concentration_risk: float  # 0-100, higher = more concentrated
-    sector_concentration: Dict[str, float]  # sector -> percentage
+    sector_concentration: dict[str, float]  # sector -> percentage
     largest_position_weight: float
 
 
@@ -48,8 +46,8 @@ class RiskValidationResult:
     """Result of risk validation"""
 
     is_valid: bool
-    violations: List[str]
-    warnings: List[str]
+    violations: list[str]
+    warnings: list[str]
     risk_score: float
 
 
@@ -148,9 +146,9 @@ class RiskCalculatorService:
     def validate_risk_limits(
         self,
         portfolio: Portfolio,
-        positions: List[Position],
-        investments: Dict[str, Investment],
-        current_prices: Dict[str, Money],
+        positions: list[Position],
+        investments: dict[str, Investment],
+        current_prices: dict[str, Money],
         risk_limits: RiskLimits,
     ) -> RiskValidationResult:
         """Validate portfolio against risk limits"""
@@ -213,11 +211,11 @@ class RiskCalculatorService:
     def suggest_risk_reduction(
         self,
         portfolio: Portfolio,
-        positions: List[Position],
-        investments: Dict[str, Investment],
-        current_prices: Dict[str, Money],
+        positions: list[Position],
+        investments: dict[str, Investment],
+        current_prices: dict[str, Money],
         risk_limits: RiskLimits,
-    ) -> List[str]:
+    ) -> list[str]:
         """Suggest actions to reduce portfolio risk"""
         suggestions = []
         portfolio_value = portfolio.calculate_total_value(current_prices)
@@ -385,8 +383,8 @@ class RiskCalculatorService:
         return min(100.0, risk_score)
 
     def _calculate_portfolio_returns(  # pylint: disable=too-many-arguments,too-many-locals
-        self, positions: List[Position], historical_returns: Dict[str, List[float]]
-    ) -> List[float]:
+        self, positions: list[Position], historical_returns: dict[str, list[float]]
+    ) -> list[float]:
         """Calculate historical portfolio returns"""
         # Simplified implementation
         # In real scenario, would calculate weighted returns based on positions
@@ -411,9 +409,7 @@ class RiskCalculatorService:
 
         return portfolio_returns
 
-    def _calculate_var(
-        self, returns: List[float], confidence: float
-    ) -> float:  # pylint: disable=too-many-arguments
+    def _calculate_var(self, returns: list[float], confidence: float) -> float:  # pylint: disable=too-many-arguments
         """Calculate Value at Risk at given confidence level"""
         if not returns:
             return 0.0
@@ -427,7 +423,7 @@ class RiskCalculatorService:
         return sorted_returns[index]
 
     def _calculate_expected_shortfall(  # pylint: disable=too-many-arguments
-        self, returns: List[float], confidence: float
+        self, returns: list[float], confidence: float
     ) -> float:
         """Calculate Expected Shortfall (Conditional VaR)"""
         var = self._calculate_var(returns, confidence)
@@ -439,7 +435,7 @@ class RiskCalculatorService:
         return sum(worse_returns) / len(worse_returns)
 
     def _calculate_portfolio_beta(
-        self, positions: List[Position], investments: Dict[str, Investment]
+        self, positions: list[Position], investments: dict[str, Investment]
     ) -> float:
         """Calculate portfolio beta (simplified)"""
         # Simplified calculation - in real scenario would use market data
@@ -468,7 +464,7 @@ class RiskCalculatorService:
 
         return weighted_beta / total_weight if total_weight > 0 else 1.0
 
-    def _calculate_volatility(self, returns: List[float]) -> float:
+    def _calculate_volatility(self, returns: list[float]) -> float:
         """Calculate annualized volatility"""
         if len(returns) < 2:
             return 0.0
@@ -479,12 +475,12 @@ class RiskCalculatorService:
 
         return daily_vol * (252**0.5)  # Annualized (252 trading days)
 
-    def _calculate_max_drawdown(self, returns: List[float]) -> float:
+    def _calculate_max_drawdown(self, returns: list[float]) -> float:
         """Calculate maximum drawdown (delegated to utils)."""
         return calculate_max_drawdown(returns)
 
     def _calculate_concentration_risk(
-        self, positions: List[Position], current_prices: Dict[str, Money]
+        self, positions: list[Position], current_prices: dict[str, Money]
     ) -> float:
         """Calculate concentration risk using Herfindahl index"""
         if not positions:
@@ -520,11 +516,11 @@ class RiskCalculatorService:
 
     def _calculate_sector_concentration(
         self,
-        positions: List[Position],
-        investments: Dict[str, Investment],
-        current_prices: Dict[str, Money],
-        portfolio_value: Optional[Money] = None,
-    ) -> Dict[str, float]:
+        positions: list[Position],
+        investments: dict[str, Investment],
+        current_prices: dict[str, Money],
+        portfolio_value: Money | None = None,
+    ) -> dict[str, float]:
         """Calculate sector concentration percentages
 
         Args:
@@ -534,7 +530,7 @@ class RiskCalculatorService:
             portfolio_value: Total portfolio value for percentage calculation.
                            If None, uses sum of position values (less accurate)
         """
-        sector_values: Dict[str, Decimal] = {}
+        sector_values: dict[str, Decimal] = {}
         position_total_value = Decimal("0")
 
         for position in positions:
@@ -564,7 +560,7 @@ class RiskCalculatorService:
         }
 
     def _get_largest_position_weight(
-        self, positions: List[Position], current_prices: Dict[str, Money]
+        self, positions: list[Position], current_prices: dict[str, Money]
     ) -> float:
         """Get weight of largest position"""
         if not positions:

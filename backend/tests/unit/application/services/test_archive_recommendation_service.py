@@ -6,8 +6,7 @@ Tests for archive-enhanced investment recommendation service
 import os
 import sys
 from datetime import datetime
-from decimal import Decimal
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import Mock, patch
 
 import pytest
 

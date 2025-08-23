@@ -7,15 +7,15 @@ des données de marché YFinance.
 """
 
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
 
 from ...application.services.market_data_cache_service import MarketDataCacheService
-from ...domain.entities.market_data_timeline import IntervalType, PrecisionLevel
+from ...domain.entities.market_data_timeline import IntervalType
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +25,8 @@ class MarketDataRequest(BaseModel):
     """Requête pour récupérer des données de marché"""
 
     symbol: str = Field(..., description="Symbole boursier", example="AAPL")
-    start_date: Optional[datetime] = Field(None, description="Date de début")
-    end_date: Optional[datetime] = Field(None, description="Date de fin")
+    start_date: datetime | None = Field(None, description="Date de début")
+    end_date: datetime | None = Field(None, description="Date de fin")
     interval: str = Field("1d", description="Intervalle des données", example="1d")
     max_age_hours: float = Field(1.0, description="Âge maximum des données en heures")
     force_refresh: bool = Field(False, description="Forcer le rafraîchissement")
@@ -80,9 +80,9 @@ class MarketDataResponse(BaseModel):
     symbol: str
     interval: str
     total_points: int
-    data_range: Dict[str, Optional[datetime]]
-    cache_info: Dict[str, Any]
-    points: List[MarketDataPoint]
+    data_range: dict[str, datetime | None]
+    cache_info: dict[str, Any]
+    points: list[MarketDataPoint]
 
 
 class TimelineMetricsResponse(BaseModel):
@@ -94,26 +94,26 @@ class TimelineMetricsResponse(BaseModel):
     gaps_count: int
     significant_gaps_count: int
     data_quality_score: float
-    oldest_point: Optional[datetime]
-    newest_point: Optional[datetime]
-    precision_distribution: Dict[str, int]
+    oldest_point: datetime | None
+    newest_point: datetime | None
+    precision_distribution: dict[str, int]
 
 
 class CacheStatsResponse(BaseModel):
     """Statistiques du cache"""
 
-    service_stats: Dict[str, Any]
-    cache_manager_stats: Dict[str, Any]
+    service_stats: dict[str, Any]
+    cache_manager_stats: dict[str, Any]
     timelines_in_memory: int
     total_requests: int
     cache_hit_rate: float
-    performance_metrics: Dict[str, Any]
+    performance_metrics: dict[str, Any]
 
 
 class BulkRefreshRequest(BaseModel):
     """Requête pour rafraîchissement en lot"""
 
-    symbols: List[str] = Field(..., description="Liste des symboles à rafraîchir")
+    symbols: list[str] = Field(..., description="Liste des symboles à rafraîchir")
     interval: str = Field("1d", description="Intervalle des données")
     max_concurrent: int = Field(
         10, description="Nombre maximum de requêtes simultanées"
@@ -132,7 +132,7 @@ class BulkRefreshResponse(BaseModel):
     total_symbols: int
     successful_refreshes: int
     failed_refreshes: int
-    results: Dict[str, bool]
+    results: dict[str, bool]
     duration_seconds: float
 
 
@@ -157,8 +157,8 @@ async def get_cache_service() -> MarketDataCacheService:
 @router.get("/market-data/{symbol}", response_model=MarketDataResponse)
 async def get_market_data(
     symbol: str,
-    start_date: Optional[str] = Query(None, description="Date de début (ISO format)"),
-    end_date: Optional[str] = Query(None, description="Date de fin (ISO format)"),
+    start_date: str | None = Query(None, description="Date de début (ISO format)"),
+    end_date: str | None = Query(None, description="Date de fin (ISO format)"),
     interval: str = Query("1d", description="Intervalle des données"),
     max_age_hours: float = Query(1.0, description="Âge maximum en heures"),
     force_refresh: bool = Query(False, description="Forcer le rafraîchissement"),
@@ -256,7 +256,7 @@ async def get_market_data(
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Paramètres invalides: {str(e)}",
+            detail=f"Paramètres invalides: {e!s}",
         )
     except Exception as e:
         logger.error(f"Erreur lors de la récupération des données pour {symbol}: {e}")
@@ -416,7 +416,7 @@ async def clear_symbol_cache(
             content={
                 "message": f"Cache vidé pour le symbole {symbol}",
                 "symbol": symbol,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
         )
 
@@ -439,7 +439,7 @@ async def clear_all_cache(
         return JSONResponse(
             content={
                 "message": "Cache entièrement vidé",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
         )
 
@@ -471,7 +471,7 @@ async def get_latest_price(
                 "symbol": symbol,
                 "price": float(latest_price.amount),
                 "currency": latest_price.currency.code,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
         )
 

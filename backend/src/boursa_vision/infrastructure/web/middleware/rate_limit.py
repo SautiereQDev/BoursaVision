@@ -1,9 +1,9 @@
 """
 Rate limiting middleware
 """
+
 import asyncio
 import time
-from typing import Dict, Tuple
 
 from fastapi import HTTPException, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -23,7 +23,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.calls = calls
         self.period = period
-        self.clients: Dict[str, Tuple[int, float]] = {}
+        self.clients: dict[str, tuple[int, float]] = {}
         self._lock = asyncio.Lock()
 
     async def dispatch(self, request: Request, call_next) -> Response:

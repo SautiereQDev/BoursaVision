@@ -7,12 +7,9 @@ Pure business logic without external dependencies.
 """
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from decimal import Decimal
-from typing import Dict, List
+from datetime import UTC, datetime
 
-from ..entities.investment import Investment
-from ..entities.portfolio import PerformanceMetrics, Portfolio, Position
+from ..entities.portfolio import PerformanceMetrics, Portfolio
 from ..utils.performance import calculate_max_drawdown
 from ..value_objects.money import Money
 
@@ -68,7 +65,7 @@ class PerformanceAnalyzerService:
             sharpe_ratio=1.2,
             max_drawdown=0.1,
             beta=1.0,
-            last_updated=datetime.now(timezone.utc),
+            last_updated=datetime.now(UTC),
         )
 
     def calculate_position_performance(
@@ -92,7 +89,7 @@ class PerformanceAnalyzerService:
         return RiskAdjustedMetrics(0.0, 0.0, 0.0, 0.0, 0.0)
 
     def compare_with_benchmark(
-        self, portfolio_returns: List[float], benchmark_returns: List[float]
+        self, portfolio_returns: list[float], benchmark_returns: list[float]
     ) -> PerformanceComparison:
         """Compare portfolio performance with benchmark"""
 
@@ -118,7 +115,9 @@ class PerformanceAnalyzerService:
         alpha = portfolio_cumulative - benchmark_cumulative
 
         # Calculate tracking error
-        excess_returns = [p - b for p, b in zip(portfolio_ret, benchmark_ret)]
+        excess_returns = [
+            p - b for p, b in zip(portfolio_ret, benchmark_ret, strict=False)
+        ]
         tracking_error = self._calculate_volatility(excess_returns)
 
         # Information ratio
@@ -165,8 +164,8 @@ class PerformanceAnalyzerService:
     def _calculate_monthly_return(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         portfolio: Portfolio,
-        current_prices: Dict[str, Money],
-        historical_prices: Dict[str, List[Money]],
+        current_prices: dict[str, Money],
+        historical_prices: dict[str, list[Money]],
     ) -> float:
         """Calculate monthly return for portfolio"""
 
@@ -190,8 +189,8 @@ class PerformanceAnalyzerService:
     def _calculate_annual_return(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         portfolio: Portfolio,
-        current_prices: Dict[str, Money],
-        historical_prices: Dict[str, List[Money]],
+        current_prices: dict[str, Money],
+        historical_prices: dict[str, list[Money]],
     ) -> float:
         """Calculate annualized return for portfolio"""
 
@@ -213,8 +212,8 @@ class PerformanceAnalyzerService:
         return float((current_value.amount - past_value.amount) / past_value.amount)
 
     def _get_portfolio_returns(
-        self, historical_prices: Dict[str, List[Money]]
-    ) -> List[float]:
+        self, historical_prices: dict[str, list[Money]]
+    ) -> list[float]:
         """Calculate time series of portfolio returns"""
 
         # Simplified implementation - equal weights
@@ -249,7 +248,7 @@ class PerformanceAnalyzerService:
 
         return portfolio_returns
 
-    def _calculate_volatility(self, returns: List[float]) -> float:
+    def _calculate_volatility(self, returns: list[float]) -> float:
         """Calculate volatility (standard deviation) of returns"""
         if len(returns) < 2:
             return 0.0
@@ -268,12 +267,12 @@ class PerformanceAnalyzerService:
 
         return (annual_return - risk_free_rate) / volatility
 
-    def _calculate_max_drawdown(self, returns: List[float]) -> float:
+    def _calculate_max_drawdown(self, returns: list[float]) -> float:
         """Calculate maximum drawdown (delegated to utils)."""
         return calculate_max_drawdown(returns)
 
     def _calculate_beta(
-        self, portfolio_returns: List[float], benchmark_returns: List[float]
+        self, portfolio_returns: list[float], benchmark_returns: list[float]
     ) -> float:
         """Calculate portfolio beta relative to benchmark"""
         if not portfolio_returns or not benchmark_returns:
@@ -294,7 +293,7 @@ class PerformanceAnalyzerService:
         # Calculate covariance and variance
         covariance = sum(
             (p - portfolio_mean) * (b - benchmark_mean)
-            for p, b in zip(portfolio_ret, benchmark_ret)
+            for p, b in zip(portfolio_ret, benchmark_ret, strict=False)
         ) / (len(portfolio_ret) - 1)
 
         benchmark_variance = sum((b - benchmark_mean) ** 2 for b in benchmark_ret) / (
@@ -306,7 +305,7 @@ class PerformanceAnalyzerService:
 
         return covariance / benchmark_variance
 
-    def _calculate_cumulative_return(self, returns: List[float]) -> float:
+    def _calculate_cumulative_return(self, returns: list[float]) -> float:
         """Calculate cumulative return from series of returns"""
         if not returns:
             return 0.0

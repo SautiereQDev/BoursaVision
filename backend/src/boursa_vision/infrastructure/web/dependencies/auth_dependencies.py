@@ -7,7 +7,7 @@ FastAPI dependencies for authentication and authorization.
 
 from typing import Optional
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from boursa_vision.application.services.authentication_service import (
@@ -32,9 +32,9 @@ async def get_auth_service() -> AuthenticationService:
 
 
 async def get_current_user_optional(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
     auth_service: AuthenticationService = Depends(get_auth_service),
-) -> Optional[User]:
+) -> User | None:
     """
     Get current user from JWT token (optional).
 

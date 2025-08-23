@@ -14,13 +14,13 @@ from .portfolio_allocation_service import (
 from .risk_calculator import RiskCalculator
 
 __all__ = [
-    "PerformanceAnalyzer",
-    "RiskCalculator",
-    "AlertProcessor",
     "AlertNotificationMethod",
-    "PortfolioAllocationService",
-    "AllocationStrategy",
+    "AlertProcessor",
     "AllocationResult",
+    "AllocationStrategy",
+    "PerformanceAnalyzer",
+    "PortfolioAllocationService",
+    "RiskCalculator",
 ]
 
 from .performance_analyzer import (
@@ -31,11 +31,11 @@ from .performance_analyzer import (
 from .risk_calculator import RiskCalculatorService, RiskMetrics, RiskValidationResult
 
 __all__ = [
-    "RiskCalculatorService",
-    "RiskMetrics",
-    "RiskValidationResult",
     "PerformanceAnalyzerService",
     "PerformanceComparison",
     "RiskAdjustedMetrics",
     "RiskCalculator",
+    "RiskCalculatorService",
+    "RiskMetrics",
+    "RiskValidationResult",
 ]

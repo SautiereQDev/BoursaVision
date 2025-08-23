@@ -7,6 +7,7 @@ Tests for base domain layer classes:
 - AggregateRoot
 - Entity
 """
+
 from datetime import datetime
 
 from boursa_vision.domain.entities.base import AggregateRoot, DomainEvent, Entity

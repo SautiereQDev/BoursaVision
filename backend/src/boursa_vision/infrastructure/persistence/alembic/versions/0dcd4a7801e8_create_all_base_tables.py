@@ -5,6 +5,7 @@ Revises: 001_timescaledb_setup
 Create Date: 2025-08-11 16:04:06.089005
 
 """
+
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 

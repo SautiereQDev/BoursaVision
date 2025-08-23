@@ -6,23 +6,18 @@ Tests des règles métier pour les investissements,
 création, validation et comportements métier.
 """
 
-from datetime import datetime, timezone
-from decimal import Decimal
-from uuid import uuid4
+from datetime import UTC, datetime
 
 import pytest
 
 from boursa_vision.domain.entities.investment import (
-    AnalysisDataMissingException,
-    FundamentalData,
     Investment,
     InvestmentSector,
     InvestmentType,
     InvestmentValidationException,
     MarketCap,
-    TechnicalData,
 )
-from boursa_vision.domain.value_objects.money import Currency, Money
+from boursa_vision.domain.value_objects.money import Currency
 
 
 @pytest.mark.unit
@@ -150,7 +145,7 @@ class TestInvestmentCreation:
     def test_should_set_timestamps_on_creation(self):
         """Devrait définir les timestamps lors de la création."""
         # Arrange
-        before_creation = datetime.now(timezone.utc)
+        before_creation = datetime.now(UTC)
 
         # Act
         investment = Investment.create(
@@ -163,7 +158,7 @@ class TestInvestmentCreation:
             currency=Currency.USD,
         )
 
-        after_creation = datetime.now(timezone.utc)
+        after_creation = datetime.now(UTC)
 
         # Assert
         assert before_creation <= investment.created_at <= after_creation

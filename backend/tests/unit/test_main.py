@@ -3,7 +3,7 @@
 import os
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -125,9 +125,10 @@ class TestDetectEnvironment:
     @patch("builtins.print")
     def test_detect_environment_prints_configuration(self, mock_print):
         """Test that detect_environment prints configuration details."""
-        with patch("os.path.exists", return_value=False), patch(
-            "os.getenv"
-        ) as mock_getenv:
+        with (
+            patch("os.path.exists", return_value=False),
+            patch("os.getenv") as mock_getenv,
+        ):
             mock_getenv.side_effect = (
                 lambda key, default=None: default
             )  # Return default values
@@ -198,9 +199,11 @@ class TestMain:
         }
 
         mock_app = Mock()
-        with patch("boursa_vision.main.create_app", return_value=mock_app), patch(
-            "os.path.exists", return_value=True
-        ), patch("os.getenv", return_value="true"):
+        with (
+            patch("boursa_vision.main.create_app", return_value=mock_app),
+            patch("os.path.exists", return_value=True),
+            patch("os.getenv", return_value="true"),
+        ):
             main()
 
             mock_uvicorn.assert_called_once_with(
@@ -216,8 +219,9 @@ class TestMain:
         """Test main function in Docker development mode."""
         mock_detect_env.return_value = {"host": "0.0.0.0", "port": 8000, "reload": True}
 
-        with patch("os.path.exists", return_value=True), patch(
-            "os.getenv", return_value="true"
+        with (
+            patch("os.path.exists", return_value=True),
+            patch("os.getenv", return_value="true"),
         ):
             main()
 
@@ -239,8 +243,9 @@ class TestMain:
         """Test main function in local development mode."""
         mock_detect_env.return_value = {"host": "0.0.0.0", "port": 8001, "reload": True}
 
-        with patch("os.path.exists", return_value=False), patch(
-            "os.getenv", return_value=None
+        with (
+            patch("os.path.exists", return_value=False),
+            patch("os.getenv", return_value=None),
         ):
             main()
 
@@ -275,8 +280,9 @@ class TestMain:
             "reload": False,
         }
 
-        with patch("boursa_vision.main.uvicorn.run"), patch(
-            "boursa_vision.main.create_app"
+        with (
+            patch("boursa_vision.main.uvicorn.run"),
+            patch("boursa_vision.main.create_app"),
         ):
             main()
 

@@ -55,16 +55,16 @@ class TechnicalAnalysisDTO(BaseDTO):
     """Technical analysis indicators DTO."""
 
     symbol: str = Field(..., description=ASSET_SYMBOL_DESC)
-    rsi: Optional[float] = Field(None, ge=0, le=100, description="RSI indicator")
-    macd: Optional[float] = Field(None, description="MACD indicator")
-    bollinger_position: Optional[float] = Field(
+    rsi: float | None = Field(None, ge=0, le=100, description="RSI indicator")
+    macd: float | None = Field(None, description="MACD indicator")
+    bollinger_position: float | None = Field(
         None, description="Bollinger Bands position"
     )
-    sma_20: Optional[float] = Field(None, description="Simple Moving Average 20")
-    sma_50: Optional[float] = Field(None, description="Simple Moving Average 50")
-    volume_trend: Optional[float] = Field(None, description="Volume trend indicator")
-    support_level: Optional[float] = Field(None, description="Support level")
-    resistance_level: Optional[float] = Field(None, description="Resistance level")
+    sma_20: float | None = Field(None, description="Simple Moving Average 20")
+    sma_50: float | None = Field(None, description="Simple Moving Average 50")
+    volume_trend: float | None = Field(None, description="Volume trend indicator")
+    support_level: float | None = Field(None, description="Support level")
+    resistance_level: float | None = Field(None, description="Resistance level")
     analysis_date: datetime = Field(
         default_factory=datetime.now, description="Analysis timestamp"
     )
@@ -76,11 +76,11 @@ class SignalDTO(BaseDTO):
     symbol: str = Field(..., description=ASSET_SYMBOL_DESC)
     action: str = Field(..., description="Signal action (BUY/SELL/HOLD)")
     confidence: float = Field(..., ge=0, le=1, description="Signal confidence score")
-    price: Optional[float] = Field(None, description="Recommended price")
-    target_price: Optional[float] = Field(None, description="Target price")
-    stop_loss: Optional[float] = Field(None, description="Stop loss price")
+    price: float | None = Field(None, description="Recommended price")
+    target_price: float | None = Field(None, description="Target price")
+    stop_loss: float | None = Field(None, description="Stop loss price")
     reason: str = Field(..., description="Signal reasoning")
-    metadata: Dict[str, Union[str, float, int]] = Field(
+    metadata: dict[str, str | float | int] = Field(
         default_factory=dict, description="Additional metadata"
     )
     timestamp: datetime = Field(..., description="Signal timestamp")
@@ -106,7 +106,7 @@ class InvestmentDTO(BaseDTO):
     exchange: str = Field(
         ..., min_length=1, max_length=50, description=EXCHANGE_NAME_DESC
     )
-    current_price: Optional[MoneyDTO] = Field(None, description="Current market price")
+    current_price: MoneyDTO | None = Field(None, description="Current market price")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
 
@@ -118,11 +118,9 @@ class PositionDTO(BaseDTO):
     investment: InvestmentDTO = Field(..., description="Investment details")
     quantity: int = Field(..., ge=0, description=QUANTITY_DESC)
     average_price: MoneyDTO = Field(..., description=AVERAGE_PRICE_DESC)
-    current_price: Optional[MoneyDTO] = Field(None, description=CURRENT_PRICE_DESC)
-    market_value: Optional[MoneyDTO] = Field(None, description="Current market value")
-    unrealized_pnl: Optional[MoneyDTO] = Field(
-        None, description="Unrealized profit/loss"
-    )
+    current_price: MoneyDTO | None = Field(None, description=CURRENT_PRICE_DESC)
+    market_value: MoneyDTO | None = Field(None, description="Current market value")
+    unrealized_pnl: MoneyDTO | None = Field(None, description="Unrealized profit/loss")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
 
@@ -134,14 +132,14 @@ class PortfolioDTO(BaseDTO):
     name: str = Field(
         ..., min_length=1, max_length=100, description=PORTFOLIO_NAME_DESC
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None, max_length=500, description="Portfolio description"
     )
     user_id: UUID = Field(..., description=USER_ID_DESC)
-    positions: List[PositionDTO] = Field(
+    positions: list[PositionDTO] = Field(
         default_factory=list, description="Portfolio positions"
     )
-    total_value: Optional[MoneyDTO] = Field(None, description="Total portfolio value")
+    total_value: MoneyDTO | None = Field(None, description="Total portfolio value")
     currency: str = Field(..., description="Base currency")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
@@ -153,11 +151,11 @@ class PerformanceMetricsDTO(BaseDTO):
     total_return: float = Field(..., description="Total return percentage")
     annualized_return: float = Field(..., description="Annualized return percentage")
     volatility: float = Field(..., description="Volatility percentage")
-    sharpe_ratio: Optional[float] = Field(None, description="Sharpe ratio")
+    sharpe_ratio: float | None = Field(None, description="Sharpe ratio")
     max_drawdown: float = Field(..., description="Maximum drawdown percentage")
-    beta: Optional[float] = Field(None, description="Beta coefficient")
-    alpha: Optional[float] = Field(None, description="Alpha coefficient")
-    var_95: Optional[float] = Field(None, description="Value at Risk 95%")
+    beta: float | None = Field(None, description="Beta coefficient")
+    alpha: float | None = Field(None, description="Alpha coefficient")
+    var_95: float | None = Field(None, description="Value at Risk 95%")
 
 
 # Request DTOs for use cases
@@ -191,7 +189,7 @@ class CreatePortfolioDTO(BaseDTO):
     name: str = Field(
         ..., min_length=1, max_length=100, description=PORTFOLIO_NAME_DESC
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None, max_length=500, description="Portfolio description"
     )
     user_id: UUID = Field(..., description=USER_ID_DESC)
@@ -201,13 +199,13 @@ class CreatePortfolioDTO(BaseDTO):
 class FindInvestmentsRequestDTO(BaseDTO):
     """Find investments request DTO."""
 
-    symbol: Optional[str] = Field(None, description=ASSET_SYMBOL_DESC)
-    investment_type: Optional[str] = Field(None, description=INVESTMENT_TYPE_DESC)
-    sector: Optional[str] = Field(None, description=INVESTMENT_SECTOR_DESC)
-    market_cap: Optional[str] = Field(None, description=MARKET_CAP_DESC)
-    exchange: Optional[str] = Field(None, description=EXCHANGE_NAME_DESC)
-    min_price: Optional[float] = Field(None, gt=0, description="Minimum price")
-    max_price: Optional[float] = Field(None, gt=0, description="Maximum price")
+    symbol: str | None = Field(None, description=ASSET_SYMBOL_DESC)
+    investment_type: str | None = Field(None, description=INVESTMENT_TYPE_DESC)
+    sector: str | None = Field(None, description=INVESTMENT_SECTOR_DESC)
+    market_cap: str | None = Field(None, description=MARKET_CAP_DESC)
+    exchange: str | None = Field(None, description=EXCHANGE_NAME_DESC)
+    min_price: float | None = Field(None, gt=0, description="Minimum price")
+    max_price: float | None = Field(None, gt=0, description="Maximum price")
     include_technical_analysis: bool = Field(
         default=True, description="Include technical analysis"
     )
@@ -217,7 +215,7 @@ class FindInvestmentsRequestDTO(BaseDTO):
 
     @field_validator("max_price")
     @classmethod
-    def validate_price_range(cls, v: Optional[float], info) -> Optional[float]:
+    def validate_price_range(cls, v: float | None, info) -> float | None:
         """Validate price range."""
         if (
             v is not None
@@ -242,7 +240,7 @@ class AnalyzePortfolioRequestDTO(BaseDTO):
     include_recommendations: bool = Field(
         default=True, description="Include recommendations"
     )
-    benchmark_symbol: Optional[str] = Field(
+    benchmark_symbol: str | None = Field(
         None, description="Benchmark symbol for comparison"
     )
 
@@ -250,11 +248,11 @@ class AnalyzePortfolioRequestDTO(BaseDTO):
 class FindInvestmentsResponseDTO(BaseDTO):
     """Find investments response DTO."""
 
-    investments: List[InvestmentDTO] = Field(..., description="Found investments")
-    technical_analysis: Dict[str, TechnicalAnalysisDTO] = Field(
+    investments: list[InvestmentDTO] = Field(..., description="Found investments")
+    technical_analysis: dict[str, TechnicalAnalysisDTO] = Field(
         default_factory=dict, description="Technical analysis by symbol"
     )
-    signals: Dict[str, SignalDTO] = Field(
+    signals: dict[str, SignalDTO] = Field(
         default_factory=dict, description="Trading signals by symbol"
     )
     total_count: int = Field(..., description="Total number of matching investments")
@@ -265,19 +263,19 @@ class AnalyzePortfolioResponseDTO(BaseDTO):
     """Analyze portfolio response DTO."""
 
     portfolio: PortfolioDTO = Field(..., description="Portfolio details")
-    performance_metrics: Optional[PerformanceMetricsDTO] = Field(
+    performance_metrics: PerformanceMetricsDTO | None = Field(
         None, description="Performance metrics"
     )
-    risk_analysis: Optional[Dict[str, Union[str, float]]] = Field(
+    risk_analysis: dict[str, str | float] | None = Field(
         None, description="Risk analysis"
     )
-    asset_allocation: Optional[Dict[str, float]] = Field(
+    asset_allocation: dict[str, float] | None = Field(
         None, description="Asset allocation percentages"
     )
-    recommendations: Optional[List[str]] = Field(
+    recommendations: list[str] | None = Field(
         None, description="Investment recommendations"
     )
-    signals: Optional[List[SignalDTO]] = Field(
+    signals: list[SignalDTO] | None = Field(
         None, description="Trading signals for positions"
     )
 
@@ -286,12 +284,12 @@ class AnalyzePortfolioResponseDTO(BaseDTO):
 class InvestmentSearchResultDTO(BaseModel):
     """Investment search result DTO."""
 
-    investments: List[InvestmentDTO]
+    investments: list[InvestmentDTO]
     total_count: int
     page: int = 1
     page_size: int = 50
-    technical_analysis: List[TechnicalAnalysisDTO] = Field(default_factory=list)
-    signals: List[SignalDTO] = Field(default_factory=list)
+    technical_analysis: list[TechnicalAnalysisDTO] = Field(default_factory=list)
+    signals: list[SignalDTO] = Field(default_factory=list)
 
 
 class PortfolioAnalysisResultDTO(BaseModel):
@@ -299,10 +297,10 @@ class PortfolioAnalysisResultDTO(BaseModel):
 
     portfolio: PortfolioDTO
     performance_metrics: PerformanceMetricsDTO
-    risk_metrics: Dict[str, float] = Field(default_factory=dict)
-    allocation: Dict[str, float] = Field(default_factory=dict)
-    recommendations: List[str] = Field(default_factory=list)
-    signals: List[SignalDTO] = Field(default_factory=list)
+    risk_metrics: dict[str, float] = Field(default_factory=dict)
+    allocation: dict[str, float] = Field(default_factory=dict)
+    recommendations: list[str] = Field(default_factory=list)
+    signals: list[SignalDTO] = Field(default_factory=list)
     analysis_date: datetime = Field(default_factory=datetime.now)
 
     # Additional fields for test compatibility
@@ -340,45 +338,45 @@ class RiskFactorDTO(BaseModel):
 class GeopoliticalRiskDTO(BaseModel):
     """DTO pour les risques géopolitiques"""
 
-    country_risk: Optional[RiskFactorDTO] = None
-    sector_risk: Optional[RiskFactorDTO] = None
-    international_exposure: Optional[RiskFactorDTO] = None
-    regulatory_risk: Optional[RiskFactorDTO] = None
-    trade_war_impact: Optional[RiskFactorDTO] = None
-    sanctions_risk: Optional[RiskFactorDTO] = None
+    country_risk: RiskFactorDTO | None = None
+    sector_risk: RiskFactorDTO | None = None
+    international_exposure: RiskFactorDTO | None = None
+    regulatory_risk: RiskFactorDTO | None = None
+    trade_war_impact: RiskFactorDTO | None = None
+    sanctions_risk: RiskFactorDTO | None = None
 
 
 class FundamentalRiskDTO(BaseModel):
     """DTO pour les risques fondamentaux"""
 
-    debt_risk: Optional[RiskFactorDTO] = None
-    liquidity_risk: Optional[RiskFactorDTO] = None
-    profitability_risk: Optional[RiskFactorDTO] = None
-    valuation_risk: Optional[RiskFactorDTO] = None
-    growth_risk: Optional[RiskFactorDTO] = None
-    revenue_quality_risk: Optional[RiskFactorDTO] = None
-    competitive_position_risk: Optional[RiskFactorDTO] = None
+    debt_risk: RiskFactorDTO | None = None
+    liquidity_risk: RiskFactorDTO | None = None
+    profitability_risk: RiskFactorDTO | None = None
+    valuation_risk: RiskFactorDTO | None = None
+    growth_risk: RiskFactorDTO | None = None
+    revenue_quality_risk: RiskFactorDTO | None = None
+    competitive_position_risk: RiskFactorDTO | None = None
 
 
 class MarketRiskDTO(BaseModel):
     """DTO pour les risques de marché"""
 
-    volatility_risk: Optional[RiskFactorDTO] = None
-    beta_risk: Optional[RiskFactorDTO] = None
-    correlation_risk: Optional[RiskFactorDTO] = None
-    drawdown_risk: Optional[RiskFactorDTO] = None
-    liquidity_risk: Optional[RiskFactorDTO] = None
-    concentration_risk: Optional[RiskFactorDTO] = None
+    volatility_risk: RiskFactorDTO | None = None
+    beta_risk: RiskFactorDTO | None = None
+    correlation_risk: RiskFactorDTO | None = None
+    drawdown_risk: RiskFactorDTO | None = None
+    liquidity_risk: RiskFactorDTO | None = None
+    concentration_risk: RiskFactorDTO | None = None
 
 
 class ESGRiskDTO(BaseModel):
     """DTO pour les risques ESG"""
 
-    environmental_risk: Optional[RiskFactorDTO] = None
-    social_risk: Optional[RiskFactorDTO] = None
-    governance_risk: Optional[RiskFactorDTO] = None
-    sustainability_risk: Optional[RiskFactorDTO] = None
-    reputation_risk: Optional[RiskFactorDTO] = None
+    environmental_risk: RiskFactorDTO | None = None
+    social_risk: RiskFactorDTO | None = None
+    governance_risk: RiskFactorDTO | None = None
+    sustainability_risk: RiskFactorDTO | None = None
+    reputation_risk: RiskFactorDTO | None = None
 
 
 class RiskAssessmentDTO(BaseModel):
@@ -397,18 +395,18 @@ class RiskAssessmentDTO(BaseModel):
     esg_risks: ESGRiskDTO = Field(default_factory=ESGRiskDTO)
 
     # Groupement par catégorie
-    risks_by_category: Dict[str, List[RiskFactorDTO]] = Field(default_factory=dict)
+    risks_by_category: dict[str, list[RiskFactorDTO]] = Field(default_factory=dict)
 
     # Tous les facteurs de risque
-    all_risk_factors: List[RiskFactorDTO] = Field(default_factory=list)
+    all_risk_factors: list[RiskFactorDTO] = Field(default_factory=list)
 
     # Métadonnées
     analysis_timestamp: datetime
     summary: str
 
     # Recommandations basées sur les risques
-    risk_mitigation_strategies: List[str] = Field(default_factory=list)
-    monitoring_recommendations: List[str] = Field(default_factory=list)
+    risk_mitigation_strategies: list[str] = Field(default_factory=list)
+    monitoring_recommendations: list[str] = Field(default_factory=list)
 
 
 class ComprehensiveInvestmentAnalysisDTO(BaseModel):
@@ -418,11 +416,11 @@ class ComprehensiveInvestmentAnalysisDTO(BaseModel):
     name: str
 
     # Analyses existantes
-    technical_analysis: Optional[TechnicalAnalysisDTO] = None
-    signal: Optional[SignalDTO] = None
+    technical_analysis: TechnicalAnalysisDTO | None = None
+    signal: SignalDTO | None = None
 
     # Nouvelle analyse des risques
-    risk_assessment: Optional[RiskAssessmentDTO] = None
+    risk_assessment: RiskAssessmentDTO | None = None
 
     # Score global combiné
     overall_investment_score: float  # 0-100
@@ -431,9 +429,9 @@ class ComprehensiveInvestmentAnalysisDTO(BaseModel):
 
     # Résumé exécutif
     executive_summary: str
-    key_opportunities: List[str] = Field(default_factory=list)
-    key_risks: List[str] = Field(default_factory=list)
+    key_opportunities: list[str] = Field(default_factory=list)
+    key_risks: list[str] = Field(default_factory=list)
 
     # Métadonnées
     analysis_date: datetime
-    analyst_notes: Optional[str] = None
+    analyst_notes: str | None = None

@@ -65,9 +65,7 @@ class FundamentalScoringStrategy(ScoringStrategy):
     Strategy for calculating fundamental scores.
     """
 
-    def calculate_score(
-        self, investment: Scorable
-    ) -> float:  # pylint: disable=protected-access
+    def calculate_score(self, investment: Scorable) -> float:  # pylint: disable=protected-access
         """
         Calculate the fundamental score for a given scorable entity.
 

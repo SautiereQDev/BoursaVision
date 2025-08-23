@@ -1,6 +1,7 @@
 """
 Test simple pour vérifier que pytest fonctionne
 """
+
 import pytest
 
 

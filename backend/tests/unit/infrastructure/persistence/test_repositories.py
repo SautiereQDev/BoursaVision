@@ -5,12 +5,7 @@ Tests conformes à l'architecture définie dans TESTS.md.
 Focus sur les interfaces et structures de repository.
 """
 
-import sys
-from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
-from unittest.mock import AsyncMock, Mock, patch
-from uuid import UUID, uuid4
 
 import pytest
 
@@ -42,7 +37,7 @@ class TestRepositoriesModuleStructure:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "Repository implementations for the trading platform" in content
@@ -73,7 +68,7 @@ class TestRepositoryImports:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "IUserRepository" in content
@@ -96,7 +91,7 @@ class TestSqlAlchemyUserRepository:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "class SqlAlchemyUserRepository(IUserRepository):" in content
@@ -112,7 +107,7 @@ class TestSqlAlchemyUserRepository:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         required_methods = [
@@ -137,7 +132,7 @@ class TestSqlAlchemyUserRepository:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "def __init__(self, session: AsyncSession):" in content
@@ -158,7 +153,7 @@ class TestSqlAlchemyPortfolioRepository:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "class SqlAlchemyPortfolioRepository(IPortfolioRepository):" in content
@@ -174,7 +169,7 @@ class TestSqlAlchemyPortfolioRepository:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         required_methods = [
@@ -197,7 +192,7 @@ class TestSqlAlchemyPortfolioRepository:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "selectinload(Portfolio.positions)" in content
@@ -217,7 +212,7 @@ class TestSqlAlchemyMarketDataRepository:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "class SqlAlchemyMarketDataRepository(IMarketDataRepository):" in content
@@ -233,7 +228,7 @@ class TestSqlAlchemyMarketDataRepository:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "async def save(self, market_data: DomainMarketData)" in content
@@ -254,7 +249,7 @@ class TestSqlAlchemyInvestmentRepository:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         # La classe peut être définie plus tard dans le fichier
@@ -277,7 +272,7 @@ class TestRepositoryMappers:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "UserMapper" in content
@@ -295,7 +290,7 @@ class TestRepositoryMappers:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "UserMapper.to_domain(" in content
@@ -311,7 +306,7 @@ class TestRepositoryMappers:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "to_persistence(" in content or "to_model(" in content
@@ -331,7 +326,7 @@ class TestRepositoryModels:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "from .models import" in content
@@ -355,7 +350,7 @@ class TestRepositoryErrorHandling:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "scalar_one_or_none()" in content
@@ -371,7 +366,7 @@ class TestRepositoryErrorHandling:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "await self._session.flush()" in content
@@ -391,7 +386,7 @@ class TestRepositoryQueries:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         # Vérifications syntaxiques
@@ -410,7 +405,7 @@ class TestRepositoryQueries:
             / "persistence"
             / "repositories.py"
         )
-        with open(repos_path, "r") as f:
+        with open(repos_path) as f:
             content = f.read()
 
         assert "and_(" in content

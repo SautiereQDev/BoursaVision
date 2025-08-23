@@ -6,8 +6,6 @@ Following Domain Layer testing principles.
 """
 
 from decimal import Decimal
-from typing import Dict, List
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -87,7 +85,7 @@ class TestMarketCapAllocation:
         return PortfolioAllocationService()
 
     @pytest.fixture
-    def sample_market_caps(self) -> Dict[str, Decimal]:
+    def sample_market_caps(self) -> dict[str, Decimal]:
         """Sample market cap data for testing."""
         return {
             "AAPL": Decimal("3000000000000"),  # 3T
@@ -152,7 +150,7 @@ class TestRiskParityAllocation:
         return PortfolioAllocationService()
 
     @pytest.fixture
-    def sample_volatilities(self) -> Dict[str, Decimal]:
+    def sample_volatilities(self) -> dict[str, Decimal]:
         """Sample volatility data for testing."""
         return {
             "AAPL": Decimal("0.25"),  # 25% volatility
@@ -220,7 +218,7 @@ class TestMomentumAllocation:
         return PortfolioAllocationService()
 
     @pytest.fixture
-    def sample_returns(self) -> Dict[str, Decimal]:
+    def sample_returns(self) -> dict[str, Decimal]:
         """Sample historical returns for testing."""
         return {
             "AAPL": Decimal("0.15"),  # 15% return

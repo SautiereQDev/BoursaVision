@@ -5,10 +5,9 @@ This module provides concrete implementations of domain repository interfaces
 using SQLAlchemy for PostgreSQL + TimescaleDB persistence.
 """
 
-from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import and_, delete, desc, func, select
+from sqlalchemy import and_, delete, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -21,7 +20,7 @@ from ...domain.repositories.market_data_repository import IMarketDataRepository
 from ...domain.repositories.portfolio_repository import IPortfolioRepository
 from ...domain.repositories.user_repository import IUserRepository
 from .mappers_new import InvestmentMapper, MarketDataMapper, PortfolioMapper, UserMapper
-from .models import Instrument, MarketData, Portfolio, Position, User
+from .models import Instrument, MarketData, Portfolio, User
 
 
 class SqlAlchemyUserRepository(IUserRepository):
@@ -30,21 +29,21 @@ class SqlAlchemyUserRepository(IUserRepository):
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def find_by_id(self, user_id: UUID) -> Optional[DomainUser]:
+    async def find_by_id(self, user_id: UUID) -> DomainUser | None:
         """Find user by ID."""
         stmt = select(User).where(User.id == user_id)
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
         return UserMapper.to_domain(model) if model else None
 
-    async def find_by_email(self, email: str) -> Optional[DomainUser]:
+    async def find_by_email(self, email: str) -> DomainUser | None:
         """Find user by email."""
         stmt = select(User).where(User.email == email)
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
         return UserMapper.to_domain(model) if model else None
 
-    async def find_by_username(self, username: str) -> Optional[DomainUser]:
+    async def find_by_username(self, username: str) -> DomainUser | None:
         """Find user by username."""
         stmt = select(User).where(User.username == username)
         result = await self._session.execute(stmt)
@@ -73,7 +72,7 @@ class SqlAlchemyUserRepository(IUserRepository):
         result = await self._session.execute(stmt)
         return result.rowcount > 0
 
-    async def find_all_active(self) -> List[DomainUser]:
+    async def find_all_active(self) -> list[DomainUser]:
         """Find all active users."""
         stmt = select(User).where(User.is_active.is_(True))
         result = await self._session.execute(stmt)
@@ -87,7 +86,7 @@ class SqlAlchemyPortfolioRepository(IPortfolioRepository):
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def find_by_id(self, portfolio_id: UUID) -> Optional[DomainPortfolio]:
+    async def find_by_id(self, portfolio_id: UUID) -> DomainPortfolio | None:
         """Find portfolio by ID."""
         stmt = (
             select(Portfolio)
@@ -98,7 +97,7 @@ class SqlAlchemyPortfolioRepository(IPortfolioRepository):
         model = result.scalar_one_or_none()
         return PortfolioMapper.to_domain(model) if model else None
 
-    async def find_by_user_id(self, user_id: UUID) -> List[DomainPortfolio]:
+    async def find_by_user_id(self, user_id: UUID) -> list[DomainPortfolio]:
         """Find portfolios by user ID."""
         stmt = (
             select(Portfolio)
@@ -175,8 +174,8 @@ class SqlAlchemyMarketDataRepository(IMarketDataRepository):
         start_time,
         end_time,
         interval_type: str = "1d",
-        limit: Optional[int] = None,
-    ) -> List[DomainMarketData]:
+        limit: int | None = None,
+    ) -> list[DomainMarketData]:
         """Find market data by symbol and time range (optimized for TimescaleDB)."""
         stmt = (
             select(MarketData)
@@ -200,7 +199,7 @@ class SqlAlchemyMarketDataRepository(IMarketDataRepository):
 
     async def find_latest_by_symbol(
         self, symbol: str, interval_type: str = "1d"
-    ) -> Optional[DomainMarketData]:
+    ) -> DomainMarketData | None:
         """Find latest market data for symbol."""
         stmt = (
             select(MarketData)
@@ -219,8 +218,8 @@ class SqlAlchemyMarketDataRepository(IMarketDataRepository):
         return MarketDataMapper.to_domain(model) if model else None
 
     async def find_by_symbols(
-        self, symbols: List[str], interval_type: str = "1d", limit: Optional[int] = None
-    ) -> List[DomainMarketData]:
+        self, symbols: list[str], interval_type: str = "1d", limit: int | None = None
+    ) -> list[DomainMarketData]:
         """Find latest market data for multiple symbols."""
         stmt = (
             select(MarketData)
@@ -254,10 +253,10 @@ class SqlAlchemyMarketDataRepository(IMarketDataRepository):
 class SqlAlchemyInvestmentRepository(IInvestmentRepository):
     """SQLAlchemy implementation of Investment repository."""
 
-    def __init__(self, session: Optional[AsyncSession] = None):
+    def __init__(self, session: AsyncSession | None = None):
         self._session = session
 
-    async def find_by_symbol(self, symbol: str) -> Optional[Investment]:
+    async def find_by_symbol(self, symbol: str) -> Investment | None:
         """Find investment by symbol."""
         stmt = (
             select(Instrument)
@@ -274,7 +273,7 @@ class SqlAlchemyInvestmentRepository(IInvestmentRepository):
             return InvestmentMapper.to_domain(model, fundamental_data)
         return None
 
-    async def find_by_exchange(self, exchange: str) -> List[Investment]:
+    async def find_by_exchange(self, exchange: str) -> list[Investment]:
         """Find investments by exchange."""
         stmt = (
             select(Instrument)
@@ -295,7 +294,7 @@ class SqlAlchemyInvestmentRepository(IInvestmentRepository):
 
         return investments
 
-    async def find_by_sector(self, sector: str) -> List[Investment]:
+    async def find_by_sector(self, sector: str) -> list[Investment]:
         """Find investments by sector."""
         stmt = (
             select(Instrument)
@@ -339,7 +338,7 @@ class SqlAlchemyInvestmentRepository(IInvestmentRepository):
         await self._session.flush()
         return InvestmentMapper.to_domain(model)
 
-    async def find_all_active(self) -> List[Investment]:
+    async def find_all_active(self) -> list[Investment]:
         """Find all active investments."""
         stmt = (
             select(Instrument)
@@ -358,7 +357,7 @@ class SqlAlchemyInvestmentRepository(IInvestmentRepository):
 
         return investments
 
-    async def find_by_id(self, investment_id: str) -> Optional[Investment]:
+    async def find_by_id(self, investment_id: str) -> Investment | None:
         """Find investment by ID."""
         if not self._session:
             raise ValueError("Session is not initialized")
@@ -380,7 +379,7 @@ class SqlAlchemyInvestmentRepository(IInvestmentRepository):
             return InvestmentMapper.to_domain(model, fundamental_data)
         return None
 
-    async def find_all(self) -> List[Investment]:
+    async def find_all(self) -> list[Investment]:
         """Find all investments."""
         if not self._session:
             raise ValueError("Session is not initialized")
@@ -406,7 +405,7 @@ class SqlAlchemyInvestmentRepository(IInvestmentRepository):
         await self._session.execute(stmt)
         await self._session.flush()
 
-    async def find_by_market_cap(self, market_cap: str) -> List[Investment]:
+    async def find_by_market_cap(self, market_cap: str) -> list[Investment]:
         """Find investments by market cap."""
         if not self._session:
             raise ValueError("Session is not initialized")
@@ -434,7 +433,7 @@ class SqlAlchemyInvestmentRepository(IInvestmentRepository):
             investments.append(InvestmentMapper.to_domain(model, fundamental_data))
         return investments
 
-    async def search_by_name(self, name_pattern: str) -> List[Investment]:
+    async def search_by_name(self, name_pattern: str) -> list[Investment]:
         """Search investments by name pattern."""
         if not self._session:
             raise ValueError("Session is not initialized")

@@ -4,13 +4,9 @@ Integrates with Clean Architecture and uses Repository pattern
 """
 
 import logging
-import uuid
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from statistics import mean
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-import numpy as np
 import pandas as pd
 import psycopg2
 
@@ -47,9 +43,9 @@ class ArchivedRecommendation:
     volume_trend: str
 
     # Insights
-    strengths: List[str]
-    weaknesses: List[str]
-    key_insights: List[str]
+    strengths: list[str]
+    weaknesses: list[str]
+    key_insights: list[str]
 
 
 class ArchiveDataRepository:
@@ -62,7 +58,7 @@ class ArchiveDataRepository:
         """Get database connection"""
         return psycopg2.connect(self.database_url)
 
-    def get_available_symbols(self) -> List[str]:
+    def get_available_symbols(self) -> list[str]:
         """Get all symbols with archived data"""
         with self.get_connection() as conn:
             with conn.cursor() as cur:
@@ -102,7 +98,7 @@ class ArchiveDataRepository:
                 df.set_index("time", inplace=True)
             return df
 
-    def get_symbol_info(self, symbol: str) -> Dict[str, Any]:
+    def get_symbol_info(self, symbol: str) -> dict[str, Any]:
         """Get basic symbol information"""
         with self.get_connection() as conn:
             with conn.cursor() as cur:
@@ -144,7 +140,7 @@ class TechnicalAnalyzer:
         return float(rsi.iloc[-1]) if not pd.isna(rsi.iloc[-1]) else 50.0
 
     @staticmethod
-    def calculate_moving_averages(prices: pd.Series) -> Dict[str, float]:
+    def calculate_moving_averages(prices: pd.Series) -> dict[str, float]:
         """Calculate moving averages"""
         mas = {}
         for period in [5, 10, 20, 50]:
@@ -180,7 +176,7 @@ class ArchiveBasedRecommendationService:
 
     def get_recommendations(
         self, max_recommendations: int = 10, min_score: float = 60.0
-    ) -> List[ArchivedRecommendation]:
+    ) -> list[ArchivedRecommendation]:
         """Generate recommendations based on archived data"""
         logger.info("Generating recommendations from archived data...")
 
@@ -195,7 +191,9 @@ class ArchiveBasedRecommendationService:
                 recommendation = self._analyze_symbol(symbol)
                 if recommendation and recommendation.overall_score >= min_score:
                     recommendations.append(recommendation)
-                    logger.info(f"✅ {symbol}: Score {recommendation.overall_score:.1f}")
+                    logger.info(
+                        f"✅ {symbol}: Score {recommendation.overall_score:.1f}"
+                    )
                 else:
                     logger.info(f"⚠️ {symbol}: Score too low or analysis failed")
 
@@ -206,7 +204,7 @@ class ArchiveBasedRecommendationService:
         recommendations.sort(key=lambda x: x.overall_score, reverse=True)
         return recommendations[:max_recommendations]
 
-    def _analyze_symbol(self, symbol: str) -> Optional[ArchivedRecommendation]:
+    def _analyze_symbol(self, symbol: str) -> ArchivedRecommendation | None:
         """Analyze a single symbol"""
         # Get market data
         df = self.repository.get_market_data(symbol, days=30)
@@ -296,7 +294,7 @@ class ArchiveBasedRecommendationService:
         return 25  # Overbought - risky
 
     def _score_moving_averages(
-        self, current_price: float, mas: Dict[str, float]
+        self, current_price: float, mas: dict[str, float]
     ) -> float:
         """Score moving average position"""
         score = 50
@@ -316,7 +314,7 @@ class ArchiveBasedRecommendationService:
 
         return score
 
-    def _calculate_price_changes(self, prices: pd.Series) -> Dict[str, float]:
+    def _calculate_price_changes(self, prices: pd.Series) -> dict[str, float]:
         """Calculate price changes over different periods"""
         current = prices.iloc[-1]
         changes = {}
@@ -333,7 +331,7 @@ class ArchiveBasedRecommendationService:
 
         return changes
 
-    def _score_momentum(self, price_changes: Dict[str, float]) -> float:
+    def _score_momentum(self, price_changes: dict[str, float]) -> float:
         """Score momentum based on price changes"""
         # Weight recent changes more heavily
         score = (
@@ -358,7 +356,7 @@ class ArchiveBasedRecommendationService:
         else:
             return 20
 
-    def _analyze_volume(self, df: pd.DataFrame) -> Dict[str, Any]:
+    def _analyze_volume(self, df: pd.DataFrame) -> dict[str, Any]:
         """Analyze volume trends"""
         volumes = df["volume"]
         avg_volume = float(volumes.mean())
@@ -382,7 +380,7 @@ class ArchiveBasedRecommendationService:
             "recent_vs_avg": recent_volume / avg_volume if avg_volume > 0 else 1.0,
         }
 
-    def _score_volume(self, volume_analysis: Dict[str, Any]) -> float:
+    def _score_volume(self, volume_analysis: dict[str, Any]) -> float:
         """Score volume characteristics"""
         if volume_analysis["trend"] == "INCREASING":
             return 75
@@ -390,7 +388,7 @@ class ArchiveBasedRecommendationService:
             return 60
         return 45
 
-    def _assess_risk(self, volatility: float, price_changes: Dict[str, float]) -> str:
+    def _assess_risk(self, volatility: float, price_changes: dict[str, float]) -> str:
         """Assess risk level"""
         risk_score = volatility + abs(price_changes.get("7d", 0))
 
@@ -428,11 +426,11 @@ class ArchiveBasedRecommendationService:
     def _generate_insights(
         self,
         rsi: float,
-        mas: Dict[str, float],
-        price_changes: Dict[str, float],
-        volume_analysis: Dict[str, Any],
+        mas: dict[str, float],
+        price_changes: dict[str, float],
+        volume_analysis: dict[str, Any],
         current_price: float,
-    ) -> Tuple[List[str], List[str], List[str]]:
+    ) -> tuple[list[str], list[str], list[str]]:
         """Generate human-readable insights"""
         strengths = []
         weaknesses = []

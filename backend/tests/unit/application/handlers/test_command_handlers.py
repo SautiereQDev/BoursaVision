@@ -555,9 +555,9 @@ class TestCommandHandlersIntegration:
         ]
 
         for handler_class in handlers:
-            assert hasattr(
-                handler_class, "handle"
-            ), f"{handler_class.__name__} must have handle method"
+            assert hasattr(handler_class, "handle"), (
+                f"{handler_class.__name__} must have handle method"
+            )
 
     def test_handlers_dependency_injection(self):
         """Test l'injection de dépendances dans tous les handlers"""
@@ -594,7 +594,7 @@ class TestCommandHandlersIntegration:
         ]
 
         for handler_class in handlers:
-            handle_method = getattr(handler_class, "handle")
-            assert inspect.iscoroutinefunction(
-                handle_method
-            ), f"{handler_class.__name__}.handle must be async"
+            handle_method = handler_class.handle
+            assert inspect.iscoroutinefunction(handle_method), (
+                f"{handler_class.__name__}.handle must be async"
+            )

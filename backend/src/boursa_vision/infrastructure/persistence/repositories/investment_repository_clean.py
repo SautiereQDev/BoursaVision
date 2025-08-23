@@ -5,11 +5,8 @@ SQLAlchemy Investment Repository Implementation
 SQLAlchemy implementation of the investment repository interface.
 """
 
-from typing import List, Optional
-from uuid import UUID
-
 from sqlalchemy import delete as sql_delete
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....domain.entities.investment import Investment
@@ -99,7 +96,7 @@ class SimpleInvestmentMapper:
 class SQLAlchemyInvestmentRepository(IInvestmentRepository):
     """SQLAlchemy implementation of investment repository."""
 
-    def __init__(self, session: Optional[AsyncSession] = None):
+    def __init__(self, session: AsyncSession | None = None):
         self._mapper = SimpleInvestmentMapper()
         self._session = session  # Optional injected session for testing
 
@@ -115,35 +112,35 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
                 result = await session.execute(stmt)
                 return result
 
-    async def find_by_symbol(self, symbol: str) -> Optional[Investment]:
+    async def find_by_symbol(self, symbol: str) -> Investment | None:
         """Find investment by symbol."""
         stmt = select(InvestmentModel).where(InvestmentModel.symbol == symbol)
         result = await self._execute_with_session(stmt)
         model = result.scalar_one_or_none()
         return self._mapper.to_domain(model) if model else None
 
-    async def find_by_id(self, investment_id: str) -> Optional[Investment]:
+    async def find_by_id(self, investment_id: str) -> Investment | None:
         """Find investment by ID."""
         stmt = select(InvestmentModel).where(InvestmentModel.id == investment_id)
         result = await self._execute_with_session(stmt)
         model = result.scalar_one_or_none()
         return self._mapper.to_domain(model) if model else None
 
-    async def find_by_exchange(self, exchange: str) -> List[Investment]:
+    async def find_by_exchange(self, exchange: str) -> list[Investment]:
         """Find investments by exchange."""
         stmt = select(InvestmentModel).where(InvestmentModel.exchange == exchange)
         result = await self._execute_with_session(stmt)
         models = result.scalars().all()
         return [self._mapper.to_domain(model) for model in models]
 
-    async def find_by_sector(self, sector: str) -> List[Investment]:
+    async def find_by_sector(self, sector: str) -> list[Investment]:
         """Find investments by sector."""
         stmt = select(InvestmentModel).where(InvestmentModel.sector == sector)
         result = await self._execute_with_session(stmt)
         models = result.scalars().all()
         return [self._mapper.to_domain(model) for model in models]
 
-    async def find_all_active(self) -> List[Investment]:
+    async def find_all_active(self) -> list[Investment]:
         """Find all active investments."""
         stmt = select(InvestmentModel)
         result = await self._execute_with_session(stmt)
@@ -198,11 +195,11 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
                 await session.flush()
                 return self._mapper.to_domain(model)
 
-    async def find_all(self) -> List[Investment]:
+    async def find_all(self) -> list[Investment]:
         """Find all investments (alias for find_all_active)."""
         return await self.find_all_active()
 
-    async def find_by_market_cap(self, market_cap: str) -> List[Investment]:
+    async def find_by_market_cap(self, market_cap: str) -> list[Investment]:
         """Find investments by market cap."""
         # Convert market cap enum to numeric value for filtering
         market_cap_mapping = {
@@ -223,7 +220,7 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
         models = result.scalars().all()
         return [self._mapper.to_domain(model) for model in models]
 
-    async def search_by_name(self, name_pattern: str) -> List[Investment]:
+    async def search_by_name(self, name_pattern: str) -> list[Investment]:
         """Search investments by name pattern."""
         stmt = select(InvestmentModel).where(
             InvestmentModel.name.ilike(f"%{name_pattern}%")

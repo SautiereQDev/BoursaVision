@@ -10,6 +10,6 @@ from .analyze_portfolio import AnalyzePortfolioUseCase
 from .find_investments import FindInvestmentsUseCase
 
 __all__ = [
-    "FindInvestmentsUseCase",
     "AnalyzePortfolioUseCase",
+    "FindInvestmentsUseCase",
 ]

@@ -135,11 +135,14 @@ class TestDatabaseManager:
     @pytest.mark.skipif(not DATABASE_AVAILABLE, reason="Database module non disponible")
     def test_create_engine_first_call(self, database_manager):
         """Test création du moteur SQLAlchemy au premier appel."""
-        with patch(
-            "boursa_vision.infrastructure.persistence.database.create_async_engine"
-        ) as mock_create_engine, patch(
-            "boursa_vision.infrastructure.persistence.database.event"
-        ) as mock_event:
+        with (
+            patch(
+                "boursa_vision.infrastructure.persistence.database.create_async_engine"
+            ) as mock_create_engine,
+            patch(
+                "boursa_vision.infrastructure.persistence.database.event"
+            ) as mock_event,
+        ):
             mock_engine = MagicMock()
             mock_engine.sync_engine = MagicMock()
             mock_create_engine.return_value = mock_engine
@@ -162,11 +165,14 @@ class TestDatabaseManager:
     @pytest.mark.skipif(not DATABASE_AVAILABLE, reason="Database module non disponible")
     def test_create_engine_subsequent_calls(self, database_manager):
         """Test que les appels subséquents retournent le même moteur."""
-        with patch(
-            "boursa_vision.infrastructure.persistence.database.create_async_engine"
-        ) as mock_create_engine, patch(
-            "boursa_vision.infrastructure.persistence.database.event"
-        ) as mock_event:
+        with (
+            patch(
+                "boursa_vision.infrastructure.persistence.database.create_async_engine"
+            ) as mock_create_engine,
+            patch(
+                "boursa_vision.infrastructure.persistence.database.event"
+            ) as mock_event,
+        ):
             mock_engine = MagicMock()
             mock_engine.sync_engine = MagicMock()
             mock_create_engine.return_value = mock_engine
@@ -181,12 +187,14 @@ class TestDatabaseManager:
     @pytest.mark.skipif(not DATABASE_AVAILABLE, reason="Database module non disponible")
     def test_create_session_factory_first_call(self, database_manager):
         """Test création de la factory de sessions au premier appel."""
-        with patch(
-            "boursa_vision.infrastructure.persistence.database.create_async_engine"
-        ) as mock_create_engine, patch(
-            "boursa_vision.infrastructure.persistence.database.async_sessionmaker"
-        ) as mock_sessionmaker, patch(
-            "boursa_vision.infrastructure.persistence.database.event"
+        with (
+            patch(
+                "boursa_vision.infrastructure.persistence.database.create_async_engine"
+            ) as mock_create_engine,
+            patch(
+                "boursa_vision.infrastructure.persistence.database.async_sessionmaker"
+            ) as mock_sessionmaker,
+            patch("boursa_vision.infrastructure.persistence.database.event"),
         ):
             mock_engine = MagicMock()
             mock_engine.sync_engine = MagicMock()
@@ -209,12 +217,14 @@ class TestDatabaseManager:
     @pytest.mark.skipif(not DATABASE_AVAILABLE, reason="Database module non disponible")
     def test_create_session_factory_subsequent_calls(self, database_manager):
         """Test que les appels subséquents retournent la même factory."""
-        with patch(
-            "boursa_vision.infrastructure.persistence.database.create_async_engine"
-        ) as mock_create_engine, patch(
-            "boursa_vision.infrastructure.persistence.database.async_sessionmaker"
-        ) as mock_sessionmaker, patch(
-            "boursa_vision.infrastructure.persistence.database.event"
+        with (
+            patch(
+                "boursa_vision.infrastructure.persistence.database.create_async_engine"
+            ) as mock_create_engine,
+            patch(
+                "boursa_vision.infrastructure.persistence.database.async_sessionmaker"
+            ) as mock_sessionmaker,
+            patch("boursa_vision.infrastructure.persistence.database.event"),
         ):
             mock_engine = MagicMock()
             mock_engine.sync_engine = MagicMock()
@@ -445,9 +455,7 @@ class TestDatabaseIntegration:
         if not DATABASE_AVAILABLE:
             # Tester que les imports ont échoué de manière attendue
             with pytest.raises(ImportError):
-                from boursa_vision.infrastructure.persistence.database import (
-                    DatabaseConfig,
-                )
+                pass
         else:
             # Si les imports fonctionnent, vérifier la disponibilité
             assert DATABASE_AVAILABLE is True

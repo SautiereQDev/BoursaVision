@@ -4,9 +4,6 @@ Comprehensive testing of recommendation engine using archived market data.
 Priority #3 - Testing 247-line recommendation service for maximum coverage impact.
 """
 
-import datetime
-from decimal import Decimal
-from typing import Any, Dict, List
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest

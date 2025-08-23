@@ -9,7 +9,6 @@ SQLAlchemy models for portfolios and positions.
 import uuid
 from collections import defaultdict
 from decimal import Decimal
-from typing import Dict, Optional
 
 from sqlalchemy import (
     Boolean,
@@ -159,7 +158,7 @@ class Portfolio(Base, DatabaseMixin, TimestampMixin):
         Index("idx_portfolios_default", "user_id", "is_default"),
     )
 
-    def calculate_total_value(self, current_prices: Optional[Dict] = None):
+    def calculate_total_value(self, current_prices: dict | None = None):
         """Calculates the total value of the portfolio"""
         total = self.current_cash
         if current_prices:
@@ -226,7 +225,7 @@ class Position(Base, DatabaseMixin, PortfolioInstrumentMixin, TimestampMixin):
         Index("idx_positions_active", "is_active"),
     )
 
-    def calculate_unrealized_pnl(self, current_price: Optional[float] = None):
+    def calculate_unrealized_pnl(self, current_price: float | None = None):
         """Calculates unrealized profit or loss"""
         if current_price is None:
             current_price = float(self.market_price or 0)
@@ -235,7 +234,7 @@ class Position(Base, DatabaseMixin, PortfolioInstrumentMixin, TimestampMixin):
         book_value = float(self.quantity) * float(self.average_price)
         return market_value - book_value
 
-    def calculate_return_percentage(self, current_price: Optional[float] = None):
+    def calculate_return_percentage(self, current_price: float | None = None):
         """Calculates return percentage"""
         if current_price is None:
             current_price = float(self.market_price or 0)

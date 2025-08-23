@@ -5,7 +5,7 @@ Authentication Middleware
 Middleware for JWT token validation and user authentication.
 """
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from fastapi import HTTPException, Request, Response, status
 from fastapi.security import HTTPBearer
@@ -116,7 +116,7 @@ class RequireRole:
         Raises:
             HTTPException: If user doesn't have required role
         """
-        user: Optional[User] = getattr(request.state, "current_user", None)
+        user: User | None = getattr(request.state, "current_user", None)
 
         if not user:
             raise HTTPException(
@@ -158,7 +158,7 @@ class RequirePermission:
         Raises:
             HTTPException: If user doesn't have required permission
         """
-        user: Optional[User] = getattr(request.state, "current_user", None)
+        user: User | None = getattr(request.state, "current_user", None)
 
         if not user:
             raise HTTPException(

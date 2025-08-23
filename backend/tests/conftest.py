@@ -5,10 +5,9 @@ Configuration Pytest pour BoursaVision Backend
 Configuration globale des tests avec fixtures et utilitaires communs.
 """
 
-import asyncio
 import sys
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import AsyncGenerator, Generator
 from unittest.mock import MagicMock
 
 # Ajouter le répertoire src au sys.path pour les imports
@@ -22,11 +21,9 @@ import pytest_asyncio
 from faker import Faker
 from fastapi import FastAPI
 from httpx import AsyncClient
-from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from boursa_vision.infrastructure.persistence.models.base import Base
 from boursa_vision.infrastructure.web.main import create_application
 
 # Configuration Faker pour des données cohérentes

@@ -1,9 +1,8 @@
 """Tests for AuthenticationService with comprehensive coverage."""
 
-from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
@@ -19,13 +18,11 @@ from boursa_vision.application.services.authentication_service import (
 from boursa_vision.domain.entities.refresh_token import RefreshToken
 from boursa_vision.domain.entities.user import User, UserRole
 from boursa_vision.domain.events.auth_events import (
-    UserLoggedInEvent,
     UserLoggedOutEvent,
     UserLoginFailedEvent,
 )
-from boursa_vision.domain.value_objects.auth import AccessToken
+from boursa_vision.domain.value_objects.auth import AccessToken, TokenPair
 from boursa_vision.domain.value_objects.auth import RefreshToken as RefreshTokenVO
-from boursa_vision.domain.value_objects.auth import TokenPair
 
 
 class TestAuthenticationServiceExceptions:
@@ -180,7 +177,7 @@ class TestAuthenticateUser:
         access_token = Mock(spec=AccessToken)
         refresh_token = Mock(spec=RefreshTokenVO)
         refresh_token.token = "refresh_token_value"
-        refresh_token.expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+        refresh_token.expires_at = datetime.now(UTC) + timedelta(days=7)
 
         token_pair = Mock(spec=TokenPair)
         token_pair.access_token = access_token
@@ -362,9 +359,9 @@ class TestRefreshAccessToken:
         mock_new_token_pair = Mock(spec=TokenPair)
         mock_new_token_pair.refresh_token = Mock()
         mock_new_token_pair.refresh_token.token = "new_refresh_token"
-        mock_new_token_pair.refresh_token.expires_at = datetime.now(
-            timezone.utc
-        ) + timedelta(days=7)
+        mock_new_token_pair.refresh_token.expires_at = datetime.now(UTC) + timedelta(
+            days=7
+        )
 
         mocks["refresh_token_repo"].find_by_token.return_value = mock_token_entity
         mocks["user_repo"].find_by_id.return_value = mock_user
@@ -923,7 +920,7 @@ class TestCleanupExpiredTokens:
         mocks["refresh_token_repo"].cleanup_expired_tokens.return_value = 5
 
         with patch("datetime.datetime") as mock_datetime:
-            mock_now = datetime.now(timezone.utc)
+            mock_now = datetime.now(UTC)
             mock_datetime.now.return_value = mock_now
 
             # Execute
@@ -995,9 +992,7 @@ class TestAuthenticationServiceIntegration:
         mock_token_pair = Mock(spec=TokenPair)
         mock_token_pair.refresh_token = Mock()
         mock_token_pair.refresh_token.token = "refresh_token_value"
-        mock_token_pair.refresh_token.expires_at = datetime.now(
-            timezone.utc
-        ) + timedelta(days=7)
+        mock_token_pair.refresh_token.expires_at = datetime.now(UTC) + timedelta(days=7)
 
         # Setup all mocks
         mocks["user_repo"].find_by_email_for_auth.return_value = mock_user

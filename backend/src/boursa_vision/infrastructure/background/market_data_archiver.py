@@ -7,9 +7,8 @@ de tous les instruments financiers configurés.
 
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
 
 try:
     import pandas as pd
@@ -38,7 +37,6 @@ from ...domain.entities.market_data import (
 )
 from ...domain.value_objects.money import Currency
 from ...infrastructure.persistence import get_db_session, get_market_data_repository
-from ...infrastructure.persistence.mappers import MarketDataMapper
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -60,7 +58,7 @@ class MarketDataArchiver:
         self.financial_indices = self._load_financial_indices()
         self.request_delay = 0.2  # Délai entre requêtes YFinance
 
-    def _load_financial_indices(self) -> Dict[str, List[str]]:
+    def _load_financial_indices(self) -> dict[str, list[str]]:
         """Charge les indices financiers depuis la configuration."""
         return {
             "cac40": [
@@ -245,7 +243,7 @@ class MarketDataArchiver:
             ],
         }
 
-    async def archive_all_symbols(self, interval: str = "1d") -> Dict[str, any]:
+    async def archive_all_symbols(self, interval: str = "1d") -> dict[str, any]:
         """
         Archive les données de tous les symboles financiers.
 
@@ -278,13 +276,13 @@ class MarketDataArchiver:
 
                 except Exception as e:
                     failed_archives += 1
-                    error_msg = f"Failed to archive {symbol}: {str(e)}"
+                    error_msg = f"Failed to archive {symbol}: {e!s}"
                     errors.append(error_msg)
                     logger.error(error_msg)
 
         # Statistiques finales
         report = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "interval": interval,
             "total_symbols": total_symbols,
             "successful_archives": successful_archives,
@@ -338,12 +336,12 @@ class MarketDataArchiver:
             logger.debug(f"Archived {len(data_points)} data points for {symbol}")
 
         except Exception as e:
-            logger.error(f"Error archiving {symbol}: {str(e)}")
+            logger.error(f"Error archiving {symbol}: {e!s}")
             raise
 
     async def _fetch_yfinance_data(
         self, symbol: str, period: str, interval: str
-    ) -> List[MarketData]:
+    ) -> list[MarketData]:
         """
         Récupère les données depuis YFinance.
 
@@ -383,7 +381,7 @@ class MarketDataArchiver:
                 ):
                     args = MarketDataArgs(
                         symbol=symbol,
-                        timestamp=index.to_pydatetime().replace(tzinfo=timezone.utc),
+                        timestamp=index.to_pydatetime().replace(tzinfo=UTC),
                         open_price=Decimal(str(row["Open"])),
                         high_price=Decimal(str(row["High"])),
                         low_price=Decimal(str(row["Low"])),
@@ -403,7 +401,7 @@ class MarketDataArchiver:
             return market_data_list
 
         except Exception as e:
-            logger.error(f"YFinance fetch error for {symbol}: {str(e)}")
+            logger.error(f"YFinance fetch error for {symbol}: {e!s}")
             raise
 
     def _convert_interval_to_timeframe(self, interval: str) -> Timeframe:
@@ -431,14 +429,12 @@ class MarketDataArchiver:
             return Currency.EUR
         elif symbol.endswith(".L"):  # London
             return Currency.GBP
-        elif symbol.endswith(".DE"):  # Allemagne
-            return Currency.EUR
-        elif symbol.endswith(".AS"):  # Amsterdam
+        elif symbol.endswith(".DE") or symbol.endswith(".AS"):  # Allemagne
             return Currency.EUR
         else:  # US par défaut
             return Currency.USD
 
-    async def get_archival_status(self) -> Dict[str, any]:
+    async def get_archival_status(self) -> dict[str, any]:
         """
         Récupère le statut de l'archivage.
 
@@ -463,7 +459,7 @@ class MarketDataArchiver:
                     }
 
                 return {
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "total_records": total_records,
                     "latest_data": latest_timestamp.isoformat()
                     if latest_timestamp
@@ -479,9 +475,9 @@ class MarketDataArchiver:
                 }
 
         except Exception as e:
-            logger.error(f"Error getting archival status: {str(e)}")
+            logger.error(f"Error getting archival status: {e!s}")
             return {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "status": "error",
                 "error": str(e),
             }

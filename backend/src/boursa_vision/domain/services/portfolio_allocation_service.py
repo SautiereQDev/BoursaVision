@@ -14,9 +14,8 @@ Classes:
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List
 
-from ..entities.portfolio import Portfolio, Position
+from ..entities.portfolio import Portfolio
 from ..value_objects.money import Money
 
 
@@ -36,12 +35,12 @@ class AllocationStrategy(str, Enum):
 class AllocationResult:
     """Result of portfolio allocation calculation"""
 
-    allocations: Dict[str, Decimal]  # symbol -> percentage
+    allocations: dict[str, Decimal]  # symbol -> percentage
     expected_return: Decimal
     expected_risk: Decimal
     sharpe_ratio: Decimal
     rebalance_needed: bool
-    rebalance_trades: Dict[str, Decimal]  # symbol -> amount to trade
+    rebalance_trades: dict[str, Decimal]  # symbol -> amount to trade
 
 
 class PortfolioAllocationService:
@@ -57,7 +56,7 @@ class PortfolioAllocationService:
         self._max_allocation = Decimal("0.50")  # 50% maximum
         self._rebalance_threshold = Decimal("0.05")  # 5% drift threshold
 
-    def calculate_equal_weight_allocation(self, symbols: List[str]) -> AllocationResult:
+    def calculate_equal_weight_allocation(self, symbols: list[str]) -> AllocationResult:
         """Calculate equal weight allocation"""
         if not symbols:
             raise ValueError("Symbols list cannot be empty")
@@ -75,7 +74,7 @@ class PortfolioAllocationService:
         )
 
     def calculate_market_cap_allocation(
-        self, market_caps: Dict[str, Decimal]
+        self, market_caps: dict[str, Decimal]
     ) -> AllocationResult:
         """Calculate market capitalization weighted allocation"""
         if not market_caps:
@@ -102,7 +101,7 @@ class PortfolioAllocationService:
         )
 
     def calculate_risk_parity_allocation(
-        self, risk_contributions: Dict[str, Decimal]
+        self, risk_contributions: dict[str, Decimal]
     ) -> AllocationResult:
         """Calculate risk parity allocation"""
         if not risk_contributions:
@@ -135,7 +134,7 @@ class PortfolioAllocationService:
         )
 
     def calculate_momentum_allocation(
-        self, momentum_scores: Dict[str, Decimal]
+        self, momentum_scores: dict[str, Decimal]
     ) -> AllocationResult:
         """Calculate momentum-based allocation"""
         if not momentum_scores:
@@ -175,8 +174,8 @@ class PortfolioAllocationService:
     def check_rebalancing_needed(
         self,
         portfolio: Portfolio,
-        target_allocations: Dict[str, Decimal],
-        current_prices: Dict[str, Money],
+        target_allocations: dict[str, Decimal],
+        current_prices: dict[str, Money],
     ) -> AllocationResult:
         """Check if portfolio needs rebalancing"""
         current_allocations = self._calculate_current_allocations(
@@ -213,8 +212,8 @@ class PortfolioAllocationService:
         )
 
     def _apply_allocation_constraints(
-        self, allocations: Dict[str, Decimal]
-    ) -> Dict[str, Decimal]:
+        self, allocations: dict[str, Decimal]
+    ) -> dict[str, Decimal]:
         """Apply minimum and maximum allocation constraints"""
         constrained = {}
         total_adjustment = Decimal("0")
@@ -262,8 +261,8 @@ class PortfolioAllocationService:
         return constrained
 
     def _calculate_current_allocations(
-        self, portfolio: Portfolio, current_prices: Dict[str, Money]
-    ) -> Dict[str, Decimal]:
+        self, portfolio: Portfolio, current_prices: dict[str, Money]
+    ) -> dict[str, Decimal]:
         """Calculate current portfolio allocations"""
         total_value = portfolio.calculate_total_value(current_prices)
 

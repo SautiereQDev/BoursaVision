@@ -7,16 +7,15 @@ Focus sur les méthodes non testées et les cas d'erreur.
 
 Architecture suivant TESTS.md:
 - AAA Pattern (Arrange, Act, Assert)
-- Test Pyramid: Focus tests unitaires rapides 
+- Test Pyramid: Focus tests unitaires rapides
 - Clean Architecture: Application Layer Testing
 - Mocking Strategy: Mock des dépendances externes
 """
 
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pandas as pd
 import pytest
@@ -412,7 +411,7 @@ class TestMarketDataCacheServiceDataRetrieval:
 
         # Add some test data to timeline
         test_point = TimelinePoint(
-            timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
+            timestamp=datetime(2024, 1, 1, tzinfo=UTC),
             open_price=Money(
                 Decimal("100.0"), Currency(code="USD", name="US Dollar", symbol="$")
             ),
@@ -439,8 +438,8 @@ class TestMarketDataCacheServiceDataRetrieval:
         # Act
         result = await service.get_market_data(
             symbol=symbol,
-            start_time=datetime(2023, 12, 31, tzinfo=timezone.utc),
-            end_time=datetime(2024, 1, 2, tzinfo=timezone.utc),
+            start_time=datetime(2023, 12, 31, tzinfo=UTC),
+            end_time=datetime(2024, 1, 2, tzinfo=UTC),
         )
 
         # Assert
@@ -457,7 +456,7 @@ class TestMarketDataCacheServiceDataRetrieval:
         # Mock successful yfinance fetch
         mock_points = [
             TimelinePoint(
-                timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
+                timestamp=datetime(2024, 1, 1, tzinfo=UTC),
                 open_price=Money(
                     Decimal("150.0"), Currency(code="USD", name="US Dollar", symbol="$")
                 ),
@@ -722,7 +721,7 @@ class TestMarketDataCacheServiceAdvancedFeatures:
 
         # Add test point to timeline
         test_point = TimelinePoint(
-            timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
+            timestamp=datetime(2024, 1, 1, tzinfo=UTC),
             open_price=Money(
                 Decimal("100.0"), Currency(code="USD", name="US Dollar", symbol="$")
             ),
@@ -926,7 +925,7 @@ class TestMarketDataCacheServiceIntegration:
         # Mock YFinance data
         mock_points = [
             TimelinePoint(
-                timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
+                timestamp=datetime(2024, 1, 1, tzinfo=UTC),
                 open_price=Money(
                     Decimal("100.0"), Currency(code="USD", name="US Dollar", symbol="$")
                 ),

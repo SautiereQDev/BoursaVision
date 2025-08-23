@@ -1,7 +1,6 @@
 """Get signals query module."""
 
 from dataclasses import dataclass
-from typing import List, Optional
 
 from ...common import IQuery
 
@@ -10,7 +9,7 @@ from ...common import IQuery
 class GetSignalsQuery(IQuery):
     """Query to get trading signals"""
 
-    symbols: Optional[List[str]] = None
-    signal_types: Optional[List[str]] = None
+    symbols: list[str] | None = None
+    signal_types: list[str] | None = None
     min_confidence: float = 0.0
     limit: int = 50

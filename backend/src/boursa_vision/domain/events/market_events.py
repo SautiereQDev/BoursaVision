@@ -12,7 +12,6 @@ Classes:
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import List
 from uuid import UUID
 
 from .portfolio_events import DomainEvent
@@ -33,7 +32,7 @@ class MarketDataUpdatedEvent(DomainEvent):
 class MarketDataBatchUpdatedEvent(DomainEvent):
     """Event fired when multiple market data points are updated"""
 
-    symbols: List[str]
+    symbols: list[str]
     count: int
     source: str
 

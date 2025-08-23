@@ -5,8 +5,6 @@ Portfolio API Routes
 REST API endpoints for portfolio management.
 """
 
-from decimal import Decimal
-from typing import Dict, List, Optional
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -21,8 +19,8 @@ router = APIRouter(prefix="/api/v1/portfolios", tags=["Portfolios"])
 
 
 # Mock storage for portfolios (in-memory)
-_mock_portfolios: Dict[str, dict] = {}
-_mock_positions: Dict[str, dict] = {}
+_mock_portfolios: dict[str, dict] = {}
+_mock_positions: dict[str, dict] = {}
 
 
 # ===============================
@@ -48,7 +46,7 @@ class PortfolioCreateRequest(BaseModel):
     """Request model for creating portfolios."""
 
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     currency: str = "USD"
 
 
@@ -63,7 +61,7 @@ class PositionCreateRequest(BaseModel):
 class PositionUpdateRequest(BaseModel):
     """Request model for updating positions."""
 
-    quantity: Optional[int] = None
+    quantity: int | None = None
 
 
 class PositionResponse(BaseModel):
@@ -84,7 +82,7 @@ class PortfolioValueResponse(BaseModel):
     current_value: MoneyResponse
     total_cost: MoneyResponse
     total_gain: MoneyResponse
-    positions: List[PositionResponse]
+    positions: list[PositionResponse]
 
 
 class PortfolioResponse(BaseModel):
@@ -92,7 +90,7 @@ class PortfolioResponse(BaseModel):
 
     id: str
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     currency: str
 
 

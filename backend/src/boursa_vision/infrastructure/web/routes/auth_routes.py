@@ -5,7 +5,7 @@ Authentication Routes for FastAPI
 Routes for user authentication, registration, and token management.
 """
 
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -112,7 +112,7 @@ async def register(
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Registration failed",
@@ -171,7 +171,7 @@ async def login(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Authentication failed",
@@ -215,7 +215,7 @@ async def refresh_token(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Token refresh failed"
         )
@@ -279,13 +279,13 @@ async def get_current_user_profile(
 
 @router.get(
     "/validate",
-    response_model=Dict[str, Any],
+    response_model=dict[str, Any],
     summary="Validate access token",
     description="Validate current access token and return token info",
 )
 async def validate_token(
     current_user: User = Depends(get_current_active_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Validate access token and return basic info.
     """

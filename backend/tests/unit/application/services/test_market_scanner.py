@@ -9,10 +9,8 @@ Tests couvrant l'ensemble du service de scan de marché incluant :
 - Gestion des résultats et des erreurs
 """
 
-import asyncio
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from datetime import datetime
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -21,7 +19,6 @@ from boursa_vision.application.services.market_scanner import (
     FullMarketStrategy,
     FundamentalAnalyzer,
     MarketScannerService,
-    MarketScannerStrategy,
     ScanConfig,
     ScanResult,
     ScanResultObserver,

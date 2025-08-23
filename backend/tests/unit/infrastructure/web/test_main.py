@@ -10,6 +10,7 @@ Comprehensive tests for main.py covering:
 - Health checks and root endpoints
 - Lifespan events
 """
+
 from unittest.mock import Mock, patch
 
 import pytest

@@ -3,9 +3,9 @@ Tests unitaires pour le service d'archivage de données de marché.
 Conformément à l'architecture de tests avec patterns AAA et markers appropriés.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 from sqlalchemy.exc import IntegrityError
@@ -112,7 +112,7 @@ class TestMarketDataPoint:
     def test_should_create_market_data_point_with_valid_data(self):
         # Arrange
         symbol = "AAPL"
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         open_price = Decimal("150.00")
         high_price = Decimal("155.00")
         low_price = Decimal("148.00")
@@ -145,7 +145,7 @@ class TestMarketDataPoint:
     def test_should_convert_to_dict_with_correct_structure(self):
         # Arrange
         symbol = "TSLA"
-        timestamp = datetime(2024, 1, 15, 9, 30, 0, tzinfo=timezone.utc)
+        timestamp = datetime(2024, 1, 15, 9, 30, 0, tzinfo=UTC)
         data_point = MarketDataPoint(
             symbol=symbol,
             timestamp=timestamp,
@@ -198,7 +198,7 @@ class TestMarketDataProcessor:
         processor = MarketDataProcessor(config)
         raw_data = {
             "symbol": "MSFT",
-            "timestamp": datetime(2024, 1, 15, tzinfo=timezone.utc),
+            "timestamp": datetime(2024, 1, 15, tzinfo=UTC),
             "open_price": Decimal("300.00"),
             "high_price": Decimal("310.00"),
             "low_price": Decimal("295.00"),
@@ -236,7 +236,7 @@ class TestMarketDataProcessor:
         processor = MarketDataProcessor(config)
         raw_data = {
             "symbol": "GOOGL",
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
             "open_price": Decimal("2500.00"),
             "high_price": Decimal("2550.00"),
             "low_price": Decimal("2480.00"),
@@ -296,11 +296,14 @@ class TestEnhancedMarketDataArchiver:
     @pytest.fixture
     def mock_database_components(self):
         """Fixture pour mocker les composants de base de données."""
-        with patch(
-            "boursa_vision.application.services.archiving.market_archiver.create_engine"
-        ) as mock_engine, patch(
-            "boursa_vision.application.services.archiving.market_archiver.sessionmaker"
-        ) as mock_sessionmaker:
+        with (
+            patch(
+                "boursa_vision.application.services.archiving.market_archiver.create_engine"
+            ) as mock_engine,
+            patch(
+                "boursa_vision.application.services.archiving.market_archiver.sessionmaker"
+            ) as mock_sessionmaker,
+        ):
             mock_session = Mock()
             mock_sessionmaker.return_value = Mock(return_value=mock_session)
 
@@ -362,8 +365,8 @@ class TestEnhancedMarketDataArchiver:
                 "Volume": [1000000, 1100000],
             },
             index=[
-                datetime(2024, 1, 15, tzinfo=timezone.utc),
-                datetime(2024, 1, 16, tzinfo=timezone.utc),
+                datetime(2024, 1, 15, tzinfo=UTC),
+                datetime(2024, 1, 16, tzinfo=UTC),
             ],
         )
 
@@ -455,7 +458,7 @@ class TestEnhancedMarketDataArchiver:
                 "Close": [102.0],
                 "Volume": [1000000],
             },
-            index=[datetime(2024, 1, 15, tzinfo=timezone.utc)],
+            index=[datetime(2024, 1, 15, tzinfo=UTC)],
         )
 
         with patch(
@@ -560,8 +563,8 @@ class TestEnhancedMarketDataArchiver:
         mock_symbol_result = Mock()
         mock_symbol_result.symbol = "AAPL"
         mock_symbol_result.count = 500
-        mock_symbol_result.oldest = datetime(2024, 1, 1, tzinfo=timezone.utc)
-        mock_symbol_result.newest = datetime(2024, 1, 30, tzinfo=timezone.utc)
+        mock_symbol_result.oldest = datetime(2024, 1, 1, tzinfo=UTC)
+        mock_symbol_result.newest = datetime(2024, 1, 30, tzinfo=UTC)
 
         mock_query.group_by.return_value.all.return_value = [mock_symbol_result]
 
@@ -587,7 +590,7 @@ class TestEnhancedMarketDataArchiver:
         # Mock duplicate detection query
         mock_duplicate_result = Mock()
         mock_duplicate_result.symbol = "TEST"
-        mock_duplicate_result.timestamp = datetime(2024, 1, 15, tzinfo=timezone.utc)
+        mock_duplicate_result.timestamp = datetime(2024, 1, 15, tzinfo=UTC)
         mock_duplicate_result.interval_type = "1d"
         mock_duplicate_result.count = 2
         mock_duplicate_result.prices = [Decimal("100.0"), Decimal("100.5")]
@@ -619,7 +622,7 @@ class TestEnhancedMarketDataArchiver:
         # Mock result with same prices (not a real duplicate)
         mock_duplicate_result = Mock()
         mock_duplicate_result.symbol = "TEST"
-        mock_duplicate_result.timestamp = datetime(2024, 1, 15, tzinfo=timezone.utc)
+        mock_duplicate_result.timestamp = datetime(2024, 1, 15, tzinfo=UTC)
         mock_duplicate_result.interval_type = "1d"
         mock_duplicate_result.count = 2
         mock_duplicate_result.prices = [
@@ -651,12 +654,16 @@ class TestMarketArchiverIntegration:
     @pytest.fixture
     def mock_dependencies(self):
         """Mock all external dependencies for integration tests."""
-        with patch(
-            "boursa_vision.application.services.archiving.market_archiver.create_engine"
-        ), patch(
-            "boursa_vision.application.services.archiving.market_archiver.sessionmaker"
-        ), patch(
-            "boursa_vision.application.services.archiving.market_archiver.yf.Ticker"
+        with (
+            patch(
+                "boursa_vision.application.services.archiving.market_archiver.create_engine"
+            ),
+            patch(
+                "boursa_vision.application.services.archiving.market_archiver.sessionmaker"
+            ),
+            patch(
+                "boursa_vision.application.services.archiving.market_archiver.yf.Ticker"
+            ),
         ):
             yield
 
@@ -676,7 +683,7 @@ class TestMarketArchiverIntegration:
         # Act - Simuler un traitement via le processor
         raw_data = {
             "symbol": "TEST",
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
             "open_price": Decimal("100.00"),
             "high_price": Decimal("105.00"),
             "low_price": Decimal("95.00"),
@@ -703,7 +710,7 @@ class TestMarketArchiverPerformance:
         processor = MarketDataProcessor(config)
         raw_data = {
             "symbol": "PERF",
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
             "open_price": Decimal("100.00"),
             "high_price": Decimal("105.00"),
             "low_price": Decimal("95.00"),

@@ -1,14 +1,12 @@
 """
 Tests unitaires pour le service de cache MarketDataCacheService
-Couverture exhaustive des fonctionnalités critiques : caching, rate limiting, 
+Couverture exhaustive des fonctionnalités critiques : caching, rate limiting,
 récupération de données, gestion d'erreurs et événements.
 """
 
 import asyncio
-from datetime import datetime, timedelta, timezone
-from decimal import Decimal
-from typing import List
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -18,12 +16,9 @@ from boursa_vision.application.services.market_data_cache_service import (
 )
 from boursa_vision.domain.entities.market_data_timeline import (
     Currency,
-    DataSource,
     IntervalType,
     MarketDataTimeline,
-    Money,
     PrecisionLevel,
-    TimelinePoint,
 )
 from boursa_vision.domain.services.cache_strategies import CacheConfig
 
@@ -152,7 +147,7 @@ class TestYFinanceDataFetcher:
         mock_hist.empty = False
         mock_hist.iterrows.return_value = [
             (
-                Mock(to_pydatetime=lambda: datetime.now(timezone.utc)),
+                Mock(to_pydatetime=lambda: datetime.now(UTC)),
                 {
                     "Open": 150.0,
                     "High": 155.0,

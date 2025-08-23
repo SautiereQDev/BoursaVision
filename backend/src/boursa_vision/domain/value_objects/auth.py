@@ -6,7 +6,7 @@ Value objects for authentication-related concepts in the domain layer.
 """
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 
@@ -24,18 +24,18 @@ class RefreshToken:
         """Validate refresh token data after initialization"""
         if not self.token or not self.token.strip():
             raise ValueError("Token cannot be empty")
-        if self.expires_at <= datetime.now(timezone.utc):
+        if self.expires_at <= datetime.now(UTC):
             raise ValueError("Token cannot be expired")
 
     def is_valid(self) -> bool:
         """Check if the refresh token is still valid"""
         if self.is_revoked:
             return False
-        return datetime.now(timezone.utc) < self.expires_at
+        return datetime.now(UTC) < self.expires_at
 
     def is_expired(self) -> bool:
         """Check if the refresh token has expired"""
-        return datetime.now(timezone.utc) >= self.expires_at
+        return datetime.now(UTC) >= self.expires_at
 
 
 @dataclass(frozen=True)
@@ -52,20 +52,20 @@ class AccessToken:
         """Validate access token data after initialization"""
         if not self.token or not self.token.strip():
             raise ValueError("Token cannot be empty")
-        if self.expires_at <= datetime.now(timezone.utc):
+        if self.expires_at <= datetime.now(UTC):
             raise ValueError("Token cannot be expired")
 
     def is_valid(self) -> bool:
         """Check if the access token is still valid"""
-        return datetime.now(timezone.utc) < self.expires_at
+        return datetime.now(UTC) < self.expires_at
 
     def is_expired(self) -> bool:
         """Check if the access token has expired"""
-        return datetime.now(timezone.utc) >= self.expires_at
+        return datetime.now(UTC) >= self.expires_at
 
     def expires_in_seconds(self) -> int:
         """Get seconds until expiration"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if self.expires_at <= now:
             return 0
         return int((self.expires_at - now).total_seconds())

@@ -1,22 +1,17 @@
 """Advanced Investment Analysis Service with comprehensive scoring system."""
 
 import math
-import statistics
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Protocol
+from datetime import datetime
+from typing import Any
 
-import numpy as np
 import pandas as pd
 import yfinance as yf
 
 from boursa_vision.domain.entities.investment import (
-    FundamentalData,
     Investment,
-    TechnicalData,
 )
-from boursa_vision.domain.value_objects.money import Money
 
 
 class AnalysisStrategy(ABC):
@@ -24,15 +19,15 @@ class AnalysisStrategy(ABC):
 
     @abstractmethod
     def calculate_score(
-        self, investment: Investment, market_data: Dict[str, Any]
+        self, investment: Investment, market_data: dict[str, Any]
     ) -> float:
         """Calculate score for this strategy (0-100)."""
         pass
 
     @abstractmethod
     def get_insights(
-        self, investment: Investment, market_data: Dict[str, Any]
-    ) -> List[str]:
+        self, investment: Investment, market_data: dict[str, Any]
+    ) -> list[str]:
         """Get human-readable insights from this analysis."""
         pass
 
@@ -65,7 +60,7 @@ class TechnicalAnalysisStrategy(AnalysisStrategy):
     """Advanced technical analysis with multiple indicators."""
 
     def calculate_score(
-        self, investment: Investment, market_data: Dict[str, Any]
+        self, investment: Investment, market_data: dict[str, Any]
     ) -> float:
         """Calculate technical score based on multiple indicators."""
         try:
@@ -269,8 +264,8 @@ class TechnicalAnalysisStrategy(AnalysisStrategy):
             return 50.0
 
     def get_insights(
-        self, investment: Investment, market_data: Dict[str, Any]
-    ) -> List[str]:
+        self, investment: Investment, market_data: dict[str, Any]
+    ) -> list[str]:
         """Generate technical analysis insights."""
         insights = []
 
@@ -338,7 +333,7 @@ class FundamentalAnalysisStrategy(AnalysisStrategy):
     """Advanced fundamental analysis with comprehensive metrics."""
 
     def calculate_score(
-        self, investment: Investment, market_data: Dict[str, Any]
+        self, investment: Investment, market_data: dict[str, Any]
     ) -> float:
         """Calculate fundamental score based on financial metrics."""
         try:
@@ -382,7 +377,7 @@ class FundamentalAnalysisStrategy(AnalysisStrategy):
             print(f"Error in fundamental analysis: {e}")
             return 50.0
 
-    def _calculate_pe_score(self, info: Dict[str, Any]) -> float:
+    def _calculate_pe_score(self, info: dict[str, Any]) -> float:
         """Calculate P/E ratio score."""
         pe_ratio = info.get("trailingPE") or info.get("forwardPE")
         if pe_ratio is None or pe_ratio <= 0:
@@ -400,7 +395,7 @@ class FundamentalAnalysisStrategy(AnalysisStrategy):
         else:
             return 20.0
 
-    def _calculate_roe_score(self, info: Dict[str, Any]) -> float:
+    def _calculate_roe_score(self, info: dict[str, Any]) -> float:
         """Calculate Return on Equity score."""
         roe = info.get("returnOnEquity")
         if roe is None:
@@ -419,7 +414,7 @@ class FundamentalAnalysisStrategy(AnalysisStrategy):
         else:
             return 30.0
 
-    def _calculate_growth_score(self, info: Dict[str, Any]) -> float:
+    def _calculate_growth_score(self, info: dict[str, Any]) -> float:
         """Calculate growth score based on revenue and earnings growth."""
         revenue_growth = info.get("revenueGrowth")
         earnings_growth = info.get("earningsGrowth")
@@ -458,7 +453,7 @@ class FundamentalAnalysisStrategy(AnalysisStrategy):
 
         return sum(scores) / len(scores) if scores else 50.0
 
-    def _calculate_debt_score(self, info: Dict[str, Any]) -> float:
+    def _calculate_debt_score(self, info: dict[str, Any]) -> float:
         """Calculate debt-to-equity score."""
         debt_to_equity = info.get("debtToEquity")
         current_ratio = info.get("currentRatio")
@@ -489,7 +484,7 @@ class FundamentalAnalysisStrategy(AnalysisStrategy):
 
         return sum(scores) / len(scores) if scores else 50.0
 
-    def _calculate_margin_score(self, info: Dict[str, Any]) -> float:
+    def _calculate_margin_score(self, info: dict[str, Any]) -> float:
         """Calculate profitability margins score."""
         gross_margin = info.get("grossMargins")
         operating_margin = info.get("operatingMargins")
@@ -517,7 +512,7 @@ class FundamentalAnalysisStrategy(AnalysisStrategy):
 
         return sum(scores) / len(scores) if scores else 50.0
 
-    def _calculate_dividend_score(self, info: Dict[str, Any]) -> float:
+    def _calculate_dividend_score(self, info: dict[str, Any]) -> float:
         """Calculate dividend score."""
         dividend_yield = info.get("dividendYield")
         payout_ratio = info.get("payoutRatio")
@@ -548,8 +543,8 @@ class FundamentalAnalysisStrategy(AnalysisStrategy):
         return max(0.0, min(100.0, score))
 
     def get_insights(
-        self, investment: Investment, market_data: Dict[str, Any]
-    ) -> List[str]:
+        self, investment: Investment, market_data: dict[str, Any]
+    ) -> list[str]:
         """Generate fundamental analysis insights."""
         insights = []
 
@@ -631,7 +626,7 @@ class MomentumAnalysisStrategy(AnalysisStrategy):
     """Momentum analysis based on price movements and trends."""
 
     def calculate_score(
-        self, investment: Investment, market_data: Dict[str, Any]
+        self, investment: Investment, market_data: dict[str, Any]
     ) -> float:
         """Calculate momentum score."""
         try:
@@ -648,7 +643,7 @@ class MomentumAnalysisStrategy(AnalysisStrategy):
             periods = [5, 10, 20, 60]  # days
             weights = [0.4, 0.3, 0.2, 0.1]
 
-            for period, weight in zip(periods, weights):
+            for period, weight in zip(periods, weights, strict=False):
                 if len(close_prices) > period:
                     past_price = close_prices.iloc[-(period + 1)]
                     return_pct = ((current_price - past_price) / past_price) * 100
@@ -714,8 +709,8 @@ class MomentumAnalysisStrategy(AnalysisStrategy):
             return 50.0
 
     def get_insights(
-        self, investment: Investment, market_data: Dict[str, Any]
-    ) -> List[str]:
+        self, investment: Investment, market_data: dict[str, Any]
+    ) -> list[str]:
         """Generate momentum insights."""
         insights = []
 
@@ -781,19 +776,19 @@ class ComprehensiveAnalysisResult:
     fundamental_score: float
     momentum_score: float
 
-    strengths: List[str]
-    weaknesses: List[str]
-    insights: List[str]
+    strengths: list[str]
+    weaknesses: list[str]
+    insights: list[str]
 
-    target_price: Optional[float] = None
-    stop_loss: Optional[float] = None
+    target_price: float | None = None
+    stop_loss: float | None = None
     analyzed_at: datetime = field(default_factory=datetime.utcnow)
 
 
 class AdvancedInvestmentAnalyzer:
     """Advanced investment analyzer using multiple strategies."""
 
-    def __init__(self, weights: Optional[AnalysisWeights] = None):
+    def __init__(self, weights: AnalysisWeights | None = None):
         self.weights = weights or AnalysisWeights()
         self.technical_strategy = TechnicalAnalysisStrategy()
         self.fundamental_strategy = FundamentalAnalysisStrategy()
@@ -879,7 +874,7 @@ class AdvancedInvestmentAnalyzer:
                 momentum_score=50.0,
                 strengths=[],
                 weaknesses=["Analysis failed due to data issues"],
-                insights=[f"Error: {str(e)}"],
+                insights=[f"Error: {e!s}"],
             )
 
     def _determine_recommendation(
@@ -897,7 +892,7 @@ class AdvancedInvestmentAnalyzer:
         else:
             return "SELL"
 
-    def _assess_risk_level(self, info: Dict[str, Any], hist: pd.DataFrame) -> str:
+    def _assess_risk_level(self, info: dict[str, Any], hist: pd.DataFrame) -> str:
         """Assess risk level based on volatility and fundamentals."""
         try:
             # Calculate volatility
@@ -946,7 +941,7 @@ class AdvancedInvestmentAnalyzer:
         except Exception:
             return "MODERATE"
 
-    def _calculate_confidence(self, info: Dict[str, Any], hist: pd.DataFrame) -> float:
+    def _calculate_confidence(self, info: dict[str, Any], hist: pd.DataFrame) -> float:
         """Calculate confidence in the analysis."""
         confidence = 1.0
 
@@ -976,8 +971,8 @@ class AdvancedInvestmentAnalyzer:
         technical_score: float,
         fundamental_score: float,
         momentum_score: float,
-        info: Dict[str, Any],
-    ) -> tuple[List[str], List[str]]:
+        info: dict[str, Any],
+    ) -> tuple[list[str], list[str]]:
         """Identify key strengths and weaknesses."""
         strengths = []
         weaknesses = []
@@ -1016,8 +1011,8 @@ class AdvancedInvestmentAnalyzer:
         return strengths, weaknesses
 
     def _calculate_price_targets(
-        self, info: Dict[str, Any], hist: pd.DataFrame, overall_score: float
-    ) -> tuple[Optional[float], Optional[float]]:
+        self, info: dict[str, Any], hist: pd.DataFrame, overall_score: float
+    ) -> tuple[float | None, float | None]:
         """Calculate target price and stop loss."""
         try:
             current_price = hist["Close"].iloc[-1]

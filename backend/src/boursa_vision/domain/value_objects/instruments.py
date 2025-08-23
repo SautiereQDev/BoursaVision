@@ -1,9 +1,9 @@
 """
 Domain value objects for financial instruments.
 """
+
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -12,7 +12,7 @@ class Stock:
 
     symbol: str
     name: str
-    exchange: Optional[str] = None
+    exchange: str | None = None
     currency: str = "USD"
 
     def __str__(self) -> str:

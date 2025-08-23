@@ -2,9 +2,9 @@
 Tests complets pour market_data_cache.py (486 lignes)
 Tests mockés pour FastAPI router de cache intelligent des données YFinance
 """
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -16,8 +16,8 @@ class MockMarketDataRequest:
     def __init__(
         self,
         symbol: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         interval: str = "1d",
         max_age_hours: float = 1.0,
         force_refresh: bool = False,
@@ -97,7 +97,7 @@ class MockMarketDataCacheRouter:
             "newest_entry": "2024-01-02T15:30:00Z",
         }
 
-    def clear_cache(self, symbol: Optional[str] = None):
+    def clear_cache(self, symbol: str | None = None):
         """Mock POST /cache/clear"""
         if symbol:
             return {"cleared_entries": 3, "symbol": symbol, "status": "success"}
@@ -158,8 +158,8 @@ def test_market_data_request_validation():
     # Test données valides
     valid_data = {
         "symbol": "AAPL",
-        "start_date": datetime(2024, 1, 1, tzinfo=timezone.utc),
-        "end_date": datetime(2024, 1, 31, tzinfo=timezone.utc),
+        "start_date": datetime(2024, 1, 1, tzinfo=UTC),
+        "end_date": datetime(2024, 1, 31, tzinfo=UTC),
         "interval": "1d",
         "max_age_hours": 2.0,
         "force_refresh": False,
@@ -247,8 +247,8 @@ def test_get_market_data_with_date_range(mock_router):
     """Test récupération avec plage de dates"""
     result = mock_router.get_market_data(
         "MSFT",
-        start_date=datetime(2024, 1, 1, tzinfo=timezone.utc),
-        end_date=datetime(2024, 1, 31, tzinfo=timezone.utc),
+        start_date=datetime(2024, 1, 1, tzinfo=UTC),
+        end_date=datetime(2024, 1, 31, tzinfo=UTC),
         interval="1d",
         max_age_hours=2.0,
         force_refresh=True,
@@ -472,8 +472,8 @@ async def test_error_handling_comprehensive(mock_cache_service):
 def test_data_consistency_validation():
     """Test cohérence et validation des données"""
     # Test données avec dates cohérentes
-    start_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
-    end_date = datetime(2024, 1, 31, tzinfo=timezone.utc)
+    start_date = datetime(2024, 1, 1, tzinfo=UTC)
+    end_date = datetime(2024, 1, 31, tzinfo=UTC)
 
     request = MockMarketDataRequest(
         symbol="AAPL", start_date=start_date, end_date=end_date, interval="1d"

@@ -5,8 +5,6 @@ User Mapper - Domain/Persistence Mapping
 Maps between Domain User entities and SQLAlchemy User models.
 """
 
-from typing import Optional
-
 from boursa_vision.domain.entities.user import User as DomainUser
 from boursa_vision.domain.entities.user import UserRole
 from boursa_vision.domain.value_objects.money import Currency
@@ -17,7 +15,7 @@ class SimpleUserMapper:
     """Simple mapper for User entities and models."""
 
     @staticmethod
-    def to_domain(model: Optional[UserModel]) -> Optional[DomainUser]:
+    def to_domain(model: UserModel | None) -> DomainUser | None:
         """Convert SQLAlchemy User model to domain User entity."""
         if model is None:
             return None
@@ -42,7 +40,7 @@ class SimpleUserMapper:
         )
 
     @staticmethod
-    def to_persistence(domain_user: Optional[DomainUser]) -> Optional[UserModel]:
+    def to_persistence(domain_user: DomainUser | None) -> UserModel | None:
         """Convert domain User entity to SQLAlchemy User model."""
         if domain_user is None:
             return None
@@ -64,6 +62,6 @@ class SimpleUserMapper:
         )
 
     @classmethod
-    def to_model(cls, domain_user: Optional[DomainUser]) -> Optional[UserModel]:
+    def to_model(cls, domain_user: DomainUser | None) -> UserModel | None:
         """Alias for to_persistence for test compatibility."""
         return cls.to_persistence(domain_user)

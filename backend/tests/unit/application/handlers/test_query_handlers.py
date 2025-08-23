@@ -8,7 +8,7 @@ Test des opérations de lecture, transformation et gestion d'erreurs.
 
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
@@ -558,9 +558,9 @@ class TestQueryHandlersIntegration:
         ]
 
         for handler_class in handlers:
-            assert hasattr(
-                handler_class, "handle"
-            ), f"{handler_class.__name__} must have handle method"
+            assert hasattr(handler_class, "handle"), (
+                f"{handler_class.__name__} must have handle method"
+            )
 
     def test_handlers_dependency_injection(self):
         """Test l'injection de dépendances dans tous les handlers"""
@@ -595,10 +595,10 @@ class TestQueryHandlersIntegration:
         ]
 
         for handler_class in handlers:
-            handle_method = getattr(handler_class, "handle")
-            assert inspect.iscoroutinefunction(
-                handle_method
-            ), f"{handler_class.__name__}.handle must be async"
+            handle_method = handler_class.handle
+            assert inspect.iscoroutinefunction(handle_method), (
+                f"{handler_class.__name__}.handle must be async"
+            )
 
     def test_handlers_error_propagation(self):
         """Test que les handlers propagent correctement les erreurs"""

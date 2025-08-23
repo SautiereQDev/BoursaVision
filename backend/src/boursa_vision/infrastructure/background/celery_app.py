@@ -7,7 +7,6 @@ incluant l'archivage automatique des données de marché.
 
 import logging
 import os
-from typing import Any, Dict
 
 try:
     from celery import Celery
@@ -41,6 +40,7 @@ if not CELERY_AVAILABLE or USE_MOCK_CELERY:
         def task(self, *args, **kwargs):
             def decorator(func):
                 return func
+
             return decorator
 
         @property
@@ -49,7 +49,7 @@ if not CELERY_AVAILABLE or USE_MOCK_CELERY:
 
         def update(self, *args, **kwargs):
             pass
-            
+
         def start(self):
             """Mock start method for compatibility"""
             pass

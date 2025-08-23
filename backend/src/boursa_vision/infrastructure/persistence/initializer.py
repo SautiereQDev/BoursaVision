@@ -3,9 +3,7 @@ Persistence layer initialization and configuration.
 Sets up database connections, repositories, and Unit of Work.
 """
 
-import asyncio
 import logging
-from typing import Optional
 
 from boursa_vision.infrastructure.persistence.repository_factory import (
     SQLAlchemyRepositoryFactory,
@@ -64,10 +62,10 @@ class PersistenceLayerInitializer:
     def __init__(self, config: PersistenceLayerConfig):
         """Initialize with configuration."""
         self.config = config
-        self.db_manager: Optional[DatabaseManager] = None
-        self.timescale_manager: Optional[TimescaleDBManager] = None
-        self.repository_factory: Optional[SQLAlchemyRepositoryFactory] = None
-        self.uow_factory: Optional[UnitOfWorkFactory] = None
+        self.db_manager: DatabaseManager | None = None
+        self.timescale_manager: TimescaleDBManager | None = None
+        self.repository_factory: SQLAlchemyRepositoryFactory | None = None
+        self.uow_factory: UnitOfWorkFactory | None = None
         self._initialized = False
 
     async def initialize(self) -> None:
@@ -135,7 +133,7 @@ class PersistenceLayerInitializer:
 
 
 # Global initializer instance
-_initializer: Optional[PersistenceLayerInitializer] = None
+_initializer: PersistenceLayerInitializer | None = None
 
 
 def init_persistence_layer(
@@ -148,7 +146,7 @@ def init_persistence_layer(
     return _initializer
 
 
-def get_persistence_initializer() -> Optional[PersistenceLayerInitializer]:
+def get_persistence_initializer() -> PersistenceLayerInitializer | None:
     """Get the global persistence layer initializer."""
     return _initializer
 

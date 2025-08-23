@@ -10,11 +10,11 @@ from .portfolio_repository import SQLAlchemyPortfolioRepository
 from .user_repository import SQLAlchemyUserRepository
 
 __all__ = [
-    "SQLAlchemyUserRepository",
-    "SQLAlchemyPortfolioRepository",
-    "SQLAlchemyMarketDataRepository",
-    "SQLAlchemyInvestmentRepository",
-    "UserMapper",
-    "PortfolioMapper",
     "InvestmentMapper",
+    "PortfolioMapper",
+    "SQLAlchemyInvestmentRepository",
+    "SQLAlchemyMarketDataRepository",
+    "SQLAlchemyPortfolioRepository",
+    "SQLAlchemyUserRepository",
+    "UserMapper",
 ]

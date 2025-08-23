@@ -15,11 +15,11 @@ Design Patterns Utilisés:
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any
 
 try:
     import numpy as np
@@ -33,8 +33,6 @@ except ImportError:
     np = None
     YF_AVAILABLE = False
 
-from boursa_vision.domain.entities.investment import InvestmentSector, MarketCap
-from boursa_vision.domain.value_objects.money import Currency, Money
 
 logger = logging.getLogger(__name__)
 
@@ -58,24 +56,24 @@ class ScanResult:
 
     symbol: str
     name: str
-    sector: Optional[str]
-    market_cap: Optional[float]
+    sector: str | None
+    market_cap: float | None
     price: float
     change_percent: float
     volume: int
-    pe_ratio: Optional[float]
-    pb_ratio: Optional[float]
-    roe: Optional[float]
-    debt_to_equity: Optional[float]
-    dividend_yield: Optional[float]
-    rsi: Optional[float]
-    macd_signal: Optional[str]
+    pe_ratio: float | None
+    pb_ratio: float | None
+    roe: float | None
+    debt_to_equity: float | None
+    dividend_yield: float | None
+    rsi: float | None
+    macd_signal: str | None
     technical_score: float
     fundamental_score: float
     overall_score: float
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convertir en dictionnaire"""
         return {
             "symbol": self.symbol,
@@ -107,8 +105,8 @@ class ScanConfig:
     max_symbols: int = 1000
     min_market_cap: float = 1e9  # 1 billion
     min_volume: int = 100000
-    sectors: Optional[List[str]] = None
-    exclude_symbols: Set[str] = field(default_factory=set)
+    sectors: list[str] | None = None
+    exclude_symbols: set[str] = field(default_factory=set)
     include_fundamentals: bool = True
     include_technicals: bool = True
     parallel_requests: int = 50
@@ -124,7 +122,7 @@ class ScanResultObserver(ABC):
         pass
 
     @abstractmethod
-    async def on_scan_completed(self, results: List[ScanResult]) -> None:
+    async def on_scan_completed(self, results: list[ScanResult]) -> None:
         """Notification de fin de scan"""
         pass
 
@@ -133,12 +131,12 @@ class MarketScannerStrategy(ABC):
     """Interface pour les stratégies de scan"""
 
     @abstractmethod
-    async def get_symbols_to_scan(self, config: ScanConfig) -> List[str]:
+    async def get_symbols_to_scan(self, config: ScanConfig) -> list[str]:
         """Récupère la liste des symboles à scanner"""
         pass
 
     @abstractmethod
-    def should_include_symbol(self, symbol: str, data: Dict) -> bool:
+    def should_include_symbol(self, symbol: str, data: dict) -> bool:
         """Détermine si un symbole doit être inclus dans les résultats"""
         pass
 
@@ -314,7 +312,7 @@ class FullMarketStrategy(MarketScannerStrategy):
         ],
     }
 
-    async def get_symbols_to_scan(self, config: ScanConfig) -> List[str]:
+    async def get_symbols_to_scan(self, config: ScanConfig) -> list[str]:
         """Récupère tous les symboles disponibles"""
         symbols = []
 
@@ -333,7 +331,7 @@ class FullMarketStrategy(MarketScannerStrategy):
         logger.info(f"Scanning {len(symbols)} symbols with full market strategy")
         return symbols[: config.max_symbols]
 
-    def should_include_symbol(self, symbol: str, data: Dict) -> bool:
+    def should_include_symbol(self, symbol: str, data: dict) -> bool:
         """Inclure tous les symboles valides"""
         return True
 
@@ -341,10 +339,10 @@ class FullMarketStrategy(MarketScannerStrategy):
 class SectorStrategy(MarketScannerStrategy):
     """Stratégie de scan par secteur"""
 
-    def __init__(self, target_sectors: List[str]):
+    def __init__(self, target_sectors: list[str]):
         self.target_sectors = target_sectors
 
-    async def get_symbols_to_scan(self, config: ScanConfig) -> List[str]:
+    async def get_symbols_to_scan(self, config: ScanConfig) -> list[str]:
         """Récupère les symboles des secteurs ciblés"""
         symbols = []
         strategy = FullMarketStrategy()
@@ -359,7 +357,7 @@ class SectorStrategy(MarketScannerStrategy):
         )
         return symbols[: config.max_symbols]
 
-    def should_include_symbol(self, symbol: str, data: Dict) -> bool:
+    def should_include_symbol(self, symbol: str, data: dict) -> bool:
         """Inclure si le secteur correspond"""
         sector = data.get("sector", "").lower()
         return any(target.lower() in sector for target in self.target_sectors)
@@ -369,7 +367,7 @@ class TechnicalAnalyzer:
     """Analyseur technique pour les données de marché"""
 
     @staticmethod
-    def calculate_rsi(prices: List[float], period: int = 14) -> float:
+    def calculate_rsi(prices: list[float], period: int = 14) -> float:
         """Calcule le RSI"""
         if not YF_AVAILABLE or len(prices) < period + 1:
             return 50.0
@@ -386,7 +384,7 @@ class TechnicalAnalyzer:
             return 50.0
 
     @staticmethod
-    def calculate_macd_signal(prices: List[float]) -> str:
+    def calculate_macd_signal(prices: list[float]) -> str:
         """Calcule le signal MACD"""
         if not YF_AVAILABLE or len(prices) < 26:
             return "NEUTRAL"
@@ -447,7 +445,7 @@ class FundamentalAnalyzer:
     """Analyseur fondamental pour les données de marché"""
 
     @staticmethod
-    def _score_pe_ratio(pe_ratio: Optional[float]) -> float:
+    def _score_pe_ratio(pe_ratio: float | None) -> float:
         """Score P/E ratio"""
         if pe_ratio is None or pe_ratio <= 0:
             return 50.0
@@ -461,7 +459,7 @@ class FundamentalAnalyzer:
             return 30.0
 
     @staticmethod
-    def _score_pb_ratio(pb_ratio: Optional[float]) -> float:
+    def _score_pb_ratio(pb_ratio: float | None) -> float:
         """Score P/B ratio"""
         if pb_ratio is None or pb_ratio <= 0:
             return 50.0
@@ -473,7 +471,7 @@ class FundamentalAnalyzer:
             return 35.0
 
     @staticmethod
-    def _score_roe(roe: Optional[float]) -> float:
+    def _score_roe(roe: float | None) -> float:
         """Score ROE"""
         if roe is None:
             return 50.0
@@ -487,7 +485,7 @@ class FundamentalAnalyzer:
             return 30.0
 
     @staticmethod
-    def _score_debt_to_equity(debt_to_equity: Optional[float]) -> float:
+    def _score_debt_to_equity(debt_to_equity: float | None) -> float:
         """Score Debt/Equity"""
         if debt_to_equity is None:
             return 50.0
@@ -501,7 +499,7 @@ class FundamentalAnalyzer:
             return 20.0
 
     @staticmethod
-    def _score_dividend_yield(dividend_yield: Optional[float]) -> float:
+    def _score_dividend_yield(dividend_yield: float | None) -> float:
         """Score dividend yield"""
         if dividend_yield is None:
             return 50.0
@@ -515,11 +513,11 @@ class FundamentalAnalyzer:
     @classmethod
     def calculate_fundamental_score(
         cls,
-        pe_ratio: Optional[float],
-        pb_ratio: Optional[float],
-        roe: Optional[float],
-        debt_to_equity: Optional[float],
-        dividend_yield: Optional[float],
+        pe_ratio: float | None,
+        pb_ratio: float | None,
+        roe: float | None,
+        debt_to_equity: float | None,
+        dividend_yield: float | None,
     ) -> float:
         """Calcule un score fondamental global"""
         # Calculer chaque score composant
@@ -555,9 +553,9 @@ class FundamentalAnalyzer:
 class MarketScannerService:
     """Service principal de scan du marché"""
 
-    def __init__(self, yfinance_client: Optional[Any] = None):
+    def __init__(self, yfinance_client: Any | None = None):
         self.yfinance_client = yfinance_client
-        self.observers: List[ScanResultObserver] = []
+        self.observers: list[ScanResultObserver] = []
         self.technical_analyzer = TechnicalAnalyzer()
         self.fundamental_analyzer = FundamentalAnalyzer()
         self.executor = ThreadPoolExecutor(max_workers=50)
@@ -579,7 +577,7 @@ class MarketScannerService:
             except Exception as e:
                 logger.error(f"Error notifying observer: {e}")
 
-    async def _notify_completion(self, results: List[ScanResult]) -> None:
+    async def _notify_completion(self, results: list[ScanResult]) -> None:
         """Notifie les observers de la fin du scan"""
         for observer in self.observers:
             try:
@@ -596,10 +594,10 @@ class MarketScannerService:
         else:
             return FullMarketStrategy()  # Stratégie par défaut
 
-    async def scan_market(self, config: ScanConfig) -> List[ScanResult]:
+    async def scan_market(self, config: ScanConfig) -> list[ScanResult]:
         """Lance un scan complet du marché"""
         logger.info(f"Starting market scan with strategy: {config.strategy}")
-        start_time = datetime.now(timezone.utc)
+        start_time = datetime.now(UTC)
 
         # Créer la stratégie
         strategy = self._create_strategy(config)
@@ -611,7 +609,7 @@ class MarketScannerService:
         results = []
         semaphore = asyncio.Semaphore(config.parallel_requests)
 
-        async def scan_symbol(symbol: str) -> Optional[ScanResult]:
+        async def scan_symbol(symbol: str) -> ScanResult | None:
             async with semaphore:
                 return self._scan_single_symbol(symbol, config, strategy)
 
@@ -633,7 +631,7 @@ class MarketScannerService:
         # Notifier la fin
         await self._notify_completion(results)
 
-        scan_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+        scan_time = (datetime.now(UTC) - start_time).total_seconds()
         logger.info(
             f"Market scan completed: {len(results)} symbols scanned in {scan_time:.2f}s"
         )
@@ -642,7 +640,7 @@ class MarketScannerService:
 
     def _scan_single_symbol(
         self, symbol: str, config: ScanConfig, strategy: MarketScannerStrategy
-    ) -> Optional[ScanResult]:
+    ) -> ScanResult | None:
         """Scanne un symbole individuel"""
         if not YF_AVAILABLE or yf is None:
             logger.warning("YFinance not available")
@@ -670,8 +668,8 @@ class MarketScannerService:
             return None
 
     def _extract_scan_data(
-        self, symbol: str, info: Dict[str, Any], hist: Any, config: ScanConfig
-    ) -> Optional[ScanResult]:
+        self, symbol: str, info: dict[str, Any], hist: Any, config: ScanConfig
+    ) -> ScanResult | None:
         """Extrait les données pour le scan"""
         try:
             current_price = float(hist["Close"].iloc[-1])
@@ -732,7 +730,7 @@ class MarketScannerService:
             logger.error(f"Error extracting data for {symbol}: {e}")
             return None
 
-    def _extract_fundamental_data(self, info: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_fundamental_data(self, info: dict[str, Any]) -> dict[str, Any]:
         """Extrait les données fondamentales"""
         roe = info.get("returnOnEquity")
         if roe:
@@ -750,7 +748,7 @@ class MarketScannerService:
             "dividend_yield": dividend_yield,
         }
 
-    def _extract_technical_data(self, hist: Any) -> Dict[str, Any]:
+    def _extract_technical_data(self, hist: Any) -> dict[str, Any]:
         """Extrait les données techniques"""
         try:
             prices = hist["Close"].tolist()
@@ -779,8 +777,8 @@ class MarketScannerService:
             return {"rsi": None, "macd_signal": "NEUTRAL", "score": 50.0}
 
     def get_top_opportunities(
-        self, results: List[ScanResult], limit: int = 50
-    ) -> List[ScanResult]:
+        self, results: list[ScanResult], limit: int = 50
+    ) -> list[ScanResult]:
         """Récupère les meilleures opportunités d'achat"""
         # Filtrer les résultats avec un score global élevé
         opportunities = [r for r in results if r.overall_score >= 70]
@@ -793,8 +791,8 @@ class MarketScannerService:
         return opportunities[:limit]
 
     def get_sector_leaders(
-        self, results: List[ScanResult]
-    ) -> Dict[str, List[ScanResult]]:
+        self, results: list[ScanResult]
+    ) -> dict[str, list[ScanResult]]:
         """Récupère les leaders par secteur"""
         sector_results = {}
 

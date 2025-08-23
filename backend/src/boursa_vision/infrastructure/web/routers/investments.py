@@ -5,8 +5,6 @@ Investment API Routes
 REST API endpoints for investment management.
 """
 
-from decimal import Decimal
-from typing import List, Optional
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -14,11 +12,8 @@ from pydantic import BaseModel
 
 from boursa_vision.domain.entities.investment import (
     Investment,
-    InvestmentSector,
-    InvestmentType,
-    MarketCap,
 )
-from boursa_vision.domain.value_objects.money import Currency, Money
+from boursa_vision.domain.value_objects.money import Money
 from boursa_vision.infrastructure.web.dependencies.auth_dependencies import (
     get_current_active_user,
 )
@@ -58,17 +53,17 @@ class InvestmentCreateRequest(BaseModel):
     investment_type: str
     sector: str
     market_cap: str
-    exchange: Optional[str] = None
+    exchange: str | None = None
     currency: str = "USD"
     current_price: MoneyRequest
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class InvestmentUpdateRequest(BaseModel):
     """Request model for updating investments."""
 
-    current_price: Optional[MoneyRequest] = None
-    description: Optional[str] = None
+    current_price: MoneyRequest | None = None
+    description: str | None = None
 
 
 class InvestmentResponse(BaseModel):
@@ -80,10 +75,10 @@ class InvestmentResponse(BaseModel):
     investment_type: str
     sector: str
     market_cap: str
-    exchange: Optional[str] = None
+    exchange: str | None = None
     currency: str
     current_price: MoneyResponse
-    description: Optional[str] = None
+    description: str | None = None
 
     @classmethod
     def from_investment(cls, investment: Investment) -> "InvestmentResponse":
@@ -108,7 +103,7 @@ class InvestmentResponse(BaseModel):
 class InvestmentSearchResponse(BaseModel):
     """Response model for investment search."""
 
-    investments: List[InvestmentResponse]
+    investments: list[InvestmentResponse]
     total: int
 
 
@@ -162,7 +157,7 @@ async def create_investment(
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid investment data: {str(e)}",
+            detail=f"Invalid investment data: {e!s}",
         )
 
 
@@ -291,9 +286,9 @@ async def delete_investment(
     description="Search investments with various filters",
 )
 async def search_investments(
-    symbol: Optional[str] = Query(None, description="Filter by symbol"),
-    sector: Optional[str] = Query(None, description="Filter by sector"),
-    market_cap: Optional[str] = Query(None, description="Filter by market cap"),
+    symbol: str | None = Query(None, description="Filter by symbol"),
+    sector: str | None = Query(None, description="Filter by sector"),
+    market_cap: str | None = Query(None, description="Filter by market cap"),
     current_user=Depends(get_current_active_user),
 ) -> InvestmentSearchResponse:
     """Search investments with filters."""

@@ -5,13 +5,12 @@ Tests avec exécution réelle du code pour améliorer la couverture,
 conformes aux principes de l'Architecture Clean.
 """
 
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, Mock
-from uuid import UUID, uuid4
+from datetime import UTC, datetime, timedelta
+from unittest.mock import AsyncMock, Mock
+from uuid import uuid4
 
 import pytest
 from sqlalchemy.engine.result import Result, ScalarResult
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from boursa_vision.domain.entities.refresh_token import (
     RefreshToken as DomainRefreshToken,
@@ -37,7 +36,7 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         self.test_token_string = "test_refresh_token_12345"
 
         # Dates de test
-        self.now = datetime.now(timezone.utc)
+        self.now = datetime.now(UTC)
         self.expires_at = self.now + timedelta(days=30)
         self.created_at = self.now - timedelta(hours=1)
 
@@ -532,7 +531,7 @@ class TestSQLAlchemyRefreshTokenRepositoryEdgeCases:
         self.mock_session.execute.return_value = mock_result
 
         # Act
-        count = await self.repository.cleanup_expired_tokens(datetime.now(timezone.utc))
+        count = await self.repository.cleanup_expired_tokens(datetime.now(UTC))
 
         # Assert
         assert count == 0

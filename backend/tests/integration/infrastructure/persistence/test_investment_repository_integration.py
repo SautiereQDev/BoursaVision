@@ -6,12 +6,11 @@ Tests avec vraie base de données pour vérifier
 l'interaction avec la persistence et les mappings.
 """
 
-from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import uuid4
 
 import pytest
-from factories import InvestmentFactory, InvestmentModelFactory
+from factories import InvestmentFactory
 from sqlalchemy import select
 
 from boursa_vision.domain.entities.investment import (
@@ -334,7 +333,8 @@ class TestInvestmentRepositoryEdgeCases:
         investment1 = InvestmentFactory.create(symbol="AAPL", name="Apple Inc.")
 
         investment2 = InvestmentFactory.create(
-            symbol="AAPL", name="Apple Inc. Duplicate"  # Même symbole
+            symbol="AAPL",
+            name="Apple Inc. Duplicate",  # Même symbole
         )
 
         # Act

@@ -7,28 +7,6 @@
 # Variables
 # ========================================
 
-.PHONY: archive
-archive: ## Archive market data once
-	@echo "$(CYAN)📊 Archiving market data...$(NC)"
-	@./scripts/market-archiver.sh archive
-
-.PHONY: archive-stats
-archive-stats: ## Show archive statistics
-	@echo "$(CYAN)📈 Archive statistics:$(NC)"
-	@./scripts/market-archiver.sh stats
-
-.PHONY: archive-continuous
-archive-continuous: ## Start continuous archiving (every 24 hours)
-	@echo "$(CYAN)🔄 Starting continuous archiving...$(NC)"
-	@./scripts/market-archiver.sh monitor
-
-.PHONY: archive-test
-archive-test: ## Test archiving functionality
-	@echo "$(CYAN)🧪 Testing archive functionality...$(NC)"
-	@./scripts/market-archiver.sh quality========
-# Docker-only execution - No local commands
-# Supports: CAC40, NASDAQ100, FTSE100, DAX40
-
 # ========================================
 # Variables
 # ========================================
@@ -278,3 +256,73 @@ test: api-test ## Shortcut: Test Production API
 
 .PHONY: build
 build: api-build ## Shortcut: Build Production API
+
+# ========================================
+# Code Quality Commands
+# ========================================
+
+.PHONY: lint
+lint: ## Run ruff linter on backend code
+	@echo "$(YELLOW)🔍 Running ruff linter...$(NC)"
+	@cd backend && poetry run ruff check src/ tests/
+	@echo "$(GREEN)✅ Linting completed$(NC)"
+
+.PHONY: lint-fix
+lint-fix: ## Run ruff linter with auto-fix on backend code
+	@echo "$(YELLOW)🔧 Running ruff linter with auto-fix...$(NC)"
+	@cd backend && poetry run ruff check --fix src/ tests/
+	@echo "$(GREEN)✅ Linting with auto-fix completed$(NC)"
+
+.PHONY: format
+format: ## Format backend code with ruff
+	@echo "$(YELLOW)🎨 Formatting code with ruff...$(NC)"
+	@cd backend && poetry run ruff format src/ tests/
+	@echo "$(GREEN)✅ Code formatting completed$(NC)"
+
+.PHONY: format-check
+format-check: ## Check if backend code is properly formatted
+	@echo "$(YELLOW)🔍 Checking code formatting...$(NC)"
+	@cd backend && poetry run ruff format --check src/ tests/
+	@echo "$(GREEN)✅ Format check completed$(NC)"
+
+.PHONY: lint-all
+lint-all: lint format-check ## Run all linting and format checks
+	@echo "$(GREEN)✅ All code quality checks completed$(NC)"
+
+.PHONY: fix-all
+fix-all: lint-fix format ## Fix all linting issues and format code
+	@echo "$(GREEN)✅ All code fixes applied$(NC)"
+
+.PHONY: typecheck
+typecheck: ## Run mypy type checking on backend code
+	@echo "$(YELLOW)🔍 Running mypy type checking...$(NC)"
+	@cd backend && poetry run mypy src/
+	@echo "$(GREEN)✅ Type checking completed$(NC)"
+
+.PHONY: quality
+quality: lint-all typecheck ## Run all quality checks (lint, format, types)
+	@echo "$(GREEN)✅ All quality checks completed$(NC)"
+
+# ========================================
+# Archive Commands
+# ========================================
+
+.PHONY: archive
+archive: ## Archive market data once
+	@echo "$(CYAN)📊 Archiving market data...$(NC)"
+	@./scripts/market-archiver.sh archive
+
+.PHONY: archive-stats
+archive-stats: ## Show archive statistics
+	@echo "$(CYAN)📈 Archive statistics:$(NC)"
+	@./scripts/market-archiver.sh stats
+
+.PHONY: archive-continuous
+archive-continuous: ## Start continuous archiving (every 24 hours)
+	@echo "$(CYAN)🔄 Starting continuous archiving...$(NC)"
+	@./scripts/market-archiver.sh monitor
+
+.PHONY: archive-test
+archive-test: ## Test archiving functionality
+	@echo "$(CYAN)🧪 Testing archive functionality...$(NC)"
+	@./scripts/market-archiver.sh quality

@@ -1,9 +1,10 @@
 """
 FastAPI dependencies for dependency injection
 """
-from typing import Any, Dict, Optional, Protocol
 
-from fastapi import Depends, Query
+from typing import Any, Optional, Protocol
+
+from fastapi import Query
 
 from boursa_vision.application.services.authentication_service import (
     AuthenticationService,
@@ -46,11 +47,11 @@ class Container:
 
     def __init__(self):
         self._services = {}
-        self._auth_service: Optional[AuthenticationService] = None
-        self._jwt_service: Optional[JWTService] = None
-        self._password_service: Optional[PasswordService] = None
-        self._user_repository: Optional[UserRepository] = None
-        self._refresh_token_repository: Optional[RefreshTokenRepository] = None
+        self._auth_service: AuthenticationService | None = None
+        self._jwt_service: JWTService | None = None
+        self._password_service: PasswordService | None = None
+        self._user_repository: UserRepository | None = None
+        self._refresh_token_repository: RefreshTokenRepository | None = None
 
     def get_service(self, service_name: str) -> Any:
         """Get a service by name."""
@@ -131,14 +132,14 @@ def get_current_user_optional() -> CurrentUserOptional:
 def get_pagination_params(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
-) -> Dict[str, int]:
+) -> dict[str, int]:
     """Get pagination parameters."""
     offset = (page - 1) * page_size
     return {"page": page, "page_size": page_size, "offset": offset, "limit": page_size}
 
 
 # Type aliases for cleaner imports
-PaginationParams = Dict[str, int]
+PaginationParams = dict[str, int]
 
 
 def get_database_session():

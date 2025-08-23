@@ -3,8 +3,8 @@
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 from .advanced_analysis_service import (
     AdvancedInvestmentAnalyzer,
@@ -16,11 +16,11 @@ from .advanced_analysis_service import (
 class RecommendationRequest:
     """Request for investment recommendations."""
 
-    symbols: Optional[List[str]] = None  # If None, use all available symbols
+    symbols: list[str] | None = None  # If None, use all available symbols
     max_recommendations: int = 10
     risk_tolerance: str = "MODERATE"  # LOW, MODERATE, HIGH
     investment_horizon: str = "MEDIUM"  # SHORT, MEDIUM, LONG
-    exclude_sectors: List[str] = field(default_factory=list)
+    exclude_sectors: list[str] = field(default_factory=list)
     min_score: float = 60.0
     max_risk_level: str = "HIGH"  # VERY_LOW, LOW, MODERATE, HIGH, VERY_HIGH
 
@@ -44,17 +44,17 @@ class InvestmentRecommendation:
     momentum_score: float
 
     # Price targets
-    target_price: Optional[float] = None
-    stop_loss: Optional[float] = None
-    upside_potential: Optional[float] = None
+    target_price: float | None = None
+    stop_loss: float | None = None
+    upside_potential: float | None = None
 
     # Analysis details
-    strengths: List[str] = field(default_factory=list)
-    weaknesses: List[str] = field(default_factory=list)
-    key_insights: List[str] = field(default_factory=list)
+    strengths: list[str] = field(default_factory=list)
+    weaknesses: list[str] = field(default_factory=list)
+    key_insights: list[str] = field(default_factory=list)
 
     # Metadata
-    analyzed_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    analyzed_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     data_quality: str = "GOOD"  # EXCELLENT, GOOD, FAIR, POOR
 
 
@@ -62,12 +62,12 @@ class InvestmentRecommendation:
 class PortfolioRecommendation:
     """Complete portfolio recommendation with multiple investments."""
 
-    recommendations: List[InvestmentRecommendation]
-    portfolio_metrics: Dict[str, Any]
-    analysis_summary: Dict[str, Any]
-    risk_assessment: Dict[str, Any]
-    sector_allocation: Dict[str, float]
-    generated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    recommendations: list[InvestmentRecommendation]
+    portfolio_metrics: dict[str, Any]
+    analysis_summary: dict[str, Any]
+    risk_assessment: dict[str, Any]
+    sector_allocation: dict[str, float]
+    generated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 class InvestmentRecommendationService:
@@ -331,7 +331,7 @@ class InvestmentRecommendationService:
                 sector_allocation={},
             )
 
-    def _get_symbols_to_analyze(self, request: RecommendationRequest) -> List[str]:
+    def _get_symbols_to_analyze(self, request: RecommendationRequest) -> list[str]:
         """Get list of symbols to analyze based on request."""
         if request.symbols:
             return request.symbols
@@ -345,8 +345,8 @@ class InvestmentRecommendationService:
         return list(dict.fromkeys(all_symbols))
 
     def _analyze_investments_parallel(
-        self, symbols: List[str]
-    ) -> List[ComprehensiveAnalysisResult]:
+        self, symbols: list[str]
+    ) -> list[ComprehensiveAnalysisResult]:
         """Analyze investments in parallel for better performance."""
         analyses = []
 
@@ -372,7 +372,7 @@ class InvestmentRecommendationService:
 
         return analyses
 
-    def _analyze_with_cache(self, symbol: str) -> Optional[ComprehensiveAnalysisResult]:
+    def _analyze_with_cache(self, symbol: str) -> ComprehensiveAnalysisResult | None:
         """Analyze investment with caching."""
         cache_key = f"analysis_{symbol}_{int(time.time() // self._cache_ttl)}"
 
@@ -389,9 +389,9 @@ class InvestmentRecommendationService:
 
     def _filter_analyses(
         self,
-        analyses: List[ComprehensiveAnalysisResult],
+        analyses: list[ComprehensiveAnalysisResult],
         request: RecommendationRequest,
-    ) -> List[ComprehensiveAnalysisResult]:
+    ) -> list[ComprehensiveAnalysisResult]:
         """Filter analyses based on request criteria."""
         filtered = []
 
@@ -470,8 +470,8 @@ class InvestmentRecommendationService:
         )
 
     def _calculate_portfolio_metrics(
-        self, recommendations: List[InvestmentRecommendation]
-    ) -> Dict[str, Any]:
+        self, recommendations: list[InvestmentRecommendation]
+    ) -> dict[str, Any]:
         """Calculate portfolio-level metrics."""
         if not recommendations:
             return {}
@@ -502,9 +502,9 @@ class InvestmentRecommendationService:
 
     def _generate_analysis_summary(
         self,
-        all_analyses: List[ComprehensiveAnalysisResult],
-        filtered_analyses: List[ComprehensiveAnalysisResult],
-    ) -> Dict[str, Any]:
+        all_analyses: list[ComprehensiveAnalysisResult],
+        filtered_analyses: list[ComprehensiveAnalysisResult],
+    ) -> dict[str, Any]:
         """Generate summary of analysis process."""
         return {
             "total_analyzed": len(all_analyses),
@@ -520,12 +520,12 @@ class InvestmentRecommendationService:
             / len(filtered_analyses)
             if filtered_analyses
             else 0,
-            "analysis_timestamp": datetime.now(timezone.utc).isoformat(),
+            "analysis_timestamp": datetime.now(UTC).isoformat(),
         }
 
     def _assess_portfolio_risk(
-        self, recommendations: List[InvestmentRecommendation]
-    ) -> Dict[str, Any]:
+        self, recommendations: list[InvestmentRecommendation]
+    ) -> dict[str, Any]:
         """Assess overall portfolio risk."""
         if not recommendations:
             return {}
@@ -569,8 +569,8 @@ class InvestmentRecommendationService:
             return "VERY_AGGRESSIVE"
 
     def _calculate_sector_allocation(
-        self, recommendations: List[InvestmentRecommendation]
-    ) -> Dict[str, float]:
+        self, recommendations: list[InvestmentRecommendation]
+    ) -> dict[str, float]:
         """Calculate sector allocation (simplified - would need actual sector data)."""
         # This is a simplified implementation
         # In reality, you'd fetch sector data for each symbol

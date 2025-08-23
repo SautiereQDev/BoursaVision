@@ -12,10 +12,9 @@ Classes:
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 from uuid import UUID, uuid4
 
 from ..events.market_events import MarketDataUpdatedEvent
@@ -92,9 +91,9 @@ class MarketDataArgs:
     timeframe: Timeframe = Timeframe.DAY_1
     source: DataSource = DataSource.YAHOO_FINANCE
     currency: Currency = Currency.USD
-    adjusted_close: Optional[Decimal] = None
-    dividend_amount: Optional[Decimal] = None
-    split_coefficient: Optional[Decimal] = None
+    adjusted_close: Decimal | None = None
+    dividend_amount: Decimal | None = None
+    split_coefficient: Decimal | None = None
 
 
 @dataclass
@@ -106,7 +105,7 @@ class MarketData(AggregateRoot):
 
     id: UUID = field(default_factory=uuid4)
     symbol: str = field(default="")
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     timeframe: Timeframe = field(default=Timeframe.DAY_1)
     source: DataSource = field(default=DataSource.YAHOO_FINANCE)
     currency: Currency = field(default=Currency.USD)
@@ -119,13 +118,13 @@ class MarketData(AggregateRoot):
     volume: int = field(default=0)
 
     # Additional market metrics
-    adjusted_close: Optional[Decimal] = field(default=None)
-    dividend_amount: Optional[Decimal] = field(default=None)
-    split_coefficient: Optional[Decimal] = field(default=None)
+    adjusted_close: Decimal | None = field(default=None)
+    dividend_amount: Decimal | None = field(default=None)
+    split_coefficient: Decimal | None = field(default=None)
 
     # Metadata
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def __post_init__(self):
         """Initialize aggregate root and validate market data"""
@@ -210,7 +209,7 @@ class MarketData(AggregateRoot):
         self.close_price = prices.get("close_price", self.close_price)
         self.volume = prices.get("volume", self.volume)
         self.adjusted_close = prices.get("adjusted_close", self.adjusted_close)
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
         self._validate()
 

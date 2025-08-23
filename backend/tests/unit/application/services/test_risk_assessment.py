@@ -9,10 +9,8 @@ Performance Target: <100ms per unit test
 Coverage Target: >75%
 """
 
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from datetime import datetime
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
@@ -48,7 +46,7 @@ def convert_risk_factor_to_dto(risk_factor: RiskFactor) -> RiskFactorDTO:
 
 
 def create_mock_risk_assessment_dto(
-    symbol: str, risks: List[RiskFactor]
+    symbol: str, risks: list[RiskFactor]
 ) -> RiskAssessmentDTO:
     """Create a mock RiskAssessmentDTO for testing"""
     risk_dtos = [convert_risk_factor_to_dto(risk) for risk in risks]
@@ -752,15 +750,12 @@ class TestRiskAssessmentService:
     @pytest.mark.asyncio
     async def test_should_assess_comprehensive_risk_successfully(self):
         # Arrange
-        with patch.object(
-            self.service._analyzers[0], "analyze"
-        ) as mock_market, patch.object(
-            self.service._analyzers[1], "analyze"
-        ) as mock_fundamental, patch.object(
-            self.service._analyzers[2], "analyze"
-        ) as mock_geopolitical, patch.object(
-            self.service._analyzers[3], "analyze"
-        ) as mock_esg:
+        with (
+            patch.object(self.service._analyzers[0], "analyze") as mock_market,
+            patch.object(self.service._analyzers[1], "analyze") as mock_fundamental,
+            patch.object(self.service._analyzers[2], "analyze") as mock_geopolitical,
+            patch.object(self.service._analyzers[3], "analyze") as mock_esg,
+        ):
             # Setup mock returns
             mock_market.return_value = [
                 RiskFactor(
@@ -1138,9 +1133,10 @@ class TestRiskAssessmentPerformance:
         # Arrange
         start_time = datetime.now()
 
-        with patch("yfinance.Ticker") as mock_ticker, patch(
-            "yfinance.download"
-        ) as mock_download:
+        with (
+            patch("yfinance.Ticker") as mock_ticker,
+            patch("yfinance.download") as mock_download,
+        ):
             # Setup minimal mock data for speed
             mock_ticker_instance = MagicMock()
             mock_ticker.return_value = mock_ticker_instance

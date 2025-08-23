@@ -3,7 +3,6 @@ Tests for uow.py
 Unit of Work pattern implementation tests
 """
 
-import asyncio
 import sys
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -200,11 +199,14 @@ class TestUnitOfWork:
     @pytest.mark.unit
     def test_repository_caching(self, unit_of_work):
         """Test that repositories are properly cached"""
-        with patch(
-            "boursa_vision.infrastructure.persistence.uow.SQLAlchemyUserRepository"
-        ) as mock_user_repo, patch(
-            "boursa_vision.infrastructure.persistence.uow.SQLAlchemyPortfolioRepository"
-        ) as mock_portfolio_repo:
+        with (
+            patch(
+                "boursa_vision.infrastructure.persistence.uow.SQLAlchemyUserRepository"
+            ) as mock_user_repo,
+            patch(
+                "boursa_vision.infrastructure.persistence.uow.SQLAlchemyPortfolioRepository"
+            ) as mock_portfolio_repo,
+        ):
             # Access multiple repositories
             users1 = unit_of_work.users
             portfolios1 = unit_of_work.portfolios

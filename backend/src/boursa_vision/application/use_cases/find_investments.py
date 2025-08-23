@@ -7,8 +7,6 @@ Orchestrates domain services and repositories to provide comprehensive
 investment search capabilities with technical analysis.
 """
 
-from typing import Dict, List
-
 from ..common import IUseCase
 from ..dtos import (
     InvestmentDTO,
@@ -73,7 +71,7 @@ class FindInvestmentsUseCase(IUseCase[FindInvestmentsQuery, InvestmentSearchResu
 
     async def _find_investments_by_criteria(
         self, request: FindInvestmentsQuery
-    ) -> tuple[List, int]:
+    ) -> tuple[list, int]:
         """
         Find investments based on search criteria.
 
@@ -115,8 +113,8 @@ class FindInvestmentsUseCase(IUseCase[FindInvestmentsQuery, InvestmentSearchResu
         return investments, total_count
 
     async def _generate_signals_for_symbols(
-        self, symbols: List[str]
-    ) -> Dict[str, SignalDTO]:
+        self, symbols: list[str]
+    ) -> dict[str, SignalDTO]:
         """
         Generate trading signals for a list of symbols.
 
@@ -133,8 +131,8 @@ class FindInvestmentsUseCase(IUseCase[FindInvestmentsQuery, InvestmentSearchResu
             return {}
 
     async def _get_technical_analysis_for_symbols(
-        self, symbols: List[str]
-    ) -> Dict[str, TechnicalAnalysisDTO]:
+        self, symbols: list[str]
+    ) -> dict[str, TechnicalAnalysisDTO]:
         """
         Get technical analysis for a list of symbols.
 

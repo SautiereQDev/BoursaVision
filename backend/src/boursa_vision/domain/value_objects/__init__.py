@@ -11,18 +11,18 @@ from .price import Price
 from .signal import ConfidenceScore, Signal, SignalAction, SignalStrength
 
 __all__ = [
+    "ETF",
+    "Alert",
+    "AlertCondition",
+    "AlertPriority",
+    "AlertType",
+    "Bond",
+    "ConfidenceScore",
     "Currency",
     "Money",
     "Price",
     "Signal",
     "SignalAction",
-    "ConfidenceScore",
-    "Alert",
-    "AlertType",
-    "AlertCondition",
-    "AlertPriority",
     "SignalStrength",
     "Stock",
-    "Bond",
-    "ETF",
 ]

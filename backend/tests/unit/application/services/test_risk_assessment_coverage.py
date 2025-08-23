@@ -8,12 +8,10 @@ Objectif: Tester les conditions limites et les branches non couvertes
 """
 
 from datetime import datetime
-from typing import Dict, List
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
-import yfinance as yf
 
 from boursa_vision.application.services.risk_assessment import (
     FundamentalRiskAnalyzer,
@@ -226,11 +224,11 @@ class TestRiskAssessmentServiceCoverage:
         for i in range(5):
             risks.append(
                 RiskFactor(
-                    name=f"High Risk {i+1}",
+                    name=f"High Risk {i + 1}",
                     category=RiskCategory.MARKET,
                     level=RiskLevel.HIGH,
                     score=80.0,
-                    description=f"Test high risk {i+1}",
+                    description=f"Test high risk {i + 1}",
                     impact="HIGH",
                     probability="HIGH",
                     timeframe="SHORT",

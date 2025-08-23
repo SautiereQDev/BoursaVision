@@ -17,7 +17,7 @@ from uuid import UUID
 from .portfolio_events import DomainEvent
 
 if TYPE_CHECKING:
-    from ..entities.user import UserRole
+    pass
 
 
 @dataclass(kw_only=True)

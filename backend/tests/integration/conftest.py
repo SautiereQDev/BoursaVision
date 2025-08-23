@@ -7,18 +7,17 @@ Utilise SQLite en mémoire pour des tests rapides et isolés.
 """
 
 import asyncio
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import MetaData, text
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.pool import NullPool
 
 # Import des modèles nécessaires
 # Base sera importé dynamiquement dans les fixtures

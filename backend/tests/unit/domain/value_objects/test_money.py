@@ -220,7 +220,7 @@ class TestMoneyComparison:
 
         # Act & Assert
         assert money1 == money2
-        assert not (money1 != money2)
+        assert money1 == money2
 
     def test_should_compare_different_amounts(self):
         """Devrait comparer correctement des montants différents."""

@@ -5,8 +5,6 @@ Portfolio Mapper - Domain/Persistence Mapping
 Maps between Domain Portfolio entities and SQLAlchemy Portfolio models.
 """
 
-from typing import Optional
-
 from boursa_vision.domain.entities.portfolio import Portfolio as DomainPortfolio
 from boursa_vision.domain.value_objects.money import Currency, Money
 from boursa_vision.infrastructure.persistence.models.portfolios import (
@@ -18,7 +16,7 @@ class SimplePortfolioMapper:
     """Simple mapper for Portfolio entities and models."""
 
     @staticmethod
-    def to_domain(model: Optional[PortfolioModel]) -> Optional[DomainPortfolio]:
+    def to_domain(model: PortfolioModel | None) -> DomainPortfolio | None:
         """Convert SQLAlchemy Portfolio model to domain Portfolio entity."""
         if model is None:
             return None
@@ -40,8 +38,8 @@ class SimplePortfolioMapper:
 
     @staticmethod
     def to_persistence(
-        domain_portfolio: Optional[DomainPortfolio],
-    ) -> Optional[PortfolioModel]:
+        domain_portfolio: DomainPortfolio | None,
+    ) -> PortfolioModel | None:
         """Convert domain Portfolio entity to SQLAlchemy Portfolio model."""
         if domain_portfolio is None:
             return None
@@ -57,7 +55,7 @@ class SimplePortfolioMapper:
 
     @classmethod
     def to_model(
-        cls, domain_portfolio: Optional[DomainPortfolio]
-    ) -> Optional[PortfolioModel]:
+        cls, domain_portfolio: DomainPortfolio | None
+    ) -> PortfolioModel | None:
         """Alias for to_persistence for test compatibility."""
         return cls.to_persistence(domain_portfolio)

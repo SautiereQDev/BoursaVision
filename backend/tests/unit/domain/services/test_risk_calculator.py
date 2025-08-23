@@ -6,7 +6,6 @@ Tests unitaires complets pour le service de calcul des risques du domaine.
 """
 
 from decimal import Decimal
-from typing import Dict, List
 from unittest.mock import Mock, patch
 
 import pytest

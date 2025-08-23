@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 from uuid import UUID
 
 
@@ -69,17 +68,17 @@ class Alert:
     alert_type: AlertType
     condition: AlertCondition
     target_value: Decimal
-    current_value: Optional[Decimal] = None
+    current_value: Decimal | None = None
     priority: AlertPriority = AlertPriority.MEDIUM
     message: str = ""
     is_active: bool = True
-    created_at: Optional[datetime] = None
-    triggered_at: Optional[datetime] = None
-    user_id: Optional[UUID] = None
+    created_at: datetime | None = None
+    triggered_at: datetime | None = None
+    user_id: UUID | None = None
 
     # Optional range values for BETWEEN and OUTSIDE_RANGE conditions
-    min_value: Optional[Decimal] = None
-    max_value: Optional[Decimal] = None
+    min_value: Decimal | None = None
+    max_value: Decimal | None = None
 
     def __post_init__(self):
         """Validate alert parameters"""
@@ -127,15 +126,13 @@ class Alert:
 
         condition_messages = {
             AlertCondition.GREATER_THAN: (
-                f"{self.symbol} price ${current_value} is above "
-                f"${self.target_value}"
+                f"{self.symbol} price ${current_value} is above ${self.target_value}"
             ),
             AlertCondition.LESS_THAN: (
-                f"{self.symbol} price ${current_value} is below "
-                f"${self.target_value}"
+                f"{self.symbol} price ${current_value} is below ${self.target_value}"
             ),
             AlertCondition.EQUAL_TO: (
-                f"{self.symbol} price has reached " f"${self.target_value}"
+                f"{self.symbol} price has reached ${self.target_value}"
             ),
             AlertCondition.GREATER_THAN_OR_EQUAL: (
                 f"{self.symbol} price ${current_value} has reached or exceeded "

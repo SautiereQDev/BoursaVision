@@ -5,10 +5,10 @@ Tests unitaires pour AlertProcessor
 Tests unitaires complets pour le service de gestion des alertes du domaine.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import Mock
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
@@ -36,7 +36,7 @@ def sample_market_data():
     """Données de marché échantillons."""
     return MarketData(
         symbol="AAPL",
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         open_price=Decimal("150.00"),
         high_price=Decimal("155.00"),
         low_price=Decimal("148.00"),
@@ -58,7 +58,7 @@ def sample_alert():
     alert.target_value = Decimal("150.00")
     alert.is_active = True
     alert.priority = AlertPriority.MEDIUM
-    alert.created_at = datetime.now(timezone.utc)
+    alert.created_at = datetime.now(UTC)
     alert.min_value = None
     alert.max_value = None
 
@@ -777,7 +777,7 @@ class TestAlertProcessorEdgeCases:
     def test_should_handle_very_old_alerts(self, alert_processor, sample_alert):
         """Test la gestion d'alertes très anciennes."""
         # Arrange
-        sample_alert.created_at = datetime.now(timezone.utc) - timedelta(days=100)
+        sample_alert.created_at = datetime.now(UTC) - timedelta(days=100)
         current_value = Decimal("152.00")
 
         # Act

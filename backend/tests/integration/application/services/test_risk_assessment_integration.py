@@ -5,7 +5,6 @@ Teste l'utilisation réelle du service avec des données mockées mais
 sans mocker les classes internes pour améliorer la couverture de code.
 """
 
-from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 import numpy as np

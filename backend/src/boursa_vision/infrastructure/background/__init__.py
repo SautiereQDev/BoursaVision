@@ -8,8 +8,8 @@ from .market_data_archiver import MarketDataArchiver
 from .tasks import archive_market_data_task, health_check_task
 
 __all__ = [
-    "celery_app",
     "MarketDataArchiver",
     "archive_market_data_task",
+    "celery_app",
     "health_check_task",
 ]

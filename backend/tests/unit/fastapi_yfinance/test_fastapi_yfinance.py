@@ -10,20 +10,14 @@ Tests couvrant l'ensemble de l'application FastAPI YFinance incluant :
 - Configuration CORS et middleware
 """
 
-import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
-from fastapi import HTTPException
 
 # Import FastAPI testing
 from fastapi.testclient import TestClient
-from pydantic import BaseModel
 
 # Import du module à tester
-import fastapi_yfinance
 from fastapi_yfinance import (
     ADVANCED_ANALYSIS_AVAILABLE,
     FINANCIAL_INDICES,
@@ -388,9 +382,7 @@ class TestFastAPIEndpoints:
         """Test de l'endpoint ticker info sans données"""
         mock_ticker = Mock()
         mock_yf.Ticker.return_value = mock_ticker
-        mock_ticker.info = (
-            {}
-        )  # Dictionnaire vide - le code vérifie "not info" qui est False pour {}
+        mock_ticker.info = {}  # Dictionnaire vide - le code vérifie "not info" qui est False pour {}
 
         # Le code ne lève 404 que si info est falsy (None, {}, etc.)
         # Avec {} le code passe, testons avec None pour forcer l'erreur

@@ -1,12 +1,12 @@
 """FastAPI application with real YFinance data and advanced investment analysis."""
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 import yfinance as yf
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 # Import our advanced analysis services
 try:
@@ -28,17 +28,17 @@ class HealthCheckResponse(BaseModel):
 
     status: str
     timestamp: str
-    real_data_tests: Dict[str, Any]
-    summary: Dict[str, Any]
+    real_data_tests: dict[str, Any]
+    summary: dict[str, Any]
 
 
 class TickerInfoResponse(BaseModel):
     """Ticker information response model."""
 
     symbol: str
-    info: Dict[str, Any]
-    current_price: Optional[float] = None
-    currency: Optional[str] = None
+    info: dict[str, Any]
+    current_price: float | None = None
+    currency: str | None = None
     last_updated: str
 
 
@@ -270,7 +270,7 @@ FINANCIAL_INDICES = {
 }
 
 
-def test_real_data_connection() -> Dict[str, Any]:
+def test_real_data_connection() -> dict[str, Any]:
     """Test real data connection with sample symbols."""
     test_symbols = ["SHEL.L", "AMGN", "NVDA"]  # UK, US, US tech
     test_results = {}
@@ -298,7 +298,7 @@ def test_real_data_connection() -> Dict[str, Any]:
     return test_results
 
 
-@app.get("/", response_model=Dict[str, Any])
+@app.get("/", response_model=dict[str, Any])
 def get_api_info():
     """Get API information and status."""
     return {
@@ -308,7 +308,7 @@ def get_api_info():
             "Real financial data with comprehensive analysis using "
             "YFinance and advanced algorithms"
         ),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "documentation": {
             "swagger_ui": "/docs",
             "redoc": "/redoc",
@@ -345,7 +345,7 @@ def health_check():
 
     return HealthCheckResponse(
         status="healthy" if all_tests_passed else "degraded",
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
         real_data_tests=test_results,
         summary={
             "all_tests_passed": all_tests_passed,
@@ -355,7 +355,7 @@ def health_check():
             ),
             "advanced_analysis_available": ADVANCED_ANALYSIS_AVAILABLE,
             "hot_reload_test": "🔥 Hot Reload Works! - "
-            + datetime.now(timezone.utc).strftime("%H:%M:%S"),
+            + datetime.now(UTC).strftime("%H:%M:%S"),
         },
     )
 
@@ -383,12 +383,12 @@ def get_ticker_info(symbol: str):
             info=info,
             current_price=current_price,
             currency=info.get("currency"),
-            last_updated=datetime.now(timezone.utc).isoformat(),
+            last_updated=datetime.now(UTC).isoformat(),
         )
 
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error fetching data for {symbol}: {str(e)}"
+            status_code=500, detail=f"Error fetching data for {symbol}: {e!s}"
         )
 
 
@@ -423,7 +423,7 @@ def get_ticker_history(
                 "total_records": len(hist),
                 "start_date": hist.index[0].isoformat() if not hist.empty else None,
                 "end_date": hist.index[-1].isoformat() if not hist.empty else None,
-                "last_updated": datetime.now(timezone.utc).isoformat(),
+                "last_updated": datetime.now(UTC).isoformat(),
             },
         }
 
@@ -431,7 +431,7 @@ def get_ticker_history(
 
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error fetching history for {symbol}: {str(e)}"
+            status_code=500, detail=f"Error fetching history for {symbol}: {e!s}"
         )
 
 
@@ -466,7 +466,7 @@ def get_available_indices():
 def get_archived_recommendations(
     max_recommendations: int = Query(5, ge=1, le=20),
     min_score: float = Query(50.0, ge=0, le=100),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get investment recommendations from archived data."""
     try:
         import os
@@ -558,7 +558,7 @@ def get_archived_recommendations(
         return {
             "status": "success",
             "source": "archived_data",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "recommendations": recommendations,
             "summary": {
                 "symbols_analyzed": len(symbols_data),
@@ -568,14 +568,14 @@ def get_archived_recommendations(
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Archive error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Archive error: {e!s}")
 
 
 if ADVANCED_ANALYSIS_AVAILABLE:
 
     @app.get("/recommendations/best-investments")
     def get_best_investment_recommendations(
-        symbols: Optional[str] = Query(
+        symbols: str | None = Query(
             None,
             description="Comma-separated symbols to analyze (if None, analyzes all indices)",
         ),
@@ -588,7 +588,7 @@ if ADVANCED_ANALYSIS_AVAILABLE:
         investment_horizon: str = Query(
             "MEDIUM", description="Investment horizon: SHORT, MEDIUM, LONG"
         ),
-        exclude_sectors: Optional[str] = Query(
+        exclude_sectors: str | None = Query(
             None, description="Comma-separated sectors to exclude"
         ),
         min_score: float = Query(
@@ -598,7 +598,7 @@ if ADVANCED_ANALYSIS_AVAILABLE:
             "HIGH",
             description="Maximum risk level: VERY_LOW, LOW, MODERATE, HIGH, VERY_HIGH",
         ),
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         🎯 Get the best investment recommendations based on comprehensive analysis.
 
@@ -830,10 +830,6 @@ if ADVANCED_ANALYSIS_AVAILABLE:
                     )
 
                     # Create a portfolio recommendation-like response using archived data
-                    from src.application.services.investment_recommendation_service import (
-                        InvestmentRecommendation,
-                        PortfolioRecommendation,
-                    )
 
                     # Convert archived recommendations to service format for response
                     portfolio_recommendation = type(
@@ -880,7 +876,7 @@ if ADVANCED_ANALYSIS_AVAILABLE:
             # Convert to API response format
             response = {
                 "status": "success",
-                "analysis_timestamp": datetime.now(timezone.utc).isoformat(),
+                "analysis_timestamp": datetime.now(UTC).isoformat(),
                 "request_parameters": {
                     "symbols": symbols_list,
                     "max_recommendations": max_recommendations,
@@ -1007,11 +1003,11 @@ if ADVANCED_ANALYSIS_AVAILABLE:
         except Exception as e:
             raise HTTPException(
                 status_code=500,
-                detail=f"Error generating investment recommendations: {str(e)}",
+                detail=f"Error generating investment recommendations: {e!s}",
             )
 
     @app.get("/recommendations/quick-analysis/{symbol}")
-    def get_quick_symbol_analysis(symbol: str) -> Dict[str, Any]:
+    def get_quick_symbol_analysis(symbol: str) -> dict[str, Any]:
         """Get quick analysis for a single symbol."""
         try:
             # Use the recommendation service to analyze single symbol
@@ -1035,7 +1031,7 @@ if ADVANCED_ANALYSIS_AVAILABLE:
 
             return {
                 "symbol": symbol,
-                "analysis_timestamp": datetime.now(timezone.utc).isoformat(),
+                "analysis_timestamp": datetime.now(UTC).isoformat(),
                 "recommendation": rec.recommendation,
                 "overall_score": round(rec.overall_score, 2),
                 "confidence": round(rec.confidence, 3),
@@ -1064,7 +1060,7 @@ if ADVANCED_ANALYSIS_AVAILABLE:
             raise
         except Exception as e:
             raise HTTPException(
-                status_code=500, detail=f"Error analyzing symbol {symbol}: {str(e)}"
+                status_code=500, detail=f"Error analyzing symbol {symbol}: {e!s}"
             )
 
 

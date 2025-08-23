@@ -12,23 +12,21 @@ from .user import User, UserRole
 
 __all__ = [
     "AggregateRoot",
+    "DataSource",
     "DomainEvent",
     "Entity",
     "Investment",
+    "MarketData",
     "Portfolio",
     "Position",
+    "Timeframe",
     "User",
     "UserRole",
-    "MarketData",
-    "Timeframe",
-    "DataSource",
 ]
 
-from .base import AggregateRoot, DomainEvent
 from .investment import (
     AnalysisDataMissingException,
     FundamentalData,
-    Investment,
     InvestmentSector,
     InvestmentType,
     InvestmentValidationException,
@@ -38,8 +36,6 @@ from .investment import (
 from .portfolio import (
     InsufficientFundsException,
     PerformanceMetrics,
-    Portfolio,
-    Position,
     PositionLimitExceededException,
     RiskLimits,
 )

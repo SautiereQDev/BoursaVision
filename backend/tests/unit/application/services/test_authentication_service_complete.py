@@ -9,10 +9,9 @@ Tests suivant l'architecture documentée dans TESTS.md:
 - Coverage Target: >80% pour service critique
 """
 
-from datetime import datetime, timedelta, timezone
-from typing import Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
-from uuid import UUID, uuid4
+from datetime import UTC, datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+from uuid import uuid4
 
 import pytest
 
@@ -32,9 +31,8 @@ from boursa_vision.domain.events.auth_events import (
     UserLoggedOutEvent,
     UserLoginFailedEvent,
 )
-from boursa_vision.domain.value_objects.auth import AccessToken
+from boursa_vision.domain.value_objects.auth import AccessToken, TokenPair
 from boursa_vision.domain.value_objects.auth import RefreshToken as RefreshTokenVO
-from boursa_vision.domain.value_objects.auth import TokenPair
 
 
 @pytest.mark.unit
@@ -102,7 +100,7 @@ class TestUserAuthentication:
         access_token = Mock(spec=AccessToken)
         refresh_token = Mock(spec=RefreshTokenVO)
         refresh_token.token = "refresh_token_123"
-        refresh_token.expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+        refresh_token.expires_at = datetime.now(UTC) + timedelta(days=7)
 
         token_pair = Mock(spec=TokenPair)
         token_pair.access_token = access_token
@@ -314,9 +312,9 @@ class TestTokenRefresh:
         mock_new_token_pair = Mock(spec=TokenPair)
         mock_new_token_pair.refresh_token = Mock()
         mock_new_token_pair.refresh_token.token = "new_refresh_token"
-        mock_new_token_pair.refresh_token.expires_at = datetime.now(
-            timezone.utc
-        ) + timedelta(days=7)
+        mock_new_token_pair.refresh_token.expires_at = datetime.now(UTC) + timedelta(
+            days=7
+        )
 
         refresh_token_repo.find_by_token.return_value = mock_token_entity
         user_repo.find_by_id.return_value = mock_user
@@ -940,7 +938,7 @@ class TestTokenCleanup:
         # Verify datetime parameter
         call_args = refresh_token_repo.cleanup_expired_tokens.call_args[0][0]
         assert isinstance(call_args, datetime)
-        assert call_args.tzinfo == timezone.utc
+        assert call_args.tzinfo == UTC
 
 
 @pytest.mark.unit
@@ -1050,7 +1048,7 @@ class TestAuthenticationServiceEdgeCases:
         mock_token_pair = Mock(spec=TokenPair)
         mock_token_pair.refresh_token = Mock()
         mock_token_pair.refresh_token.token = "token"
-        mock_token_pair.refresh_token.expires_at = datetime.now(timezone.utc)
+        mock_token_pair.refresh_token.expires_at = datetime.now(UTC)
         jwt_service.create_token_pair.return_value = mock_token_pair
 
         # Mock refresh token creation

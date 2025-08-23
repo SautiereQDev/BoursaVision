@@ -8,7 +8,6 @@ Utilise maintenant la configuration globale centralisée.
 """
 
 import logging
-from typing import Optional
 
 import sqlalchemy
 
@@ -68,7 +67,7 @@ class PersistenceInitializer:
 
     def __init__(self, config: PersistenceConfig):
         self.config = config
-        self._db_manager: Optional[DatabaseManager] = None
+        self._db_manager: DatabaseManager | None = None
         self._is_initialized = False
 
     async def initialize(self) -> None:
@@ -118,16 +117,16 @@ class PersistenceInitializer:
         return self._is_initialized
 
     @property
-    def database_manager(self) -> Optional[DatabaseManager]:
+    def database_manager(self) -> DatabaseManager | None:
         """Get the database manager."""
         return self._db_manager
 
 
 # Global persistence initializer instance
-_persistence_initializer: Optional[PersistenceInitializer] = None
+_persistence_initializer: PersistenceInitializer | None = None
 
 
-def get_persistence_initializer() -> Optional[PersistenceInitializer]:
+def get_persistence_initializer() -> PersistenceInitializer | None:
     """Get the global persistence initializer."""
     return _persistence_initializer
 
@@ -162,7 +161,7 @@ class PersistenceContext:
 
     def __init__(self, config: PersistenceConfig):
         self.config = config
-        self._initializer: Optional[PersistenceInitializer] = None
+        self._initializer: PersistenceInitializer | None = None
 
     async def __aenter__(self) -> PersistenceInitializer:
         """Initialize persistence layer."""

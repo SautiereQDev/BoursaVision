@@ -2,7 +2,6 @@
 Alembic migration utilities with TimescaleDB support.
 """
 
-import sqlalchemy as sa
 from sqlalchemy import text
 
 from alembic import op

@@ -6,9 +6,8 @@ Focus sur les imports, instanciations et validations de base.
 """
 
 import importlib
-import sys
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -41,7 +40,7 @@ class TestCLIModuleStructure:
             / "background"
             / "cli.py"
         )
-        with open(cli_path, "r") as f:
+        with open(cli_path) as f:
             first_line = f.readline().strip()
         assert first_line == "#!/usr/bin/env python3"
 
@@ -55,7 +54,7 @@ class TestCLIModuleStructure:
             / "background"
             / "cli.py"
         )
-        with open(cli_path, "r") as f:
+        with open(cli_path) as f:
             content = f.read()
         assert "CLI pour la gestion des tâches" in content
         assert "archivage des données de marché" in content
@@ -91,7 +90,7 @@ class TestCLIConfiguration:
             / "background"
             / "cli.py"
         )
-        with open(cli_path, "r") as f:
+        with open(cli_path) as f:
             content = f.read()
 
         assert "logging.basicConfig" in content
@@ -107,7 +106,7 @@ class TestCLIConfiguration:
             / "background"
             / "cli.py"
         )
-        with open(cli_path, "r") as f:
+        with open(cli_path) as f:
             content = f.read()
 
         assert "@click.group()" in content
@@ -129,7 +128,7 @@ class TestCLIFunctionSignatures:
             / "background"
             / "cli.py"
         )
-        with open(cli_path, "r") as f:
+        with open(cli_path) as f:
             content = f.read()
 
         assert "def cli(debug: bool):" in content
@@ -145,7 +144,7 @@ class TestCLIFunctionSignatures:
             / "background"
             / "cli.py"
         )
-        with open(cli_path, "r") as f:
+        with open(cli_path) as f:
             content = f.read()
 
         assert "def archive(interval: str, period: str):" in content
@@ -161,7 +160,7 @@ class TestCLIFunctionSignatures:
             / "background"
             / "cli.py"
         )
-        with open(cli_path, "r") as f:
+        with open(cli_path) as f:
             content = f.read()
 
         assert "def archive_symbols(symbols: tuple, interval: str):" in content
@@ -182,7 +181,7 @@ class TestCLICommandOptions:
             / "background"
             / "cli.py"
         )
-        with open(cli_path, "r") as f:
+        with open(cli_path) as f:
             content = f.read()
 
         assert "--interval" in content
@@ -199,7 +198,7 @@ class TestCLICommandOptions:
             / "background"
             / "cli.py"
         )
-        with open(cli_path, "r") as f:
+        with open(cli_path) as f:
             content = f.read()
 
         assert "--period" in content
@@ -220,7 +219,7 @@ class TestCLIErrorHandling:
             / "background"
             / "cli.py"
         )
-        with open(cli_path, "r") as f:
+        with open(cli_path) as f:
             content = f.read()
 
         assert "try:" in content
@@ -237,7 +236,7 @@ class TestCLIErrorHandling:
             / "background"
             / "cli.py"
         )
-        with open(cli_path, "r") as f:
+        with open(cli_path) as f:
             content = f.read()
 
         assert "logger.info(" in content
@@ -258,7 +257,7 @@ class TestCLIConstants:
             / "background"
             / "cli.py"
         )
-        with open(cli_path, "r") as f:
+        with open(cli_path) as f:
             content = f.read()
 
         expected_intervals = ["1m", "5m", "15m", "30m", "1h", "1d", "1w", "1M"]
@@ -275,7 +274,7 @@ class TestCLIConstants:
             / "background"
             / "cli.py"
         )
-        with open(cli_path, "r") as f:
+        with open(cli_path) as f:
             content = f.read()
 
         expected_periods = [

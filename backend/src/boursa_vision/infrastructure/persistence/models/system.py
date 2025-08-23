@@ -7,7 +7,7 @@ SQLAlchemy models for system audit and configuration.
 # ================================================================
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import Boolean, Column, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
@@ -32,7 +32,7 @@ class AuditLog(Base, DatabaseMixin):
     user_agent = Column(Text)
     success = Column(Boolean, default=True)
     error_message = Column(Text)
-    created_at = Column(TIMESTAMP, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP, default=lambda: datetime.now(UTC))
 
     __table_args__ = (
         Index("idx_audit_logs_user", "user_id", "created_at"),
@@ -52,8 +52,8 @@ class SystemConfig(Base, DatabaseMixin):
     updated_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     updated_at = Column(
         TIMESTAMP,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     __table_args__ = (Index("idx_system_config_key", "key"),)

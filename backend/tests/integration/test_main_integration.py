@@ -45,9 +45,9 @@ class TestMainIntegration:
         try:
             setup_paths()
             # Vérifier que les chemins ont été ajoutés
-            assert any(
-                "src" in path for path in sys.path
-            ), "src directory should be in sys.path"
+            assert any("src" in path for path in sys.path), (
+                "src directory should be in sys.path"
+            )
         finally:
             # Nettoyer
             sys.path = original_path

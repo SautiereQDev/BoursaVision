@@ -1,13 +1,14 @@
 """
 Base DTO and shared constants for Application DTOs
 """
+
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Union
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel
 
+# Import exceptions for DTO validation
 from ..exceptions import InvalidSymbolError, PriceRangeError
 
 # Constants to avoid string duplication

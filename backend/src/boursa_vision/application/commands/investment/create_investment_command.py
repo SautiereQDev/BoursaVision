@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from boursa_vision.application.common import ICommand
 
@@ -15,4 +14,4 @@ class CreateInvestmentCommand(ICommand):
     market_cap: str
     currency: str
     exchange: str
-    isin: Optional[str] = None
+    isin: str | None = None

@@ -7,8 +7,8 @@ Following architecture in TESTS.md:
 - HTTP client fixtures for FastAPI testing
 """
 
-from datetime import datetime, timezone
-from typing import Any, Dict
+from datetime import UTC, datetime
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pandas as pd
@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient
 
 
 @pytest.fixture
-def mock_yfinance_ticker_info() -> Dict[str, Any]:
+def mock_yfinance_ticker_info() -> dict[str, Any]:
     """Mock YFinance ticker info response."""
     return {
         "symbol": "AAPL",
@@ -173,7 +173,7 @@ def financial_indices():
 @pytest.fixture
 def mock_datetime_now():
     """Mock datetime.now for consistent timestamps in tests."""
-    fixed_datetime = datetime(2024, 8, 21, 12, 0, 0, tzinfo=timezone.utc)
+    fixed_datetime = datetime(2024, 8, 21, 12, 0, 0, tzinfo=UTC)
     with patch("boursa_vision.presentation.api.v1.market_api.datetime") as mock_dt:
         mock_dt.now.return_value = fixed_datetime
         yield fixed_datetime

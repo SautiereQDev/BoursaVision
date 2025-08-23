@@ -6,7 +6,7 @@ Tests concentrés sur l'API réelle du service pour maximiser la couverture
 avec un minimum de complexité.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -25,7 +25,6 @@ from boursa_vision.domain.entities.market_data_timeline import (
     PrecisionLevel,
     TimelinePoint,
 )
-from boursa_vision.domain.services.cache_strategies import CacheConfig
 
 
 class TestMarketDataCacheServiceBasics:
@@ -225,7 +224,7 @@ class TestMarketDataCacheServiceIntegration:
         # Mock le fetcher pour retourner des données
         mock_points = [
             TimelinePoint(
-                timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
+                timestamp=datetime(2024, 1, 1, tzinfo=UTC),
                 open_price=Money(
                     Decimal("100.0"), Currency(code="USD", name="US Dollar", symbol="$")
                 ),
@@ -305,8 +304,8 @@ class TestMarketDataCacheServiceIntegration:
         """Test détermination des paramètres YFinance"""
         service = MarketDataCacheService()
 
-        start_time = datetime(2024, 1, 1, tzinfo=timezone.utc)
-        end_time = datetime(2024, 1, 2, tzinfo=timezone.utc)  # 1 jour
+        start_time = datetime(2024, 1, 1, tzinfo=UTC)
+        end_time = datetime(2024, 1, 2, tzinfo=UTC)  # 1 jour
 
         period, interval = service._determine_yfinance_params(
             start_time, end_time, IntervalType.ONE_DAY

@@ -3,17 +3,13 @@ Main API method tests for OptimizedYFinanceClient - Priority #4
 Testing core functionality with comprehensive mocking
 """
 
-from typing import Any, Dict
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from boursa_vision.infrastructure.external.yfinance_client import (
     OptimizedYFinanceClient,
     YFinanceConfig,
-    YFinanceError,
-    YFinanceRateLimitError,
-    YFinanceTimeoutError,
 )
 
 

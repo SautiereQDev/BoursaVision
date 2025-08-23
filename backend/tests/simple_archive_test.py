@@ -6,8 +6,7 @@ focusing on fundamental operations without complex mocking or extensive setup.
 """
 
 from decimal import Decimal
-from typing import Dict, List, Optional
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 import pytest
 

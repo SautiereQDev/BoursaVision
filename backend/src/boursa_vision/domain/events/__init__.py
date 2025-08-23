@@ -22,16 +22,16 @@ from .user_events import (
 
 __all__ = [
     "DomainEvent",
-    "PortfolioCreatedEvent",
     "InvestmentAddedEvent",
+    "MarketDataBatchUpdatedEvent",
+    "MarketDataUpdatedEvent",
+    "MarketSessionClosedEvent",
+    "MarketSessionOpenedEvent",
+    "PortfolioCreatedEvent",
+    "PriceAlertTriggeredEvent",
     "UserCreatedEvent",
     "UserDeactivatedEvent",
     "UserEmailVerifiedEvent",
     "UserRoleChangedEvent",
     "UserTwoFactorEnabledEvent",
-    "MarketDataUpdatedEvent",
-    "MarketDataBatchUpdatedEvent",
-    "MarketSessionOpenedEvent",
-    "MarketSessionClosedEvent",
-    "PriceAlertTriggeredEvent",
 ]

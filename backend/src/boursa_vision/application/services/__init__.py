@@ -10,6 +10,6 @@ from .signal_generator import SignalGenerator
 from .technical_analyzer import TechnicalAnalyzer
 
 __all__ = [
-    "TechnicalAnalyzer",
     "SignalGenerator",
+    "TechnicalAnalyzer",
 ]

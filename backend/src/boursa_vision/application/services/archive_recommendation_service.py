@@ -5,8 +5,7 @@ Integrates archived data with existing Clean Architecture
 
 import logging
 import os
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +20,7 @@ class ArchiveDataProvider:
             or "postgresql://postgres:postgres@localhost:5432/trading_platform"
         )
 
-    def get_market_data_for_symbol(self, symbol: str) -> Optional[Dict[str, Any]]:
+    def get_market_data_for_symbol(self, symbol: str) -> dict[str, Any] | None:
         """Get market data for a symbol from archive in YFinance-compatible format"""
         try:
             # Import here to avoid dependency issues
@@ -102,7 +101,7 @@ class ArchiveDataProvider:
             logger.error(f"Error getting archive data for {symbol}: {e}")
             return None
 
-    def get_available_symbols(self) -> List[str]:
+    def get_available_symbols(self) -> list[str]:
         """Get symbols that have sufficient archived data"""
         try:
             import psycopg2
@@ -200,9 +199,6 @@ class ArchiveEnhancedAdvancedAnalyzer:
 def patch_investment_recommendation_service():
     """Patch the existing service to use archive-enhanced analyzer"""
     try:
-        from boursa_vision.application.services.advanced_analysis_service import (
-            AdvancedInvestmentAnalyzer,
-        )
         from boursa_vision.application.services.investment_recommendation_service import (
             InvestmentRecommendationService,
         )

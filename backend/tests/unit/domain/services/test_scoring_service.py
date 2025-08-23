@@ -6,12 +6,10 @@ Comprehensive tests for scoring service with strategies and protocols following 
 Tests scoring calculations, strategy pattern implementation, and metric weightings.
 """
 
-from typing import Protocol
 from unittest.mock import Mock
 
 import pytest
 
-from boursa_vision.domain.entities.investment import Investment
 from boursa_vision.domain.services.scoring_service import (
     FundamentalScoringStrategy,
     Scorable,
@@ -26,18 +24,6 @@ Tests for Scoring Service - Domain Layer
 Comprehensive tests for scoring service with strategies and protocols following DDD principles.
 Tests scoring calculations, strategy pattern implementation, and metric weightings.
 """
-
-from typing import Protocol
-from unittest.mock import Mock
-
-import pytest
-
-from boursa_vision.domain.services.scoring_service import (
-    FundamentalScoringStrategy,
-    Scorable,
-    ScoringService,
-    ScoringStrategy,
-)
 
 
 class MockScorableInvestment:
@@ -246,9 +232,9 @@ class TestFundamentalScoringStrategy:
             )
 
             score = self.strategy.calculate_score(scorable)
-            assert (
-                abs(score - expected) < 0.001
-            ), f"Failed for scores ({pe}, {roe}, {growth}, {debt})"
+            assert abs(score - expected) < 0.001, (
+                f"Failed for scores ({pe}, {roe}, {growth}, {debt})"
+            )
 
     def test_calculate_score_zero_total_weight_fallback(self):
         """Test fallback when total weight is zero (defensive test)"""

@@ -6,7 +6,7 @@ Targeted tests to improve coverage from 92.1% to 98%+
 Focuses on missing lines: 79-98, 169->176, 207->203, 256->259, 351->354
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, Mock
 from uuid import uuid4
@@ -14,12 +14,9 @@ from uuid import uuid4
 import pytest
 
 from boursa_vision.application.dtos import (
-    MoneyDTO,
     PerformanceMetricsDTO,
     PortfolioAnalysisResultDTO,
-    PortfolioDTO,
 )
-from boursa_vision.application.exceptions import PortfolioNotFoundError
 from boursa_vision.application.queries.portfolio.analyze_portfolio_query import (
     AnalyzePortfolioQuery,
 )
@@ -98,9 +95,7 @@ class TestAnalyzePortfolioCoverage:
         mock_performance.alpha = 2.1
         mock_performance.beta = 1.2
 
-        analyze_portfolio_use_case._performance_analyzer.calculate_performance.return_value = (
-            mock_performance
-        )
+        analyze_portfolio_use_case._performance_analyzer.calculate_performance.return_value = mock_performance
 
         # Create query
         query = AnalyzePortfolioQuery(portfolio_id=mock_portfolio.id)
@@ -144,9 +139,7 @@ class TestAnalyzePortfolioCoverage:
         mock_performance.max_drawdown = -8.5
         mock_performance.var_95 = -5.2  # Add missing var_95
 
-        analyze_portfolio_use_case._performance_analyzer.calculate_performance.return_value = (
-            mock_performance
-        )
+        analyze_portfolio_use_case._performance_analyzer.calculate_performance.return_value = mock_performance
 
         # Execute with benchmark but no data available
         result = await analyze_portfolio_use_case._calculate_performance_metrics(
@@ -289,9 +282,7 @@ class TestAnalyzePortfolioCoverage:
         mock_performance.max_drawdown = 0.0
         mock_performance.var_95 = 0.0  # Add missing var_95
 
-        analyze_portfolio_use_case._performance_analyzer.calculate_performance.return_value = (
-            mock_performance
-        )
+        analyze_portfolio_use_case._performance_analyzer.calculate_performance.return_value = mock_performance
         analyze_portfolio_use_case._risk_calculator.calculate_portfolio_risk.return_value = Mock(
             var_95=0.0,
             expected_shortfall=0.0,
@@ -304,9 +295,7 @@ class TestAnalyzePortfolioCoverage:
         )
 
         # Configure signal generator to return empty dict
-        analyze_portfolio_use_case._signal_generator.generate_signals_for_portfolio.return_value = (
-            {}
-        )
+        analyze_portfolio_use_case._signal_generator.generate_signals_for_portfolio.return_value = {}
 
         # Execute
         query = AnalyzePortfolioQuery(portfolio_id=mock_portfolio.id)
@@ -343,9 +332,7 @@ class TestAnalyzePortfolioCoverage:
         mock_performance.beta = 0.0
         mock_performance.var_95 = 0.0
 
-        analyze_portfolio_use_case._performance_analyzer.calculate_performance.return_value = (
-            mock_performance
-        )
+        analyze_portfolio_use_case._performance_analyzer.calculate_performance.return_value = mock_performance
 
         # Execute
         result = await analyze_portfolio_use_case._calculate_performance_metrics(

@@ -14,9 +14,9 @@ from .event_handlers import (
 )
 
 __all__ = [
-    "PortfolioCreatedEventHandler",
     "InvestmentAddedEventHandler",
     "InvestmentCreatedEventHandler",
-    "SignalGeneratedEventHandler",
     "PerformanceCalculatedEventHandler",
+    "PortfolioCreatedEventHandler",
+    "SignalGeneratedEventHandler",
 ]

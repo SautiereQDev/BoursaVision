@@ -1,36 +1,36 @@
 """This module defines custom exception classes for the Boursa Vision application.
 
-    Each exception class inherits from the base `BoursaVisionError` class, allowing
-    for unified error handling throughout the application. These exceptions are
-    designed to represent specific error scenarios that may occur during the
-    operation of the application.
+Each exception class inherits from the base `BoursaVisionError` class, allowing
+for unified error handling throughout the application. These exceptions are
+designed to represent specific error scenarios that may occur during the
+operation of the application.
 
-    Classes:
-        BoursaVisionError:
+Classes:
+    BoursaVisionError:
 
-        PortfolioNotFoundError:
-            Raised when a portfolio is not found.
+    PortfolioNotFoundError:
+        Raised when a portfolio is not found.
 
-        InvalidSymbolError:
-            Raised when a symbol is invalid.
+    InvalidSymbolError:
+        Raised when a symbol is invalid.
 
-        PriceRangeError:
-            Raised when max_price is not greater than min_price.
+    PriceRangeError:
+        Raised when max_price is not greater than min_price.
 
-        FactoryProviderError:
-            Raised when no factory provider is registered.
+    FactoryProviderError:
+        Raised when no factory provider is registered.
 
-        DatabaseNotInitializedError:
-            Raised when the database is not initialized.
+    DatabaseNotInitializedError:
+        Raised when the database is not initialized.
 
-        RateLimitError:
-            Raised when a rate limit is exceeded.
+    RateLimitError:
+        Raised when a rate limit is exceeded.
 
-        TemporaryFailureError:
-            Raised for temporary failures.
+    TemporaryFailureError:
+        Raised for temporary failures.
 
-        AnalysisFailedError:
-            Raised when an analysis operation fails."""
+    AnalysisFailedError:
+        Raised when an analysis operation fails."""
 
 
 class BoursaVisionError(Exception):

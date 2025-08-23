@@ -1,7 +1,5 @@
 """Test simple pour JWT Service."""
 
-import pytest
-
 
 def test_simple():
     """Test simple pour vérifier que le fichier fonctionne."""

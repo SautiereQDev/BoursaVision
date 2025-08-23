@@ -9,7 +9,6 @@ Classes:
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
 from uuid import UUID
 
 from ..entities.portfolio import Portfolio
@@ -24,17 +23,17 @@ class IPortfolioRepository(ABC):
     """
 
     @abstractmethod
-    async def find_by_id(self, portfolio_id: UUID) -> Optional[Portfolio]:
+    async def find_by_id(self, portfolio_id: UUID) -> Portfolio | None:
         """Find portfolio by ID"""
         pass
 
     @abstractmethod
-    async def find_by_user_id(self, user_id: UUID) -> List[Portfolio]:
+    async def find_by_user_id(self, user_id: UUID) -> list[Portfolio]:
         """Find all portfolios for a user"""
         pass
 
     @abstractmethod
-    async def find_by_name(self, user_id: UUID, name: str) -> Optional[Portfolio]:
+    async def find_by_name(self, user_id: UUID, name: str) -> Portfolio | None:
         """Find portfolio by user and name"""
         pass
 
@@ -64,6 +63,6 @@ class IPortfolioRepository(ABC):
         pass
 
     @abstractmethod
-    async def find_all(self, offset: int = 0, limit: int = 100) -> List[Portfolio]:
+    async def find_all(self, offset: int = 0, limit: int = 100) -> list[Portfolio]:
         """Find all portfolios with pagination"""
         pass

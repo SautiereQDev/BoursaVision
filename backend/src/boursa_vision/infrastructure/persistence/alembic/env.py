@@ -25,14 +25,14 @@ sys.path.insert(
     0,
     os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")),
 )
-import boursa_vision.infrastructure.persistence.models.alerts  # noqa: E402,F401
-import boursa_vision.infrastructure.persistence.models.fundamental  # noqa: E402,F401
-import boursa_vision.infrastructure.persistence.models.instruments  # noqa: E402,F401
-import boursa_vision.infrastructure.persistence.models.market_data  # noqa: E402,F401
-import boursa_vision.infrastructure.persistence.models.performance  # noqa: E402,F401
-import boursa_vision.infrastructure.persistence.models.portfolios  # noqa: E402,F401
-import boursa_vision.infrastructure.persistence.models.system  # noqa: E402,F401
-import boursa_vision.infrastructure.persistence.models.transactions  # noqa: E402,F401
+import boursa_vision.infrastructure.persistence.models.alerts  # noqa: E402
+import boursa_vision.infrastructure.persistence.models.fundamental  # noqa: E402
+import boursa_vision.infrastructure.persistence.models.instruments  # noqa: E402
+import boursa_vision.infrastructure.persistence.models.market_data  # noqa: E402
+import boursa_vision.infrastructure.persistence.models.performance  # noqa: E402
+import boursa_vision.infrastructure.persistence.models.portfolios  # noqa: E402
+import boursa_vision.infrastructure.persistence.models.system  # noqa: E402
+import boursa_vision.infrastructure.persistence.models.transactions  # noqa: E402
 import boursa_vision.infrastructure.persistence.models.users  # noqa: E402,F401
 from boursa_vision.infrastructure.persistence.models.base import Base  # noqa: E402
 

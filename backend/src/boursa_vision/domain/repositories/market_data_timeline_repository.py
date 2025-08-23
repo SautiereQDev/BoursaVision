@@ -11,9 +11,8 @@ Design Patterns:
 - Specification Pattern: Requêtes complexes typées
 """
 
-from abc import ABC, abstractmethod
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Protocol
+from datetime import UTC, datetime, timedelta
+from typing import Protocol
 
 try:
     from sqlalchemy import and_, desc, func, select
@@ -43,7 +42,7 @@ from ..entities.market_data_timeline import (
 class IMarketDataTimelineRepository(Protocol):
     """Interface du repository pour les timelines"""
 
-    async def get_timeline(self, symbol: str) -> Optional[MarketDataTimeline]:
+    async def get_timeline(self, symbol: str) -> MarketDataTimeline | None:
         """Récupère la timeline complète d'un symbole"""
         ...
 
@@ -56,18 +55,18 @@ class IMarketDataTimelineRepository(Protocol):
         symbol: str,
         start_time: datetime,
         end_time: datetime,
-        interval_type: Optional[IntervalType] = None,
-    ) -> List[TimelinePoint]:
+        interval_type: IntervalType | None = None,
+    ) -> list[TimelinePoint]:
         """Récupère les points dans une plage temporelle"""
         ...
 
     async def get_latest_point(
         self, symbol: str, interval_type: IntervalType
-    ) -> Optional[TimelinePoint]:
+    ) -> TimelinePoint | None:
         """Récupère le point le plus récent pour un symbole et intervalle"""
         ...
 
-    async def bulk_save_points(self, symbol: str, points: List[TimelinePoint]) -> int:
+    async def bulk_save_points(self, symbol: str, points: list[TimelinePoint]) -> int:
         """Sauvegarde en lot des points de timeline"""
         ...
 
@@ -75,7 +74,7 @@ class IMarketDataTimelineRepository(Protocol):
         self,
         symbol: str,
         older_than: datetime,
-        precision_level: Optional[PrecisionLevel] = None,
+        precision_level: PrecisionLevel | None = None,
     ) -> int:
         """Supprime les anciens points selon les critères"""
         ...
@@ -87,7 +86,7 @@ class SqlAlchemyMarketDataTimelineRepository:
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def get_timeline(self, symbol: str) -> Optional[MarketDataTimeline]:
+    async def get_timeline(self, symbol: str) -> MarketDataTimeline | None:
         """Récupère la timeline complète d'un symbole"""
         if not SQLALCHEMY_AVAILABLE:
             return None
@@ -131,8 +130,8 @@ class SqlAlchemyMarketDataTimelineRepository:
         symbol: str,
         start_time: datetime,
         end_time: datetime,
-        interval_type: Optional[IntervalType] = None,
-    ) -> List[TimelinePoint]:
+        interval_type: IntervalType | None = None,
+    ) -> list[TimelinePoint]:
         """Récupère les points dans une plage temporelle"""
         conditions = [
             MarketData.symbol == symbol.upper(),
@@ -154,7 +153,7 @@ class SqlAlchemyMarketDataTimelineRepository:
 
     async def get_latest_point(
         self, symbol: str, interval_type: IntervalType
-    ) -> Optional[TimelinePoint]:
+    ) -> TimelinePoint | None:
         """Récupère le point le plus récent"""
         query = (
             select(MarketData)
@@ -175,7 +174,7 @@ class SqlAlchemyMarketDataTimelineRepository:
             return self._db_to_timeline_point(db_point)
         return None
 
-    async def bulk_save_points(self, symbol: str, points: List[TimelinePoint]) -> int:
+    async def bulk_save_points(self, symbol: str, points: list[TimelinePoint]) -> int:
         """Sauvegarde en lot optimisée pour TimescaleDB"""
         if not points:
             return 0
@@ -202,7 +201,7 @@ class SqlAlchemyMarketDataTimelineRepository:
         self,
         symbol: str,
         older_than: datetime,
-        precision_level: Optional[PrecisionLevel] = None,
+        precision_level: PrecisionLevel | None = None,
     ) -> int:
         """Supprime les anciens points"""
         conditions = [MarketData.symbol == symbol.upper(), MarketData.time < older_than]
@@ -217,7 +216,7 @@ class SqlAlchemyMarketDataTimelineRepository:
 
         return result.rowcount if result.rowcount else 0
 
-    async def get_timeline_stats(self, symbol: str) -> Dict[str, any]:
+    async def get_timeline_stats(self, symbol: str) -> dict[str, any]:
         """Statistiques sur la timeline d'un symbole"""
         # Requête agrégée optimisée
         stats_query = select(
@@ -238,8 +237,8 @@ class SqlAlchemyMarketDataTimelineRepository:
         }
 
     async def get_symbols_with_data(
-        self, min_points: int = 1, since: Optional[datetime] = None
-    ) -> List[str]:
+        self, min_points: int = 1, since: datetime | None = None
+    ) -> list[str]:
         """Retourne les symboles ayant des données"""
         conditions = []
 
@@ -259,7 +258,6 @@ class SqlAlchemyMarketDataTimelineRepository:
 
     def _db_to_timeline_point(self, db_point: MarketData) -> TimelinePoint:
         """Convertit un objet DB en TimelinePoint"""
-        from decimal import Decimal
 
         # TODO: Récupérer la vraie currency depuis la configuration
         currency = self._get_currency_from_symbol(db_point.symbol)
@@ -277,7 +275,7 @@ class SqlAlchemyMarketDataTimelineRepository:
             if db_point.source
             else DataSource.YFINANCE,
             precision_level=self._determine_precision_level(db_point.time),
-            created_at=db_point.created_at or datetime.now(timezone.utc),
+            created_at=db_point.created_at or datetime.now(UTC),
         )
 
     def _timeline_point_to_db(self, symbol: str, point: TimelinePoint) -> MarketData:
@@ -325,7 +323,7 @@ class SqlAlchemyMarketDataTimelineRepository:
 
     def _determine_precision_level(self, timestamp: datetime) -> PrecisionLevel:
         """Détermine le niveau de précision basé sur l'âge"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         age_hours = (now - timestamp).total_seconds() / 3600
 
         if age_hours < 24:
@@ -354,14 +352,14 @@ class MarketDataTimelineSpecification:
         return and_(MarketData.time >= start, MarketData.time <= end)
 
     @staticmethod
-    def interval_type_in(intervals: List[IntervalType]):
+    def interval_type_in(intervals: list[IntervalType]):
         """Spécification: type d'intervalle"""
         return MarketData.interval_type.in_([i.value for i in intervals])
 
     @staticmethod
     def recent_data(hours: int = 24):
         """Spécification: données récentes"""
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cutoff = datetime.now(UTC) - timedelta(hours=hours)
         return MarketData.time >= cutoff
 
     @staticmethod

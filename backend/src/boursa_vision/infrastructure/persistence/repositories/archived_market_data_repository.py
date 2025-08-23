@@ -4,9 +4,8 @@ Provides market data from archived records using Clean Architecture patterns
 """
 
 import logging
-import os
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any
 
 try:
     import pandas as pd
@@ -31,7 +30,7 @@ logger = logging.getLogger(__name__)
 # Use os and subprocess for database operations to avoid external dependencies
 def execute_sql_query(
     database_url: str, query: str, params: tuple = ()
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Execute SQL query and return results as list of dictionaries"""
     try:
         # Simple connection without external dependencies
@@ -58,7 +57,7 @@ class ArchivedMarketDataRepository:
         """Get database connection"""
         return psycopg2.connect(self.database_url, cursor_factory=RealDictCursor)
 
-    def get_available_symbols(self) -> List[str]:
+    def get_available_symbols(self) -> list[str]:
         """Get all symbols that have archived data"""
         with self.get_connection() as conn:
             with conn.cursor() as cur:
@@ -74,9 +73,7 @@ class ArchivedMarketDataRepository:
                 )
                 return [row["symbol"] for row in cur.fetchall()]
 
-    def get_symbol_data(
-        self, symbol: str, days_back: int = 252
-    ) -> Optional[pd.DataFrame]:
+    def get_symbol_data(self, symbol: str, days_back: int = 252) -> pd.DataFrame | None:
         """Get historical data for a symbol as pandas DataFrame"""
         with self.get_connection() as conn:
             with conn.cursor() as cur:
@@ -131,7 +128,7 @@ class ArchivedMarketDataRepository:
                 logger.info(f"Retrieved {len(df)} records for {symbol} from archive")
                 return df
 
-    def get_latest_price_data(self, symbol: str) -> Optional[Dict]:
+    def get_latest_price_data(self, symbol: str) -> dict | None:
         """Get latest price data for a symbol"""
         with self.get_connection() as conn:
             with conn.cursor() as cur:
@@ -158,7 +155,7 @@ class ArchivedMarketDataRepository:
                     return dict(row)
                 return None
 
-    def get_symbols_with_sufficient_data(self, min_records: int = 30) -> List[str]:
+    def get_symbols_with_sufficient_data(self, min_records: int = 30) -> list[str]:
         """Get symbols that have sufficient data for analysis"""
         with self.get_connection() as conn:
             with conn.cursor() as cur:
@@ -178,7 +175,7 @@ class ArchivedMarketDataRepository:
 
                 return [row["symbol"] for row in cur.fetchall()]
 
-    def get_market_data_for_analysis(self, symbol: str) -> Optional[Dict]:
+    def get_market_data_for_analysis(self, symbol: str) -> dict | None:
         """Get market data formatted for analysis (compatible with existing analyzer)"""
         df = self.get_symbol_data(symbol)
         if df is None or len(df) < 20:
@@ -202,7 +199,7 @@ class ArchivedMarketDataRepository:
             },
         }
 
-    def get_bulk_analysis_data(self, symbols: List[str]) -> Dict[str, Dict]:
+    def get_bulk_analysis_data(self, symbols: list[str]) -> dict[str, dict]:
         """Get market data for multiple symbols for bulk analysis"""
         results = {}
 
@@ -233,8 +230,8 @@ class ArchiveMarketDataAdapter(IMarketDataRepository):
         start_time,
         end_time,
         interval_type: str = "1d",
-        limit: Optional[int] = None,
-    ) -> List[DomainMarketData]:
+        limit: int | None = None,
+    ) -> list[DomainMarketData]:
         """Find market data by symbol and time range from archive"""
         # Calculate days back from time range
         if isinstance(start_time, datetime):
@@ -269,7 +266,7 @@ class ArchiveMarketDataAdapter(IMarketDataRepository):
 
     async def find_latest_by_symbol(
         self, symbol: str, interval_type: str = "1d"
-    ) -> Optional[DomainMarketData]:
+    ) -> DomainMarketData | None:
         """Find latest market data for symbol from archive"""
         latest = self.archive_repo.get_latest_price_data(symbol)
         if not latest:
@@ -288,8 +285,8 @@ class ArchiveMarketDataAdapter(IMarketDataRepository):
         raise NotImplementedError("Archive repository is read-only")
 
     async def find_by_symbols(
-        self, symbols: List[str], interval_type: str = "1d", limit: Optional[int] = None
-    ) -> List[DomainMarketData]:
+        self, symbols: list[str], interval_type: str = "1d", limit: int | None = None
+    ) -> list[DomainMarketData]:
         """Find latest market data for multiple symbols from archive"""
         result = []
         for symbol in symbols:

@@ -9,7 +9,6 @@ import time
 from collections import deque
 from dataclasses import dataclass
 from threading import Lock
-from typing import Dict
 
 
 @dataclass
@@ -155,7 +154,7 @@ class AdaptiveRateLimiter:
         """Get current usage statistics."""
         return self.limiter.get_current_usage()
 
-    def get_rate_limit_info(self) -> Dict[str, int]:
+    def get_rate_limit_info(self) -> dict[str, int]:
         """Get current rate limit information."""
         return {
             "max_requests": self.current_rate_limit.max_requests,

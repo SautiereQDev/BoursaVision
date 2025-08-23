@@ -7,11 +7,9 @@ from typing import Any, Protocol
 class ApplicationContainerProtocol(Protocol):
     """Protocol for application container."""
 
-    def get_technical_analyzer(self) -> Any:
-        ...
+    def get_technical_analyzer(self) -> Any: ...
 
-    def get_signal_generator(self) -> Any:
-        ...
+    def get_signal_generator(self) -> Any: ...
 
 
 @dataclass
