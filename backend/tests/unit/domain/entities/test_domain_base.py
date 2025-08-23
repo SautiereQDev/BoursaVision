@@ -63,6 +63,8 @@ class TestAggregateRoot:
 
         class ConcreteAggregate(AggregateRoot):
             def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
+            def __eq__(self, other: object) -> bool:
                 return isinstance(other, ConcreteAggregate)
             def __eq__(self, other: object) -> bool:
                 return isinstance(other, ConcreteAggregate)
@@ -77,6 +79,8 @@ class TestAggregateRoot:
         """Test adding domain events."""
 
         class ConcreteAggregate(AggregateRoot):
+            def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
             def __eq__(self, other: object) -> bool:
                 return isinstance(other, ConcreteAggregate)
             def __eq__(self, other: object) -> bool:
@@ -97,6 +101,8 @@ class TestAggregateRoot:
         """Test that get_domain_events returns a copy."""
 
         class ConcreteAggregate(AggregateRoot):
+            def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
             def __eq__(self, other: object) -> bool:
                 return isinstance(other, ConcreteAggregate)
             def __eq__(self, other: object) -> bool:
@@ -122,6 +128,8 @@ class TestAggregateRoot:
 
         class ConcreteAggregate(AggregateRoot):
             def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
+            def __eq__(self, other: object) -> bool:
                 return isinstance(other, ConcreteAggregate)
             def add_event(self):
                 event = DomainEvent()
@@ -143,6 +151,8 @@ class TestAggregateRoot:
         """Test managing multiple domain events."""
 
         class ConcreteAggregate(AggregateRoot):
+            def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
             def __eq__(self, other: object) -> bool:
                 return isinstance(other, ConcreteAggregate)
             def add_event(self):
@@ -174,6 +184,8 @@ class TestAggregateRoot:
 
         class ConcreteAggregate(AggregateRoot):
             def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
+            def __eq__(self, other: object) -> bool:
                 return isinstance(other, ConcreteAggregate)
             def add_event(self):
                 event = DomainEvent()
@@ -195,6 +207,8 @@ class TestEntity:
         """Test creating Entity instance."""
 
         class ConcreteEntity(Entity):
+            def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
             pass
 
         entity = ConcreteEntity()
@@ -211,6 +225,8 @@ class TestEntity:
         """Test that Entity doesn't manage domain events."""
 
         class ConcreteEntity(Entity):
+            def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
             pass
 
         entity = ConcreteEntity()
@@ -225,6 +241,8 @@ class TestEntity:
         """Test Entity inheritance."""
 
         class ConcreteEntity(Entity):
+            def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
             def __init__(self, value: str):
                 self.value = value
 
@@ -246,6 +264,8 @@ class TestBaseClassesInteraction:
                 self.data = data
 
         class TestAggregate(AggregateRoot):
+            def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
             def trigger_event(self, data: str):
                 event = TestEvent(data=data)
                 self._add_domain_event(event)
@@ -263,9 +283,13 @@ class TestBaseClassesInteraction:
         """Test that Entity and AggregateRoot are separate concepts."""
 
         class MyTestEntity(Entity):
+            def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
             pass
 
         class MyTestAggregate(AggregateRoot):
+            def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
             pass
 
         entity = MyTestEntity()
