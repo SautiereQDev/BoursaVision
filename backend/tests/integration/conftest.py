@@ -7,6 +7,7 @@ Utilise SQLite en mémoire pour des tests rapides et isolés.
 """
 
 import asyncio
+import contextlib
 from collections.abc import AsyncGenerator
 
 import pytest
@@ -23,9 +24,11 @@ from sqlalchemy.ext.asyncio import (
 # Base sera importé dynamiquement dans les fixtures
 try:
     from boursa_vision.infrastructure.persistence.models.investment import (
-        InvestmentModel,
+        InvestmentModel,  # noqa: F401
     )
-    from boursa_vision.infrastructure.persistence.models.users import User as UserModel
+    from boursa_vision.infrastructure.persistence.models.users import (
+        User as UserModel,  # noqa: F401
+    )
 except ImportError:
     # Les imports échoueront dans l'IDE mais fonctionneront à l'exécution
     pass
@@ -53,7 +56,7 @@ async def event_loop():
 
 
 @pytest_asyncio.fixture(scope="function")
-async def test_db_engine() -> AsyncGenerator[AsyncEngine, None]:
+async def test_db_engine() -> AsyncGenerator[AsyncEngine]:
     """
     Moteur de base de données SQLite en mémoire pour les tests.
 
@@ -92,7 +95,7 @@ async def test_db_engine() -> AsyncGenerator[AsyncEngine, None]:
                     name VARCHAR(255) NOT NULL,
                     exchange VARCHAR(50) NOT NULL,
                     sector VARCHAR(100),
-                    industry VARCHAR(100), 
+                    industry VARCHAR(100),
                     market_cap DECIMAL(20, 2),
                     description TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -108,16 +111,14 @@ async def test_db_engine() -> AsyncGenerator[AsyncEngine, None]:
         # Nettoyer l'engine
         await engine.dispose()
         # Supprimer le fichier temporaire
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(db_path)
-        except OSError:
-            pass
 
 
 @pytest_asyncio.fixture
 async def test_session(
     test_db_engine: AsyncEngine,
-) -> AsyncGenerator[AsyncSession, None]:
+) -> AsyncGenerator[AsyncSession]:
     """
     Session de base de données pour les tests avec proper cleanup.
 

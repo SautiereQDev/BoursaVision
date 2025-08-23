@@ -177,7 +177,7 @@ class TestRiskParityAllocation:
         inverse_vol = {s: Decimal("1") / v for s, v in sample_volatilities.items()}
         total_inverse = sum(inverse_vol.values())
 
-        for symbol in sample_volatilities.keys():
+        for symbol in sample_volatilities:
             expected = inverse_vol[symbol] / total_inverse
             assert abs(result.allocations[symbol] - expected) < Decimal("1e-10")
 

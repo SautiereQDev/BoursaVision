@@ -8,7 +8,7 @@ between the application layer and external interfaces.
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Union
+from typing import ClassVar
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
@@ -37,7 +37,7 @@ class BaseDTO(BaseModel):
 
     class Config:
         from_attributes = True
-        json_encoders = {
+        json_encoders: ClassVar[dict] = {
             UUID: str,
             datetime: lambda v: v.isoformat(),
             Decimal: float,

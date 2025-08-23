@@ -148,8 +148,10 @@ class TestArchiveServiceRealImports:
             mock_cursor.fetchall.return_value = historical_data
             mock_cursor.fetchone.return_value = latest_data
 
-            with patch("psycopg2.connect", return_value=mock_conn):
-                with patch("pandas.DataFrame") as mock_df_class:
+            with (
+                patch("psycopg2.connect", return_value=mock_conn),
+                patch("pandas.DataFrame") as mock_df_class
+            ):
                     mock_df = Mock()
                     mock_df_class.return_value = mock_df
 
@@ -249,16 +251,15 @@ class TestArchiveServiceRealImports:
                 enhanced_analyzer.archive_provider,
                 "get_market_data_for_symbol",
                 return_value=mock_archive_data,
-            ):
-                with patch("yfinance.Ticker"):
-                    # Second call should succeed with archive data
-                    mock_original_analyzer.analyze_investment.side_effect = [
-                        Exception("Live data failed"),
-                        archive_result,
-                    ]
+            ), patch("yfinance.Ticker"):
+                # Second call should succeed with archive data
+                mock_original_analyzer.analyze_investment.side_effect = [
+                    Exception("Live data failed"),
+                    archive_result,
+                ]
 
-                    # Act
-                    result = enhanced_analyzer.analyze_investment("ARCHIVE_SYMBOL")
+                # Act
+                result = enhanced_analyzer.analyze_investment("ARCHIVE_SYMBOL")
 
             # Assert
             assert result is archive_result

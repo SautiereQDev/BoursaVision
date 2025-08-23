@@ -509,12 +509,14 @@ class TestArchiveBasedRecommendationService:
     @pytest.fixture
     def service(self, mock_repository, mock_analyzer):
         """Create service with mocked dependencies."""
-        with patch(
-            "boursa_vision.application.services.recommendation.recommendation_service.ArchiveDataRepository"
-        ) as mock_repo_class:
-            with patch(
+        with (
+            patch(
+                "boursa_vision.application.services.recommendation.recommendation_service.ArchiveDataRepository"
+            ) as mock_repo_class,
+            patch(
                 "boursa_vision.application.services.recommendation.recommendation_service.TechnicalAnalyzer"
-            ) as mock_analyzer_class:
+            ) as mock_analyzer_class
+        ):
                 mock_repo_class.return_value = mock_repository
                 mock_analyzer_class.return_value = mock_analyzer
 

@@ -82,7 +82,7 @@ async def domain_exception_handler(
     # Map domain exceptions to HTTP status codes
     if isinstance(exc, PortfolioNotFoundError):
         status_code = status.HTTP_404_NOT_FOUND
-    elif isinstance(exc, (InvalidSymbolError, PriceRangeError)):
+    elif isinstance(exc, InvalidSymbolError | PriceRangeError):
         status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
     else:
         status_code = status.HTTP_400_BAD_REQUEST

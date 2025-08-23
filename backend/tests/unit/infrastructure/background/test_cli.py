@@ -118,14 +118,6 @@ class TestCLIStructure:
             # Les commandes devraient être enregistrées dans le groupe
             if hasattr(cli, "commands"):
                 command_names = list(cli.commands.keys())
-                expected_commands = [
-                    "archive",
-                    "archive-symbols",
-                    "status",
-                    "worker",
-                    "beat",
-                    "test-connection",
-                ]
 
                 # Au moins quelques commandes devraient être présentes
                 for expected_cmd in ["archive", "status"]:

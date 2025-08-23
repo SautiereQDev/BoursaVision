@@ -5,10 +5,11 @@ This module provides database configuration, session management, and connection 
 optimized for PostgreSQL + TimescaleDB with SQLAlchemy 2.0.
 """
 
+from __future__ import annotations
+
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING
 
 from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import (
@@ -17,9 +18,6 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-
-if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import async_sessionmaker as AsyncSessionMaker
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +109,7 @@ class DatabaseManager:
             """Log slow queries for performance monitoring."""
             logger.debug(f"Executing query: {statement[:100]}...")
 
-    def create_session_factory(self):
+    def create_session_factory(self) -> async_sessionmaker[AsyncSession]:
         """Create the async session factory."""
         if self._session_factory is not None:
             return self._session_factory
@@ -127,7 +125,7 @@ class DatabaseManager:
         return self._session_factory
 
     @asynccontextmanager
-    async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
+    async def get_session(self) -> AsyncGenerator[AsyncSession]:
         """
         Get an async database session with proper cleanup.
 

@@ -22,7 +22,6 @@ if str(src_dir) not in sys.path:
 try:
     from boursa_vision.domain.entities.user import UserRole
     from boursa_vision.domain.value_objects.money import Currency, Money
-    from boursa_vision.domain.value_objects.price import Price
     from boursa_vision.infrastructure.persistence.mappers import (
         InvestmentMapper,
         MarketDataMapper,
@@ -43,12 +42,14 @@ def mock_user_model():
     mock.id = UUID("12345678-1234-5678-9abc-123456789012")
     mock.email = "test@example.com"
     mock.username = "testuser"
+    mock.password_hash = "$2b$12$dummy.hash.for.development.purposes.only"  # Ajout du champ manquant
     mock.first_name = "Test"
     mock.last_name = "User"
     mock.role = "ADMIN"
     mock.is_active = True
     mock.is_verified = True
     mock.created_at = datetime(2024, 1, 1, 12, 0, 0)
+    mock.updated_at = datetime(2024, 1, 1, 12, 0, 0)  # Ajout du champ manquant
     mock.last_login_at = datetime(2024, 1, 15, 10, 0, 0)
     return mock
 
@@ -101,6 +102,7 @@ class TestUserMapper:
         assert domain_user.id == mock_user_model.id
         assert domain_user.email == "test@example.com"
         assert domain_user.username == "testuser"
+        assert domain_user.password_hash == "$2b$12$dummy.hash.for.development.purposes.only"  # Nouveau champ
         assert domain_user.first_name == "Test"
         assert domain_user.last_name == "User"
         assert domain_user.role == UserRole.ADMIN
@@ -108,6 +110,7 @@ class TestUserMapper:
         assert domain_user.email_verified is True
         assert domain_user.preferred_currency == Currency.USD
         assert domain_user.created_at == datetime(2024, 1, 1, 12, 0, 0)
+        assert domain_user.updated_at == datetime(2024, 1, 1, 12, 0, 0)  # Nouveau champ
 
     @pytest.mark.skipif(not MAPPERS_AVAILABLE, reason="Mappers non disponibles")
     def test_to_domain_with_none_role(self, mock_user_model):
@@ -125,12 +128,14 @@ class TestUserMapper:
         mock_entity.id = UUID("12345678-1234-5678-9abc-123456789012")
         mock_entity.email = "test@example.com"
         mock_entity.username = "testuser"
+        mock_entity.password_hash = "hashed_password_123"  # Nouveau champ
         mock_entity.first_name = "Test"
         mock_entity.last_name = "User"
         mock_entity.role.value = "admin"
         mock_entity.is_active = True
         mock_entity.email_verified = True
         mock_entity.created_at = datetime(2024, 1, 1, 12, 0, 0)
+        mock_entity.updated_at = datetime(2024, 1, 1, 12, 0, 0)  # Nouveau champ
         mock_entity.last_login = datetime(2024, 1, 15, 10, 0, 0)
 
         persistence_user = UserMapper.to_persistence(mock_entity)
@@ -396,7 +401,7 @@ class TestInvestmentMapper:
             except ImportError:
                 pytest.skip("Investment domain entity non disponible")
 
-            domain_investment = investment_mapper.to_domain(mock_investment_model)
+            investment_mapper.to_domain(mock_investment_model)
 
             mock_create.assert_called_once_with(
                 symbol="AAPL",

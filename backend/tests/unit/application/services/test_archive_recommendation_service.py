@@ -16,7 +16,7 @@ sys.modules["psycopg2.extras"] = Mock()
 sys.modules["pandas"] = Mock()
 sys.modules["yfinance"] = Mock()
 # Ne pas mocker Pydantic globalement car cela interfère avec les configuration models# Now import the service classes with mocked dependencies
-from boursa_vision.application.services.archive_recommendation_service import (
+from boursa_vision.application.services.archive_recommendation_service import (  # noqa: E402
     ArchiveDataProvider,
     ArchiveEnhancedAdvancedAnalyzer,
     patch_investment_recommendation_service,
@@ -82,12 +82,12 @@ class TestArchiveDataProvider:
         mock_df.set_index.return_value = mock_df
         mock_df.sort_index.return_value = mock_df
 
-        with patch("psycopg2.connect", return_value=mock_conn):
-            with patch("pandas.DataFrame", return_value=mock_df):
-                with patch("pandas.to_datetime", return_value=mock_rows[0]["time"]):
-                    # The actual method will fail due to pandas internals,
-                    # so we expect None result
-                    result = provider.get_market_data_for_symbol("AAPL")
+        with patch("psycopg2.connect", return_value=mock_conn), \
+             patch("pandas.DataFrame", return_value=mock_df), \
+             patch("pandas.to_datetime", return_value=mock_rows[0]["time"]):
+                # The actual method will fail due to pandas internals,
+                # so we expect None result
+                result = provider.get_market_data_for_symbol("AAPL")
 
         # Due to mocking complications with pandas internals, we expect None
         assert result is None

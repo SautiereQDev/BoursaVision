@@ -3,7 +3,7 @@ version: "3.8"
 services:
   # PostgreSQL Database with TimescaleDB
   postgres:
-    image: timescale/timescaledb:latest-pg15
+    image: timescale/timescaledb:latest-pg17
     container_name: boursa-postgres-prod
     restart: unless-stopped
     environment:
@@ -24,7 +24,7 @@ services:
 
   # Redis Cache
   redis:
-    image: redis:7-alpine
+    image: redis:7.6-alpine
     container_name: boursa-redis-prod
     restart: unless-stopped
     command: redis-server --appendonly yes --maxmemory 1g --maxmemory-policy allkeys-lru

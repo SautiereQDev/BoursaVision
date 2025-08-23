@@ -211,7 +211,7 @@ class TestRealDataConnection:
         assert len(result) > 0
 
         # Vérifier la structure d'un résultat de succès
-        for symbol, test_result in result.items():
+        for _symbol, test_result in result.items():
             assert "success" in test_result
             if test_result["success"]:
                 assert "price" in test_result
@@ -235,7 +235,7 @@ class TestRealDataConnection:
 
         # Doit gérer le cas d'historique vide
         assert isinstance(result, dict)
-        for symbol, test_result in result.items():
+        for _symbol, test_result in result.items():
             if not test_result["success"]:
                 assert "error" in test_result
 
@@ -248,7 +248,7 @@ class TestRealDataConnection:
 
         assert isinstance(result, dict)
         # Tous les tests devraient échouer avec l'exception
-        for symbol, test_result in result.items():
+        for _symbol, test_result in result.items():
             assert test_result["success"] is False
             assert "error" in test_result
 

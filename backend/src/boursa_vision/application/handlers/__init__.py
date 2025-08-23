@@ -20,15 +20,15 @@ from .query_handlers import (
 )
 
 __all__ = [
+    "AddInvestmentToPortfolioCommandHandler",
+    "AnalyzePortfolioQueryHandler",
     # Command Handlers
     "CreateInvestmentCommandHandler",
     "CreatePortfolioCommandHandler",
-    "AddInvestmentToPortfolioCommandHandler",
-    "GenerateSignalCommandHandler",
     # Query Handlers
     "FindInvestmentsQueryHandler",
+    "GenerateSignalCommandHandler",
     "GetInvestmentByIdQueryHandler",
     "GetPortfolioByIdQueryHandler",
-    "AnalyzePortfolioQueryHandler",
     "GetUserPortfoliosQueryHandler",
 ]

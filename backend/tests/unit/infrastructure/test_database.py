@@ -171,7 +171,7 @@ class TestDatabaseManager:
             ) as mock_create_engine,
             patch(
                 "boursa_vision.infrastructure.persistence.database.event"
-            ) as mock_event,
+            ),
         ):
             mock_engine = MagicMock()
             mock_engine.sync_engine = MagicMock()

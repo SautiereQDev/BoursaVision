@@ -286,7 +286,7 @@ class TestInvestmentRecommendationService:
         assert "dax40" in service.INDICES_SYMBOLS
 
         # Vérifier que chaque indice a des symboles
-        for index_name, symbols in service.INDICES_SYMBOLS.items():
+        for _index_name, symbols in service.INDICES_SYMBOLS.items():
             assert isinstance(symbols, list)
             assert len(symbols) > 0
             for symbol in symbols:

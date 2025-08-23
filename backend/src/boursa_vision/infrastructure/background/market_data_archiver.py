@@ -442,7 +442,7 @@ class MarketDataArchiver:
             Statut détaillé de l'archivage
         """
         try:
-            async with get_db_session() as session:
+            async with get_db_session():
                 market_data_repo = get_market_data_repository()
 
                 # Statistiques générales

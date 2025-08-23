@@ -111,12 +111,12 @@ async def register(
             expires_in=result.token_pair.access_token.expires_in,
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Registration failed",
-        )
+        ) from e
 
 
 @router.post(
@@ -171,11 +171,11 @@ async def login(
         )
     except HTTPException:
         raise
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Authentication failed",
-        )
+        ) from e
 
 
 @router.post(
@@ -215,10 +215,10 @@ async def refresh_token(
         )
     except HTTPException:
         raise
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Token refresh failed"
-        )
+        ) from e
 
 
 @router.post(

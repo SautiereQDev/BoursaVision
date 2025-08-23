@@ -283,29 +283,29 @@ def upgrade() -> None:
         """
         -- Activation de TimescaleDB si pas déjà fait
         -- CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
-        
+
         -- Conversion de la table principale en hypertable
-        -- SELECT create_hypertable('market_data_cache', 'time', 
+        -- SELECT create_hypertable('market_data_cache', 'time',
         --                         chunk_time_interval => INTERVAL '1 day',
         --                         partitioning_column => 'symbol',
         --                         number_partitions => 4);
-        
+
         -- Configuration des politiques de rétention
         -- SELECT add_retention_policy('market_data_cache', INTERVAL '2 years');
-        
+
         -- Configuration de la compression automatique
         -- ALTER TABLE market_data_cache SET (
         --     timescaledb.compress,
         --     timescaledb.compress_segmentby = 'symbol,interval_type',
         --     timescaledb.compress_orderby = 'time DESC'
         -- );
-        
+
         -- SELECT add_compression_policy('market_data_cache', INTERVAL '7 days');
-        
+
         -- Politiques par défaut
         INSERT INTO precision_policies (
             id, policy_name, description, is_active, priority,
-            ultra_high_ttl_hours, high_ttl_hours, medium_ttl_hours, 
+            ultra_high_ttl_hours, high_ttl_hours, medium_ttl_hours,
             low_ttl_hours, very_low_ttl_hours
         ) VALUES (
             gen_random_uuid(),
@@ -314,12 +314,12 @@ def upgrade() -> None:
             true,
             100,
             1,    -- ultra_high: 1 heure
-            24,   -- high: 1 jour  
+            24,   -- high: 1 jour
             168,  -- medium: 1 semaine
             720,  -- low: 1 mois
             8760  -- very_low: 1 an
         );
-        
+
         INSERT INTO precision_policies (
             id, policy_name, description, symbol_pattern, is_active, priority,
             ultra_high_ttl_hours, high_ttl_hours, medium_ttl_hours,

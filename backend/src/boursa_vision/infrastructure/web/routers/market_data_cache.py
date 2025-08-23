@@ -32,13 +32,13 @@ class MarketDataRequest(BaseModel):
     force_refresh: bool = Field(False, description="Forcer le rafraîchissement")
 
     @validator("symbol")
-    def validate_symbol(cls, v):
+    def validate_symbol(self, v):
         if not v or len(v.strip()) == 0:
             raise ValueError("Symbol cannot be empty")
         return v.upper().strip()
 
     @validator("interval")
-    def validate_interval(cls, v):
+    def validate_interval(self, v):
         valid_intervals = [
             "1m",
             "2m",
@@ -120,7 +120,7 @@ class BulkRefreshRequest(BaseModel):
     )
 
     @validator("symbols")
-    def validate_symbols(cls, v):
+    def validate_symbols(self, v):
         if not v or len(v) == 0:
             raise ValueError("Symbols list cannot be empty")
         return [s.upper().strip() for s in v if s.strip()]
@@ -257,13 +257,13 @@ async def get_market_data(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Paramètres invalides: {e!s}",
-        )
+        ) from e
     except Exception as e:
         logger.error(f"Erreur lors de la récupération des données pour {symbol}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur interne lors de la récupération des données",
-        )
+        ) from e
 
 
 @router.get("/timeline-metrics/{symbol}", response_model=TimelineMetricsResponse)
@@ -306,7 +306,7 @@ async def get_timeline_metrics(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur interne lors du calcul des métriques",
-        )
+        ) from e
 
 
 @router.post("/bulk-refresh", response_model=BulkRefreshResponse)
@@ -361,7 +361,7 @@ async def bulk_refresh_symbols(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur interne lors du rafraîchissement",
-        )
+        ) from e
 
 
 @router.get("/stats", response_model=CacheStatsResponse)
@@ -400,7 +400,7 @@ async def get_cache_statistics(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur interne lors de la récupération des statistiques",
-        )
+        ) from e
 
 
 @router.delete("/clear/{symbol}")
@@ -425,7 +425,7 @@ async def clear_symbol_cache(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur interne lors du vidage du cache",
-        )
+        ) from e
 
 
 @router.delete("/clear-all")
@@ -448,7 +448,7 @@ async def clear_all_cache(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur interne lors du vidage du cache",
-        )
+        ) from e
 
 
 @router.get("/latest-price/{symbol}")
@@ -482,4 +482,4 @@ async def get_latest_price(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur interne lors de la récupération du prix",
-        )
+        ) from e

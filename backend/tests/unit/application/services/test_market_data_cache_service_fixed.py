@@ -38,7 +38,7 @@ class TestYFinanceDataFetcher:
     async def test_should_apply_rate_limiting_between_requests(self):
         """Test que le rate limiting fonctionne correctement."""
         # Given
-        start_time = datetime.now().timestamp()
+        datetime.now().timestamp()
 
         # When - deux requêtes consécutives
         await self.fetcher._apply_rate_limit()

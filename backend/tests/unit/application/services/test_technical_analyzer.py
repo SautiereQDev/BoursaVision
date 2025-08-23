@@ -887,7 +887,7 @@ class TestTechnicalAnalyzerCalculateTechnicalIndicators:
         price_points = []
 
         # Quelques points valides au début
-        for i in range(3):
+        for _i in range(3):
             price_point = Mock()
             price_point.close = 100.0
             price_point.volume = 1000000

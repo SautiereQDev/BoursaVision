@@ -176,6 +176,8 @@ class TestEntity:
         """Test creating Entity instance."""
 
         class ConcreteEntity(Entity):
+            def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
             pass
 
         entity = ConcreteEntity()
@@ -192,6 +194,8 @@ class TestEntity:
         """Test that Entity doesn't manage domain events."""
 
         class ConcreteEntity(Entity):
+            def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
             pass
 
         entity = ConcreteEntity()
@@ -206,6 +210,8 @@ class TestEntity:
         """Test Entity inheritance."""
 
         class ConcreteEntity(Entity):
+            def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
             def __init__(self, value: str):
                 self.value = value
 
@@ -244,6 +250,8 @@ class TestBaseClassesInteraction:
         """Test that Entity and AggregateRoot are separate concepts."""
 
         class MyTestEntity(Entity):
+            def __eq__(self, other: object) -> bool:
+                return isinstance(other, type(self))
             pass
 
         class MyTestAggregate(AggregateRoot):

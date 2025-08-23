@@ -6,6 +6,7 @@ Mappers that convert between domain entities and DTOs,
 isolating the application layer from domain implementation details.
 """
 
+import contextlib
 from datetime import datetime
 from uuid import UUID
 
@@ -125,10 +126,8 @@ class PortfolioMapper:
 
         total_value = None
         if hasattr(portfolio, "calculate_total_value"):
-            try:
+            with contextlib.suppress(AttributeError):
                 total_value = MoneyMapper.to_dto(portfolio.calculate_total_value())
-            except AttributeError:
-                pass  # Catch specific exception instead of general Exception
 
         # Handle MagicMock values
         def safe_getattr(obj, attr, default):

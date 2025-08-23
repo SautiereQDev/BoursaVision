@@ -511,7 +511,7 @@ class MarketDataCacheService:
             precision_levels = [PrecisionLevel.LOW, PrecisionLevel.VERY_LOW]
 
         # Nettoie pour chaque symbole en mémoire
-        for symbol, timeline in self._timelines.items():
+        for symbol, _timeline in self._timelines.items():
             try:
                 for precision_level in precision_levels:
                     count = await self.timeline_repository.delete_old_points(

@@ -4,7 +4,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, ClassVar
 
 from .advanced_analysis_service import (
     AdvancedInvestmentAnalyzer,
@@ -74,7 +74,7 @@ class InvestmentRecommendationService:
     """Service for generating investment recommendations."""
 
     # Financial indices symbols
-    INDICES_SYMBOLS = {
+    INDICES_SYMBOLS: ClassVar[dict[str, list[str]]] = {
         "cac40": [
             "MC.PA",
             "ASML.AS",

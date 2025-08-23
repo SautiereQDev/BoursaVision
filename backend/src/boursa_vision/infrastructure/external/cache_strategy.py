@@ -112,10 +112,7 @@ class AdaptiveCacheStrategy(CacheStrategy):
             return False
 
         # Don't cache empty datasets
-        if isinstance(data, (list, dict)) and len(data) == 0:
-            return False
-
-        return True
+        return not (isinstance(data, list | dict) and len(data) == 0)
 
     def _is_market_hours(self) -> bool:
         """Check if current time is during market hours (simplified)"""
@@ -327,7 +324,9 @@ class CacheKeyBuilder:
         self.parts.append(f"symbol:{symbol}")
         return self
 
-    def add_timeframe(self, period: str, interval: str = None) -> "CacheKeyBuilder":
+    def add_timeframe(
+        self, period: str, interval: str | None = None
+    ) -> "CacheKeyBuilder":
         """Add timeframe to key"""
         if interval:
             self.parts.append(f"timeframe:{period}:{interval}")
@@ -342,10 +341,7 @@ class CacheKeyBuilder:
 
     def add_date(self, date: str | datetime) -> "CacheKeyBuilder":
         """Add date to key"""
-        if isinstance(date, datetime):
-            date_str = date.strftime("%Y-%m-%d")
-        else:
-            date_str = date
+        date_str = date.strftime("%Y-%m-%d") if isinstance(date, datetime) else date
         self.parts.append(f"date:{date_str}")
         return self
 
@@ -364,7 +360,9 @@ class CacheKeyBuilder:
         return self
 
     @classmethod
-    def for_price_data(cls, symbol: str, period: str, interval: str = None) -> str:
+    def for_price_data(
+        cls, symbol: str, period: str, interval: str | None = None
+    ) -> str:
         """Build cache key for price data"""
         builder = cls("price_data")
         return builder.add_symbol(symbol).add_timeframe(period, interval).build()

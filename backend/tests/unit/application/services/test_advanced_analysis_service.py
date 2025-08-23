@@ -712,7 +712,7 @@ class TestComprehensiveIntegration:
                 results.append((investment.symbol, result))
 
         # Vérifier que tous les résultats sont valides
-        for symbol, result in results:
+        for _symbol, result in results:
             assert result is not None
             assert 0 <= result.overall_score <= 100
             assert result.recommendation in [

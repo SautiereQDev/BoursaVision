@@ -575,7 +575,7 @@ class TestPriceData:
             volume=1000000,
         )
 
-        mixed_points = self.points + [eur_point]
+        mixed_points = [*self.points, eur_point]
 
         with pytest.raises(
             ValueError, match="All price points must be in the same currency"
@@ -702,7 +702,7 @@ class TestPriceData:
             volume=1000000,
         )
 
-        points_with_zero = [zero_point] + self.points
+        points_with_zero = [zero_point, *self.points]
         price_data = PriceData(self.symbol, points_with_zero, self.interval)
 
         returns = price_data.get_returns()

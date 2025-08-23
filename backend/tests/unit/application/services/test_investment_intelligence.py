@@ -509,7 +509,7 @@ class TestInvestmentIntelligenceService:
         )
 
         # When & Then
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             await self.service.generate_investment_recommendations(self.test_config)
 
     @pytest.mark.asyncio

@@ -4,6 +4,7 @@ Implements the Abstract Factory pattern for repository creation.
 """
 
 from abc import ABC, abstractmethod
+from typing import ClassVar
 
 from boursa_vision.domain.repositories.market_data_repository import (
     IMarketDataRepository,
@@ -91,7 +92,7 @@ class RepositoryRegistry:
     """
 
     _instance = None
-    _repositories: dict[type, object] = {}
+    _repositories: ClassVar[dict[type, object]] = {}
     _factory: IRepositoryFactory | None = None
 
     def __new__(cls):

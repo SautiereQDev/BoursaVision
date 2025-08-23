@@ -243,16 +243,16 @@ class TestMoneyComparison:
 
         # Act & Assert
         with pytest.raises(ValueError, match="Cannot compare different currencies"):
-            usd_money > eur_money
+            usd_money > eur_money  # noqa: B015
 
         with pytest.raises(ValueError, match="Cannot compare different currencies"):
-            usd_money < eur_money
+            usd_money < eur_money  # noqa: B015
 
         with pytest.raises(ValueError, match="Cannot compare different currencies"):
-            usd_money >= eur_money
+            usd_money >= eur_money  # noqa: B015
 
         with pytest.raises(ValueError, match="Cannot compare different currencies"):
-            usd_money <= eur_money
+            usd_money <= eur_money  # noqa: B015
 
     def test_should_allow_equality_comparison_different_currencies(self):
         """Devrait permettre la comparaison d'égalité entre devises différentes."""

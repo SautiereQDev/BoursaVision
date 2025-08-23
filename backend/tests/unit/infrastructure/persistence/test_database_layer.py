@@ -214,7 +214,7 @@ class TestDatabaseManager:
         db_manager._session_factory = mock_factory
 
         with pytest.raises(ValueError):
-            async with db_manager.session() as session:
+            async with db_manager.session():
                 raise ValueError("Test error")
 
         mock_session.rollback.assert_called_once()
@@ -421,7 +421,7 @@ class TestGlobalDatabaseFunctions:
     async def test_get_db_session_not_initialized(self):
         """Test du gestionnaire de session quand DB non initialisée."""
         with pytest.raises(RuntimeError, match="Database not initialized"):
-            async with get_db_session() as session:
+            async with get_db_session():
                 pass
 
 
@@ -447,7 +447,7 @@ class TestDatabaseIntegration:
 
         # 2. Obtenir les managers
         db_manager = get_db_manager()
-        timescale_manager = get_timescale_manager()
+        get_timescale_manager()
 
         assert db_manager.config.pool_size == 5
         assert db_manager.config.echo is True

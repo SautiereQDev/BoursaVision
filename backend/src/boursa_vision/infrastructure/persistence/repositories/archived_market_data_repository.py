@@ -37,10 +37,12 @@ def execute_sql_query(
         import psycopg2
         from psycopg2.extras import RealDictCursor
 
-        with psycopg2.connect(database_url, cursor_factory=RealDictCursor) as conn:
-            with conn.cursor() as cur:
-                cur.execute(query, params)
-                return [dict(row) for row in cur.fetchall()]
+        with (
+            psycopg2.connect(database_url, cursor_factory=RealDictCursor) as conn,
+            conn.cursor() as cur,
+        ):
+            cur.execute(query, params)
+            return [dict(row) for row in cur.fetchall()]
     except ImportError:
         # Fallback if psycopg2 not available
         logger.error("psycopg2 not available, cannot execute database queries")
@@ -59,28 +61,26 @@ class ArchivedMarketDataRepository:
 
     def get_available_symbols(self) -> list[str]:
         """Get all symbols that have archived data"""
-        with self.get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT DISTINCT i.symbol 
+        with self.get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                    SELECT DISTINCT i.symbol
                     FROM instruments i
                     JOIN market_data md ON md.instrument_id = i.id
                     WHERE md.interval_type = 'archiver'
                     AND i.is_active = true
                     ORDER BY i.symbol
                 """
-                )
-                return [row["symbol"] for row in cur.fetchall()]
+            )
+            return [row["symbol"] for row in cur.fetchall()]
 
     def get_symbol_data(self, symbol: str, days_back: int = 252) -> pd.DataFrame | None:
         """Get historical data for a symbol as pandas DataFrame"""
-        with self.get_connection() as conn:
-            with conn.cursor() as cur:
-                # Get data for the symbol
-                cur.execute(
-                    """
-                    SELECT 
+        with self.get_connection() as conn, conn.cursor() as cur:
+            # Get data for the symbol
+            cur.execute(
+                """
+                    SELECT
                         md.time,
                         md.open_price,
                         md.high_price,
@@ -92,49 +92,48 @@ class ArchivedMarketDataRepository:
                         i.name
                     FROM market_data md
                     JOIN instruments i ON md.instrument_id = i.id
-                    WHERE i.symbol = %s 
+                    WHERE i.symbol = %s
                     AND md.interval_type = 'archiver'
                     AND md.time >= NOW() - INTERVAL '%s days'
                     ORDER BY md.time DESC
                     LIMIT %s
                 """,
-                    (symbol, days_back, days_back * 2),
-                )  # Allow for some buffer
+                (symbol, days_back, days_back * 2),
+            )  # Allow for some buffer
 
-                rows = cur.fetchall()
+            rows = cur.fetchall()
 
-                if not rows:
-                    logger.warning(f"No archived data found for symbol {symbol}")
-                    return None
+            if not rows:
+                logger.warning(f"No archived data found for symbol {symbol}")
+                return None
 
-                # Convert to DataFrame
-                df = pd.DataFrame(rows)
-                df["time"] = pd.to_datetime(df["time"])
-                df.set_index("time", inplace=True)
-                df.sort_index(inplace=True)  # Sort chronologically
+            # Convert to DataFrame
+            df = pd.DataFrame(rows)
+            df["time"] = pd.to_datetime(df["time"])
+            df.set_index("time", inplace=True)
+            df.sort_index(inplace=True)  # Sort chronologically
 
-                # Rename columns to match yfinance convention
-                df = df.rename(
-                    columns={
-                        "open_price": "Open",
-                        "high_price": "High",
-                        "low_price": "Low",
-                        "close_price": "Close",
-                        "adjusted_close": "Adj Close",
-                        "volume": "Volume",
-                    }
-                )
+            # Rename columns to match yfinance convention
+            df = df.rename(
+                columns={
+                    "open_price": "Open",
+                    "high_price": "High",
+                    "low_price": "Low",
+                    "close_price": "Close",
+                    "adjusted_close": "Adj Close",
+                    "volume": "Volume",
+                }
+            )
 
-                logger.info(f"Retrieved {len(df)} records for {symbol} from archive")
-                return df
+            logger.info(f"Retrieved {len(df)} records for {symbol} from archive")
+            return df
 
     def get_latest_price_data(self, symbol: str) -> dict | None:
         """Get latest price data for a symbol"""
-        with self.get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT 
+        with self.get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                    SELECT
                         md.close_price as current_price,
                         md.volume,
                         md.time as last_updated,
@@ -142,25 +141,24 @@ class ArchivedMarketDataRepository:
                         i.currency
                     FROM market_data md
                     JOIN instruments i ON md.instrument_id = i.id
-                    WHERE i.symbol = %s 
+                    WHERE i.symbol = %s
                     AND md.interval_type = 'archiver'
                     ORDER BY md.time DESC
                     LIMIT 1
                 """,
-                    (symbol,),
-                )
+                (symbol,),
+            )
 
-                row = cur.fetchone()
-                if row:
-                    return dict(row)
-                return None
+            row = cur.fetchone()
+            if row:
+                return dict(row)
+            return None
 
     def get_symbols_with_sufficient_data(self, min_records: int = 30) -> list[str]:
         """Get symbols that have sufficient data for analysis"""
-        with self.get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
+        with self.get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
                     SELECT i.symbol, COUNT(*) as record_count
                     FROM instruments i
                     JOIN market_data md ON md.instrument_id = i.id
@@ -170,10 +168,10 @@ class ArchivedMarketDataRepository:
                     HAVING COUNT(*) >= %s
                     ORDER BY COUNT(*) DESC
                 """,
-                    (min_records,),
-                )
+                (min_records,),
+            )
 
-                return [row["symbol"] for row in cur.fetchall()]
+            return [row["symbol"] for row in cur.fetchall()]
 
     def get_market_data_for_analysis(self, symbol: str) -> dict | None:
         """Get market data formatted for analysis (compatible with existing analyzer)"""

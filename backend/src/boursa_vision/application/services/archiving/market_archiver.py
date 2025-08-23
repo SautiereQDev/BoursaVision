@@ -9,6 +9,7 @@ import os
 import sys
 import time
 from datetime import datetime
+from typing import ClassVar
 
 # Add the src directory to Python path for imports
 sys.path.insert(0, "/app/src")
@@ -19,11 +20,9 @@ try:
         BigInteger,
         Column,
         DateTime,
-        Index,
         Integer,
         Numeric,
         String,
-        UniqueConstraint,
         create_engine,
     )
     from sqlalchemy.exc import IntegrityError
@@ -152,7 +151,7 @@ class EnhancedMarketDataArchiver:
     """
 
     # Financial symbols to archive
-    SYMBOLS = [
+    SYMBOLS: ClassVar[list[str]] = [
         # US ETFs
         "SPY",
         "QQQ",

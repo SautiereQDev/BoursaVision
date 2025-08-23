@@ -311,7 +311,7 @@ class TestCeleryLogging:
                 del sys.modules["boursa_vision.infrastructure.background.celery_app"]
 
             # Import directly from the celery_app module, not via __init__.py
-            from boursa_vision.infrastructure.background.celery_app import celery_app
+            import boursa_vision.infrastructure.background.celery_app  # noqa: F401
 
             # Should have called getLogger with module name (check that it was called with the right module)
             # getLogger may have been called multiple times, check if our module was one of them

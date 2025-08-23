@@ -98,7 +98,7 @@ class TestAnalyzePortfolioCoverage:
         analyze_portfolio_use_case._performance_analyzer.calculate_performance.return_value = mock_performance
 
         # Create query
-        query = AnalyzePortfolioQuery(portfolio_id=mock_portfolio.id)
+        AnalyzePortfolioQuery(portfolio_id=mock_portfolio.id)
 
         # Execute - should hit the getattr branch without model_dump
         result = await analyze_portfolio_use_case._calculate_performance_metrics(
@@ -172,7 +172,7 @@ class TestAnalyzePortfolioCoverage:
         market_data_repo.get_price_history.return_value = None
 
         # Execute
-        result = await analyze_portfolio_use_case._calculate_risk_metrics(
+        await analyze_portfolio_use_case._calculate_risk_metrics(
             mock_portfolio, datetime(2024, 1, 1), datetime(2024, 12, 31)
         )
 

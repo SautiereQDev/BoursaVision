@@ -118,7 +118,7 @@ class DatabaseManager:
         return self._session_factory
 
     @asynccontextmanager
-    async def session(self) -> AsyncGenerator[AsyncSession, None]:
+    async def session(self) -> AsyncGenerator[AsyncSession]:
         """Create database session with proper error handling."""
         async with self.session_factory() as session:
             try:
@@ -283,7 +283,7 @@ def get_timescale_manager() -> TimescaleDBManager:
 
 
 @asynccontextmanager
-async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_db_session() -> AsyncGenerator[AsyncSession]:
     """Get database session from global manager."""
     db_manager = get_db_manager()
     async with db_manager.session() as session:

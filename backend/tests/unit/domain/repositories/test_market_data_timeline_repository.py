@@ -14,7 +14,7 @@ import pytest
 
 # Vérifier si SQLAlchemy est disponible
 try:
-    import sqlalchemy
+    import sqlalchemy  # noqa: F401
 
     HAS_SQLALCHEMY = True
 except ImportError:
