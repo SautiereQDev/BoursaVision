@@ -10,7 +10,7 @@ from alembic import op
 def create_hypertable(
     table_name: str,
     time_column: str,
-    partitioning_column: str = None,
+    partitioning_column: str | None = None,
     chunk_time_interval: str = "1 day",
     number_partitions: int = 4,
 ):
@@ -27,7 +27,7 @@ def create_hypertable(
     if partitioning_column:
         sql = f"""
         SELECT create_hypertable(
-            '{table_name}', 
+            '{table_name}',
             '{time_column}',
             partitioning_column => '{partitioning_column}',
             number_partitions => {number_partitions},
@@ -37,7 +37,7 @@ def create_hypertable(
     else:
         sql = f"""
         SELECT create_hypertable(
-            '{table_name}', 
+            '{table_name}',
             '{time_column}',
             chunk_time_interval => INTERVAL '{chunk_time_interval}'
         );

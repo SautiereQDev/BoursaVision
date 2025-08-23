@@ -229,7 +229,7 @@ class RetryHandler:
             return exception.condition in self.config.retry_conditions
 
         # Check for common retryable exceptions
-        if isinstance(exception, (TimeoutError, ConnectionError)):
+        if isinstance(exception, TimeoutError | ConnectionError):
             return RetryCondition.NETWORK_ERROR in self.config.retry_conditions
 
         # Add more specific exception handling as needed

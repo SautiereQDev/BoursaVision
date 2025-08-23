@@ -66,7 +66,7 @@ class TechnicalIndicator(Base, DatabaseMixin):
     parameters = Column(JSONB)  # Paramètres de calcul ex: {"period": 14}
     created_at = Column(TIMESTAMP, default=lambda: datetime.now(UTC))
 
-    __table_args__ = {"extend_existing": True}  # Ajout pour éviter les conflits
+    __table_args__ = {"extend_existing": True}  # noqa: RUF012
 
 
 # Clear the registry to avoid duplicate registration

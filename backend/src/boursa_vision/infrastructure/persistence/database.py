@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import async_sessionmaker as AsyncSessionMaker
+    pass
 
 logger = logging.getLogger(__name__)
 

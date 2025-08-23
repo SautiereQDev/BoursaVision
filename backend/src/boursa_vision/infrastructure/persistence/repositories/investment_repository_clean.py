@@ -5,6 +5,8 @@ SQLAlchemy Investment Repository Implementation
 SQLAlchemy implementation of the investment repository interface.
 """
 
+import contextlib
+
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -48,10 +50,8 @@ class SimpleInvestmentMapper:
         # Mapper sector string vers enum
         sector_enum = InvestmentSector.TECHNOLOGY  # Valeur par défaut
         if model.sector:
-            try:
+            with contextlib.suppress(ValueError):
                 sector_enum = InvestmentSector(model.sector)
-            except ValueError:
-                pass  # Garde la valeur par défaut
 
         return Investment(
             symbol=model.symbol,

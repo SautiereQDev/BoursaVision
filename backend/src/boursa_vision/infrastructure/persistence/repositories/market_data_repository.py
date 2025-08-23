@@ -83,10 +83,10 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
             # Use TimescaleDB's last() function for optimal performance
             query = text(
                 """
-                SELECT DISTINCT ON (symbol) symbol, time, open_price, high_price, 
-                       low_price, close_price, adjusted_close, volume, 
+                SELECT DISTINCT ON (symbol) symbol, time, open_price, high_price,
+                       low_price, close_price, adjusted_close, volume,
                        interval_type, source, created_at
-                FROM market_data 
+                FROM market_data
                 WHERE symbol = ANY(:symbols)
                 ORDER BY symbol, time DESC
             """
@@ -199,9 +199,9 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
             query = text(
                 """
                 WITH latest_data AS (
-                    SELECT DISTINCT ON (symbol) 
+                    SELECT DISTINCT ON (symbol)
                            symbol, close_price, volume, time
-                    FROM market_data 
+                    FROM market_data
                     WHERE symbol = ANY(:symbols)
                       AND time >= NOW() - INTERVAL '7 days'
                     ORDER BY symbol, time DESC

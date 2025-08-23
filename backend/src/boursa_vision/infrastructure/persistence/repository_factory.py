@@ -3,6 +3,7 @@ Repository factory for dependency injection and service location.
 Implements the Abstract Factory pattern for repository creation.
 """
 
+import typing
 from abc import ABC, abstractmethod
 
 from boursa_vision.domain.repositories.market_data_repository import (
@@ -10,6 +11,7 @@ from boursa_vision.domain.repositories.market_data_repository import (
 )
 from boursa_vision.domain.repositories.portfolio_repository import IPortfolioRepository
 from boursa_vision.domain.repositories.user_repository import IUserRepository
+from boursa_vision.infrastructure.persistence.factory import RepositoryRegistry
 
 
 class IRepositoryFactory(ABC):
@@ -84,14 +86,11 @@ class MockRepositoryFactory(IRepositoryFactory):
         return MockMarketDataRepository()
 
 
-class RepositoryRegistry:
-    """
-    Registry for managing repository instances.
-    Implements Singleton pattern for global access.
-    """
+class RepositoryFactory(IRepositoryFactory):
+    """Factory pour créer des instances de repositories."""
 
     _instance = None
-    _repositories: dict[type, object] = {}
+    _repositories: typing.ClassVar[dict[type, object]] = {}
     _factory: IRepositoryFactory | None = None
 
     def __new__(cls):
