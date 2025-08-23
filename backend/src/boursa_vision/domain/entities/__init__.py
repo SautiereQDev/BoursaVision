@@ -29,7 +29,7 @@ from .investment import (
     FundamentalData,
     InvestmentSector,
     InvestmentType,
-    InvestmentValidationException,
+    InvestmentValidationError,
     MarketCap,
     TechnicalData,
 )
@@ -50,7 +50,7 @@ __all__ = [
     "Investment",
     "InvestmentSector",
     "InvestmentType",
-    "InvestmentValidationException",
+    "InvestmentValidationError",
     "MarketCap",
     "PerformanceMetrics",
     "Portfolio",

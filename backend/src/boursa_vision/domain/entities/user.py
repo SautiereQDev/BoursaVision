@@ -10,6 +10,8 @@ Classes:
     UserRole: Enum representing different user roles and permissions.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
@@ -56,7 +58,7 @@ class UserRole(str, Enum):
         return permissions_map.get(self, [])
 
 
-@dataclass
+@dataclass(slots=True)
 class User(AggregateRoot):
     """
     User aggregate root representing a platform user.
@@ -67,6 +69,7 @@ class User(AggregateRoot):
     id: UUID = field(default_factory=uuid4)
     email: str = field(default="")
     username: str = field(default="")
+    password_hash: str = field(default="", repr=False)  # Hidden from repr for security
     first_name: str = field(default="")
     last_name: str = field(default="")
     role: UserRole = field(default=UserRole.VIEWER)
@@ -75,11 +78,13 @@ class User(AggregateRoot):
     email_verified: bool = field(default=False)
     two_factor_enabled: bool = field(default=False)
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     last_login: datetime | None = field(default=None)
+    _is_new_user: bool = field(default=False, init=False)  # Internal flag
 
     def __post_init__(self):
         """Initialize aggregate root and validate user data"""
-        super().__init__()
+        AggregateRoot.__init__(self)  # ✅ Appel explicite au lieu de super()
         self._validate()
 
         # Add domain event if this is a new user
@@ -95,15 +100,17 @@ class User(AggregateRoot):
         cls,
         email: str,
         username: str,
+        password_hash: str,
         first_name: str,
         last_name: str,
         role: UserRole = UserRole.VIEWER,
         preferred_currency: Currency = Currency.USD,
-    ) -> "User":
+    ) -> User:
         """Factory method to create a new user"""
         user = cls(
             email=email,
             username=username,
+            password_hash=password_hash,
             first_name=first_name,
             last_name=last_name,
             role=role,
