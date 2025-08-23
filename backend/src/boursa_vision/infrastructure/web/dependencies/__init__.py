@@ -27,24 +27,24 @@ from boursa_vision.infrastructure.web.routes.auth_routes import router as auth_r
 # from boursa_vision.infrastructure.web.dependencies import Container, CurrentUserOptional
 
 __all__ = [
-    # Dependencies
-    "get_current_user",
-    "get_current_user_optional",
-    "get_current_active_user",
-    "require_role",
-    "require_permission",
-    "require_admin",
-    "require_premium",
-    "require_basic",
-    "require_create_portfolio",
-    "require_execute_trades",
-    "require_view_analytics",
-    "require_manage_system",
-    "require_view_advanced_analytics",
-    "require_access_admin_panel",
     # TODO: Add when circular import is fixed
     # "Container",
     # "CurrentUserOptional",
     # Router
     "auth_router",
+    "get_current_active_user",
+    # Dependencies
+    "get_current_user",
+    "get_current_user_optional",
+    "require_access_admin_panel",
+    "require_admin",
+    "require_basic",
+    "require_create_portfolio",
+    "require_execute_trades",
+    "require_manage_system",
+    "require_permission",
+    "require_premium",
+    "require_role",
+    "require_view_advanced_analytics",
+    "require_view_analytics",
 ]

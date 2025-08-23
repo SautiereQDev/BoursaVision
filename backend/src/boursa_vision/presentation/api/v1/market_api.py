@@ -1,18 +1,17 @@
 """FastAPI application with real YFinance data and advanced investment analysis."""
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Annotated, Any
 
 import yfinance as yf
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 # Import our advanced analysis services
 try:
     from boursa_vision.application.services.investment_recommendation_service import (
         InvestmentRecommendationService,
-        PortfolioRecommendation,
         RecommendationRequest,
     )
 
@@ -26,33 +25,82 @@ except ImportError as e:
 class HealthCheckResponse(BaseModel):
     """Health check response model."""
 
-    status: str
-    timestamp: str
-    real_data_tests: dict[str, Any]
-    summary: dict[str, Any]
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "status": "healthy",
+                "timestamp": "2024-01-01T12:00:00Z",
+                "real_data_tests": {"test_passed": True},
+                "summary": {"message": "All systems operational"}
+            }
+        }
+    )
+
+    status: str = Field(description="Service health status")
+    timestamp: str = Field(description="Health check timestamp")
+    real_data_tests: dict[str, Any] = Field(description="Real data connectivity tests")
+    summary: dict[str, Any] = Field(description="Health check summary")
 
 
 class TickerInfoResponse(BaseModel):
     """Ticker information response model."""
 
-    symbol: str
-    info: dict[str, Any]
-    current_price: float | None = None
-    currency: str | None = None
-    last_updated: str
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "symbol": "AAPL",
+                "info": {"companyName": "Apple Inc."},
+                "current_price": 150.25,
+                "currency": "USD",
+                "last_updated": "2024-01-01T12:00:00Z"
+            }
+        }
+    )
+
+    symbol: str = Field(description="Ticker symbol")
+    info: dict[str, Any] = Field(description="Detailed ticker information")
+    current_price: float | None = Field(default=None, description="Current stock price")
+    currency: str | None = Field(default=None, description="Price currency")
+    last_updated: str = Field(description="Last data update timestamp")
 
 
 # Initialize FastAPI app
-app = FastAPI(
-    title="Boursa Vision - Advanced Investment Analysis API",
-    description=(
-        "Real financial data with comprehensive analysis using "
-        "YFinance and advanced algorithms"
-    ),
-    version="2.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-)
+def create_app() -> FastAPI:
+    """Create FastAPI application with modern configuration."""
+    app = FastAPI(
+        title="BoursaVision Market Data API",
+        description=(
+            "Advanced market data API providing real-time financial information, "
+            "technical analysis, and investment recommendations using YFinance data "
+            "with sophisticated pattern recognition and portfolio optimization."
+        ),
+        version="2.0.0",
+        docs_url="/docs",
+        redoc_url="/redoc",
+        # FastAPI 0.116+ performance optimizations
+        generate_unique_id_function=lambda route: f"{route.tags[0] if route.tags else 'default'}-{route.name}",
+        responses={
+            422: {"description": "Validation Error"},
+            500: {"description": "Internal Server Error"},
+        }
+    )
+
+    # Add CORS middleware with proper configuration
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:3000",
+            "http://localhost:8080",
+        ],  # Specific origins only
+        allow_credentials=True,
+        allow_methods=["GET", "POST"],
+        allow_headers=["*"],
+    )
+
+    return app
+
+
+app = create_app()
 
 # Add CORS middleware with proper configuration
 app.add_middleware(
@@ -360,8 +408,16 @@ def health_check():
     )
 
 
-@app.get("/ticker/{symbol}/info", response_model=TickerInfoResponse)
-def get_ticker_info(symbol: str):
+@app.get(
+    "/ticker/{symbol}/info",
+    response_model=TickerInfoResponse,
+    tags=["ticker"],
+    summary="Get ticker information",
+    response_description="Detailed ticker information with current metrics",
+)
+def get_ticker_info(
+    symbol: Annotated[str, Query(description="Stock ticker symbol (e.g., AAPL, GOOGL)", min_length=1, max_length=10)]
+) -> TickerInfoResponse:
     """Get detailed information for a specific ticker."""
     try:
         ticker = yf.Ticker(symbol)

@@ -5,8 +5,6 @@ Authentication Dependencies for FastAPI
 FastAPI dependencies for authentication and authorization.
 """
 
-from typing import Optional
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
@@ -75,7 +73,7 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from None
 
 
 async def get_current_active_user(
@@ -157,4 +155,4 @@ require_access_admin_panel = require_permission("access_admin_panel")
 
 # Type aliases for easier imports
 CurrentUser = User
-CurrentUserOptional = Optional[User]
+CurrentUserOptional = User | None

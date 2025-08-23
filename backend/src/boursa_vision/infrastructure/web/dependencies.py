@@ -2,7 +2,7 @@
 FastAPI dependencies for dependency injection
 """
 
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
 
 from fastapi import Query
 
@@ -119,7 +119,7 @@ def get_container() -> Container:
 
 
 # User authentication dependency (simplified for now)
-CurrentUserOptional = Optional[Any]
+CurrentUserOptional = Any | None
 
 
 def get_current_user_optional() -> CurrentUserOptional:

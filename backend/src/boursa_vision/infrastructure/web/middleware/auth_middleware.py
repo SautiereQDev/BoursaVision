@@ -5,6 +5,7 @@ Authentication Middleware
 Middleware for JWT token validation and user authentication.
 """
 
+import typing
 from collections.abc import Callable
 
 from fastapi import HTTPException, Request, Response, status
@@ -21,7 +22,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
     """Middleware for JWT authentication"""
 
     # Paths that don't require authentication
-    EXCLUDED_PATHS = {
+    EXCLUDED_PATHS: typing.ClassVar[set[str]] = {
         "/",
         "/health",
         "/docs",
