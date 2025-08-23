@@ -129,7 +129,7 @@ async def create_investment(
 ) -> InvestmentResponse:
     """Create a new investment."""
     try:
-        # Générer un UUID pour les tests E2E
+        # Generate UUID for E2E tests
         mock_investment_id = str(uuid4())
 
         investment_response = InvestmentResponse(

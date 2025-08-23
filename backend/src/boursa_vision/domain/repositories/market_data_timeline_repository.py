@@ -202,12 +202,12 @@ class SqlAlchemyMarketDataTimelineRepository:
         older_than: datetime,
         precision_level: PrecisionLevel | None = None,
     ) -> int:
-        """Supprime les anciens points"""
+        """Delete old data points"""
         conditions = [MarketData.symbol == symbol.upper(), MarketData.time < older_than]
 
-        # TODO: Ajouter filtre sur precision_level quand disponible dans le modèle
+        # TODO: Add precision_level filter when available in the model
 
-        # Pour TimescaleDB, utilise DELETE avec condition sur time
+        # For TimescaleDB, use DELETE with time-based condition
         delete_query = MarketData.__table__.delete().where(and_(*conditions))
 
         result = await self._session.execute(delete_query)
@@ -256,9 +256,9 @@ class SqlAlchemyMarketDataTimelineRepository:
         return [row[0] for row in result.fetchall()]
 
     def _db_to_timeline_point(self, db_point: MarketData) -> TimelinePoint:
-        """Convertit un objet DB en TimelinePoint"""
+        """Convert a database object to TimelinePoint"""
 
-        # TODO: Récupérer la vraie currency depuis la configuration
+        # TODO: Get actual currency from configuration
         currency = self._get_currency_from_symbol(db_point.symbol)
 
         return TimelinePoint(

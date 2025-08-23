@@ -342,10 +342,10 @@ class MarketDataCacheService:
             )
 
             if new_points:
-                # Ajoute les nouveaux points à la timeline
+                # Add new points to timeline
                 timeline.add_points(new_points)
 
-                # Met en cache les points individuels
+                # Cache individual points
                 for point in new_points:
                     self.cache_manager.put(symbol, point)
 
