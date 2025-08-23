@@ -129,9 +129,9 @@ class TestCLIStructure:
 
                 # Au moins quelques commandes devraient être présentes
                 for expected_cmd in ["archive", "status"]:
-                    assert (
-                        expected_cmd in command_names
-                    ), f"Missing command: {expected_cmd}"
+                    assert expected_cmd in command_names, (
+                        f"Missing command: {expected_cmd}"
+                    )
         except ImportError as e:
             pytest.fail(f"Failed to test CLI commands: {e}")
 

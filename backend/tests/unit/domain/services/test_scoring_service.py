@@ -232,9 +232,9 @@ class TestFundamentalScoringStrategy:
             )
 
             score = self.strategy.calculate_score(scorable)
-            assert (
-                abs(score - expected) < 0.001
-            ), f"Failed for scores ({pe}, {roe}, {growth}, {debt})"
+            assert abs(score - expected) < 0.001, (
+                f"Failed for scores ({pe}, {roe}, {growth}, {debt})"
+            )
 
     def test_calculate_score_zero_total_weight_fallback(self):
         """Test fallback when total weight is zero (defensive test)"""

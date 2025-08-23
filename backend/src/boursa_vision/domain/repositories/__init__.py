@@ -9,7 +9,7 @@ from .portfolio_repository import IPortfolioRepository
 from .user_repository import IUserRepository
 
 __all__ = [
+    "IMarketDataRepository",
     "IPortfolioRepository",
     "IUserRepository",
-    "IMarketDataRepository",
 ]

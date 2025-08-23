@@ -11,8 +11,8 @@ __email__ = "contact@boursa-vision.com"
 
 # Core exports - Import only when needed to avoid circular dependencies
 __all__ = [
-    "get_settings",
     "BoursaVisionError",
+    "get_settings",
 ]
 
 

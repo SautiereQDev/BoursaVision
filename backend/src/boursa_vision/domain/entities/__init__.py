@@ -12,16 +12,16 @@ from .user import User, UserRole
 
 __all__ = [
     "AggregateRoot",
+    "DataSource",
     "DomainEvent",
     "Entity",
     "Investment",
+    "MarketData",
     "Portfolio",
     "Position",
+    "Timeframe",
     "User",
     "UserRole",
-    "MarketData",
-    "Timeframe",
-    "DataSource",
 ]
 
 from .investment import (

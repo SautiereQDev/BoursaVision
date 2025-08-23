@@ -7,28 +7,6 @@
 # Variables
 # ========================================
 
-.PHONY: archive
-archive: ## Archive market data once
-	@echo "$(CYAN)📊 Archiving market data...$(NC)"
-	@./scripts/market-archiver.sh archive
-
-.PHONY: archive-stats
-archive-stats: ## Show archive statistics
-	@echo "$(CYAN)📈 Archive statistics:$(NC)"
-	@./scripts/market-archiver.sh stats
-
-.PHONY: archive-continuous
-archive-continuous: ## Start continuous archiving (every 24 hours)
-	@echo "$(CYAN)🔄 Starting continuous archiving...$(NC)"
-	@./scripts/market-archiver.sh monitor
-
-.PHONY: archive-test
-archive-test: ## Test archiving functionality
-	@echo "$(CYAN)🧪 Testing archive functionality...$(NC)"
-	@./scripts/market-archiver.sh quality========
-# Docker-only execution - No local commands
-# Supports: CAC40, NASDAQ100, FTSE100, DAX40
-
 # ========================================
 # Variables
 # ========================================
@@ -324,3 +302,27 @@ typecheck: ## Run mypy type checking on backend code
 .PHONY: quality
 quality: lint-all typecheck ## Run all quality checks (lint, format, types)
 	@echo "$(GREEN)✅ All quality checks completed$(NC)"
+
+# ========================================
+# Archive Commands
+# ========================================
+
+.PHONY: archive
+archive: ## Archive market data once
+	@echo "$(CYAN)📊 Archiving market data...$(NC)"
+	@./scripts/market-archiver.sh archive
+
+.PHONY: archive-stats
+archive-stats: ## Show archive statistics
+	@echo "$(CYAN)📈 Archive statistics:$(NC)"
+	@./scripts/market-archiver.sh stats
+
+.PHONY: archive-continuous
+archive-continuous: ## Start continuous archiving (every 24 hours)
+	@echo "$(CYAN)🔄 Starting continuous archiving...$(NC)"
+	@./scripts/market-archiver.sh monitor
+
+.PHONY: archive-test
+archive-test: ## Test archiving functionality
+	@echo "$(CYAN)🧪 Testing archive functionality...$(NC)"
+	@./scripts/market-archiver.sh quality

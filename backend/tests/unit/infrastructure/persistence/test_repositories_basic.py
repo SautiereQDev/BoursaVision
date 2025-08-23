@@ -73,9 +73,9 @@ class TestRepositoriesMethods:
         # Test seulement les méthodes qui existent réellement
         basic_methods = ["find_by_id", "find_by_email"]
         for method_name in basic_methods:
-            assert hasattr(
-                SQLAlchemyUserRepository, method_name
-            ), f"Missing method: {method_name}"
+            assert hasattr(SQLAlchemyUserRepository, method_name), (
+                f"Missing method: {method_name}"
+            )
 
     def test_portfolio_repository_has_basic_methods(self):
         """SQLAlchemyPortfolioRepository a des méthodes de base."""
@@ -88,9 +88,9 @@ class TestRepositoriesMethods:
         # Test seulement les méthodes qui existent réellement
         basic_methods = ["find_by_id", "find_by_user_id"]
         for method_name in basic_methods:
-            assert hasattr(
-                SQLAlchemyPortfolioRepository, method_name
-            ), f"Missing method: {method_name}"
+            assert hasattr(SQLAlchemyPortfolioRepository, method_name), (
+                f"Missing method: {method_name}"
+            )
 
     def test_market_data_repository_has_basic_methods(self):
         """SQLAlchemyMarketDataRepository a des méthodes de base."""
@@ -103,9 +103,9 @@ class TestRepositoriesMethods:
         # Test seulement les méthodes qui existent réellement
         basic_methods = ["find_latest_by_symbol", "find_by_symbol"]
         for method_name in basic_methods:
-            assert hasattr(
-                SQLAlchemyMarketDataRepository, method_name
-            ), f"Missing method: {method_name}"
+            assert hasattr(SQLAlchemyMarketDataRepository, method_name), (
+                f"Missing method: {method_name}"
+            )
 
 
 @pytest.mark.unit

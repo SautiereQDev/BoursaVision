@@ -19,11 +19,11 @@ from .portfolio.update_portfolio_command import UpdatePortfolioCommand
 from .signal.generate_signal_command import GenerateSignalCommand
 
 __all__ = [
-    "CreateInvestmentCommand",
-    "UpdateInvestmentPriceCommand",
-    "CreatePortfolioCommand",
     "AddInvestmentToPortfolioCommand",
-    "RemoveInvestmentFromPortfolioCommand",
-    "UpdatePortfolioCommand",
+    "CreateInvestmentCommand",
+    "CreatePortfolioCommand",
     "GenerateSignalCommand",
+    "RemoveInvestmentFromPortfolioCommand",
+    "UpdateInvestmentPriceCommand",
+    "UpdatePortfolioCommand",
 ]

@@ -126,15 +126,13 @@ class Alert:
 
         condition_messages = {
             AlertCondition.GREATER_THAN: (
-                f"{self.symbol} price ${current_value} is above "
-                f"${self.target_value}"
+                f"{self.symbol} price ${current_value} is above ${self.target_value}"
             ),
             AlertCondition.LESS_THAN: (
-                f"{self.symbol} price ${current_value} is below "
-                f"${self.target_value}"
+                f"{self.symbol} price ${current_value} is below ${self.target_value}"
             ),
             AlertCondition.EQUAL_TO: (
-                f"{self.symbol} price has reached " f"${self.target_value}"
+                f"{self.symbol} price has reached ${self.target_value}"
             ),
             AlertCondition.GREATER_THAN_OR_EQUAL: (
                 f"{self.symbol} price ${current_value} has reached or exceeded "

@@ -282,9 +282,9 @@ class TestPrecisionLevelLogic:
 
         for volume, expected_level in test_cases:
             actual_level = self._determine_precision_level(volume)
-            assert (
-                actual_level == expected_level
-            ), f"Volume {volume} should be {expected_level}, got {actual_level}"
+            assert actual_level == expected_level, (
+                f"Volume {volume} should be {expected_level}, got {actual_level}"
+            )
 
     def _determine_precision_level(self, volume: int) -> PrecisionLevel:
         """Détermination du niveau de précision basé sur le volume"""

@@ -89,9 +89,9 @@ class TestSimpleInvestmentMapper:
             investment = self.mapper.to_domain(model)
 
             # Then
-            assert (
-                investment.market_cap == expected_enum
-            ), f"Pour {market_cap_value}B attendu {expected_enum}"
+            assert investment.market_cap == expected_enum, (
+                f"Pour {market_cap_value}B attendu {expected_enum}"
+            )
 
     @pytest.mark.unit
     def test_to_domain_invalid_sector_fallback(self):

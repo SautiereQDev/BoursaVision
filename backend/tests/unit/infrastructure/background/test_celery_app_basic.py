@@ -57,9 +57,9 @@ class TestCeleryAppImport:
             import os
 
             celery_file = get_celery_app_path()
-            assert os.path.exists(
-                celery_file
-            ), f"Celery app file should exist: {celery_file}"
+            assert os.path.exists(celery_file), (
+                f"Celery app file should exist: {celery_file}"
+            )
 
     def test_celery_app_file_has_content(self):
         """Le fichier celery_app.py a du contenu."""
@@ -165,6 +165,6 @@ class TestCeleryAppStructure:
         # Vérifier la présence des fonctions attendues qui existent vraiment
         expected_functions = ["debug_task", "setup_celery_logging"]
         for expected_function in expected_functions:
-            assert (
-                expected_function in function_names
-            ), f"Missing function: {expected_function}"
+            assert expected_function in function_names, (
+                f"Missing function: {expected_function}"
+            )
