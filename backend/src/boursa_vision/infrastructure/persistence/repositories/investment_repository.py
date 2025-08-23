@@ -8,7 +8,8 @@ SQLAlchemy implementation of the investment repository interface.
 from typing import List, Optional, Union
 from uuid import UUID, uuid4
 
-from sqlalchemy import select, delete as sql_delete, func
+from sqlalchemy import delete as sql_delete
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....domain.entities.investment import Investment
@@ -22,9 +23,13 @@ class SimpleInvestmentMapper:
 
     def to_domain(self, model: InvestmentModel) -> Investment:
         """Convert SQLAlchemy InvestmentModel to domain Investment."""
-        from boursa_vision.domain.entities.investment import MarketCap, InvestmentSector, InvestmentType
+        from boursa_vision.domain.entities.investment import (
+            InvestmentSector,
+            InvestmentType,
+            MarketCap,
+        )
         from boursa_vision.domain.value_objects.money import Currency
-        
+
         # Mapper market_cap numérique vers enum MarketCap
         market_cap_enum = MarketCap.LARGE  # Valeur par défaut
         if model.market_cap is not None:
@@ -52,7 +57,7 @@ class SimpleInvestmentMapper:
                 pass  # Garde la valeur par défaut
 
         return Investment(
-            id=getattr(model, 'id', uuid4()),  # Use model id or generate one
+            id=getattr(model, "id", uuid4()),  # Use model id or generate one
             symbol=model.symbol,
             name=model.name,
             exchange=model.exchange,
@@ -67,14 +72,14 @@ class SimpleInvestmentMapper:
         """Convert domain Investment to SQLAlchemy InvestmentModel."""
         # Mapper market_cap enum vers valeur numérique selon les tests
         market_cap_mapping = {
-            "NANO": 0.025,    # ~$25M
-            "MICRO": 0.175,   # ~$175M
-            "SMALL": 1.15,    # ~$1.15B
-            "MID": 6.0,       # ~$6B
-            "LARGE": 100.0,   # ~$100B
-            "MEGA": 500.0,    # ~$500B
+            "NANO": 0.025,  # ~$25M
+            "MICRO": 0.175,  # ~$175M
+            "SMALL": 1.15,  # ~$1.15B
+            "MID": 6.0,  # ~$6B
+            "LARGE": 100.0,  # ~$100B
+            "MEGA": 500.0,  # ~$500B
         }
-        
+
         market_cap_numeric = market_cap_mapping.get(investment.market_cap.value, 50.0)
 
         return InvestmentModel(
@@ -87,7 +92,7 @@ class SimpleInvestmentMapper:
             # Note: currency not stored in InvestmentModel
             # Note: description field available but not used by domain
         )
-        
+
     # Alias for compatibility with tests
     def to_model(self, investment: Investment) -> InvestmentModel:
         """Alias for to_persistence method (compatibility with tests)."""
@@ -96,8 +101,8 @@ class SimpleInvestmentMapper:
 
 class SQLAlchemyInvestmentRepository(IInvestmentRepository):
     """SQLAlchemy implementation of investment repository."""
-    
-    # Class-level mapper for test mocking compatibility  
+
+    # Class-level mapper for test mocking compatibility
     _mapper = SimpleInvestmentMapper()
 
     def __init__(self, session: Optional[AsyncSession] = None):
@@ -156,7 +161,9 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
         if self._session:
             # Use injected session (testing mode)
             # Check if investment exists
-            stmt = select(InvestmentModel).where(InvestmentModel.symbol == investment.symbol)
+            stmt = select(InvestmentModel).where(
+                InvestmentModel.symbol == investment.symbol
+            )
             result = await self._session.execute(stmt)
             existing_model = result.scalar_one_or_none()
 
@@ -177,7 +184,9 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
             # Use get_db_session (production mode)
             async with get_db_session() as session:
                 # Check if investment exists
-                stmt = select(InvestmentModel).where(InvestmentModel.symbol == investment.symbol)
+                stmt = select(InvestmentModel).where(
+                    InvestmentModel.symbol == investment.symbol
+                )
                 result = await session.execute(stmt)
                 existing_model = result.scalar_one_or_none()
 
@@ -198,19 +207,19 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
     async def find_all(self) -> List[Investment]:
         """Find all investments (alias for find_all_active)."""
         return await self.find_all_active()
-    
+
     async def find_by_market_cap(self, market_cap: str) -> List[Investment]:
         """Find investments by market cap."""
         # Convert market cap enum to numeric value for filtering
         market_cap_mapping = {
-            'NANO': 0.05,
-            'MICRO': 0.25,
-            'SMALL': 2.0,
-            'MID': 10.0,
-            'LARGE': 50.0,
-            'MEGA': 500.0,
+            "NANO": 0.05,
+            "MICRO": 0.25,
+            "SMALL": 2.0,
+            "MID": 10.0,
+            "LARGE": 50.0,
+            "MEGA": 500.0,
         }
-        
+
         target_value = market_cap_mapping.get(market_cap, 50.0)
         # Search with tolerance range
         stmt = select(InvestmentModel).where(
@@ -219,7 +228,7 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
         result = await self._execute_with_session(stmt)
         models = result.scalars().all()
         return [self._mapper.to_domain(model) for model in models]
-    
+
     async def search_by_name(self, name_pattern: str) -> List[Investment]:
         """Search investments by name pattern."""
         stmt = select(InvestmentModel).where(
@@ -231,7 +240,7 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
 
     async def delete(self, investment) -> bool:
         """Delete investment. Supports both Investment object and UUID for test compatibility.
-        
+
         Returns:
             bool: True if deletion was successful, False if not found
         """
@@ -242,14 +251,18 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
             # Called with Investment object (domain interface)
             if self._session:
                 # Use injected session (testing mode)
-                stmt = sql_delete(InvestmentModel).where(InvestmentModel.symbol == investment.symbol)
+                stmt = sql_delete(InvestmentModel).where(
+                    InvestmentModel.symbol == investment.symbol
+                )
                 result = await self._session.execute(stmt)
                 await self._session.flush()
                 return result.rowcount > 0
             else:
                 # Use get_db_session (production mode)
                 async with get_db_session() as session:
-                    stmt = sql_delete(InvestmentModel).where(InvestmentModel.symbol == investment.symbol)
+                    stmt = sql_delete(InvestmentModel).where(
+                        InvestmentModel.symbol == investment.symbol
+                    )
                     result = await session.execute(stmt)
                     await session.flush()
                     return result.rowcount > 0
@@ -258,14 +271,18 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
         """Delete investment by ID (internal method for UUID support)."""
         if self._session:
             # Use injected session (testing mode)
-            stmt = sql_delete(InvestmentModel).where(InvestmentModel.id == investment_id)
+            stmt = sql_delete(InvestmentModel).where(
+                InvestmentModel.id == investment_id
+            )
             result = await self._session.execute(stmt)
             await self._session.commit()
             return result.rowcount > 0
         else:
             # Use get_db_session (production mode)
             async with get_db_session() as session:
-                stmt = sql_delete(InvestmentModel).where(InvestmentModel.id == investment_id)
+                stmt = sql_delete(InvestmentModel).where(
+                    InvestmentModel.id == investment_id
+                )
                 result = await session.execute(stmt)
                 await session.commit()
                 return result.rowcount > 0
@@ -273,20 +290,22 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
     # Additional utility methods for testing (not part of domain interface)
     async def exists(self, investment_id: UUID) -> bool:
         """Check if investment exists by ID (utility method for tests)."""
-        stmt = select(func.count(InvestmentModel.id)).where(InvestmentModel.id == investment_id)
+        stmt = select(func.count(InvestmentModel.id)).where(
+            InvestmentModel.id == investment_id
+        )
         result = await self._execute_with_session(stmt)
         count = result.scalar()
         return (count or 0) > 0
 
     async def find_by_portfolio_id(self, portfolio_id: UUID) -> List[Investment]:
         """Find investments by portfolio ID (utility method for tests)."""
-        # Note: Currently InvestmentModel doesn't have direct portfolio relation  
+        # Note: Currently InvestmentModel doesn't have direct portfolio relation
         # This method is primarily for test compatibility
         # The portfolio_id parameter is kept for interface compatibility but not used in current implementation
         _ = portfolio_id  # Suppress unused parameter warning
-        
+
         stmt = select(InvestmentModel)
         result = await self._execute_with_session(stmt)
         models = result.scalars().all()
-        
+
         return [self._mapper.to_domain(model) for model in models]

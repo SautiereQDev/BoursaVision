@@ -5,8 +5,9 @@ Fournit des mocks et configurations pour tester l'interface CLI
 de manière isolée.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 from click.testing import CliRunner
 
 

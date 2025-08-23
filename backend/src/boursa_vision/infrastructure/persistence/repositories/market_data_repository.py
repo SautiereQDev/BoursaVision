@@ -12,6 +12,7 @@ from boursa_vision.domain.entities.market_data import MarketData as DomainMarket
 from boursa_vision.domain.repositories.market_data_repository import (
     IMarketDataRepository,
 )
+
 # from boursa_vision.infrastructure.persistence.mappers import MapperFactory
 from boursa_vision.infrastructure.persistence.mappers import MarketDataMapper
 from boursa_vision.infrastructure.persistence.models.market_data import MarketData
@@ -242,12 +243,17 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
             return summary
 
     # Abstract methods implementations (basic stubs for testing compatibility)
-    
+
     async def cleanup_old_data(self, older_than_days: int = 365) -> int:
         """Clean up old data - delegates to delete_old_data."""
         return await self.delete_old_data(older_than_days)
-    
-    async def count_by_symbol(self, symbol: str, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> int:
+
+    async def count_by_symbol(
+        self,
+        symbol: str,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+    ) -> int:
         """Count market data entries by symbol."""
         async with get_db_session() as session:
             query = select(MarketData).where(MarketData.symbol == symbol)
@@ -257,7 +263,7 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
                 query = query.where(MarketData.time <= end_date)
             result = await session.execute(query)
             return len(result.scalars().all())
-    
+
     async def delete(self, entity_id) -> bool:
         """Delete market data by ID."""
         async with get_db_session() as session:
@@ -267,15 +273,17 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
                 await session.commit()
                 return True
             return False
-    
-    async def delete_by_symbol_and_date_range(self, symbol: str, start_date: datetime, end_date: datetime) -> int:
+
+    async def delete_by_symbol_and_date_range(
+        self, symbol: str, start_date: datetime, end_date: datetime
+    ) -> int:
         """Delete market data by symbol and date range."""
         async with get_db_session() as session:
             query = select(MarketData).where(
                 and_(
                     MarketData.symbol == symbol,
                     MarketData.time >= start_date,
-                    MarketData.time <= end_date
+                    MarketData.time <= end_date,
                 )
             )
             result = await session.execute(query)
@@ -284,19 +292,18 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
                 await session.delete(record)
             await session.commit()
             return len(records)
-    
-    async def exists_by_symbol_and_timestamp(self, symbol: str, timestamp: datetime) -> bool:
+
+    async def exists_by_symbol_and_timestamp(
+        self, symbol: str, timestamp: datetime
+    ) -> bool:
         """Check if market data exists for symbol and timestamp."""
         async with get_db_session() as session:
             query = select(MarketData).where(
-                and_(
-                    MarketData.symbol == symbol,
-                    MarketData.time == timestamp
-                )
+                and_(MarketData.symbol == symbol, MarketData.time == timestamp)
             )
             result = await session.execute(query)
             return result.scalar_one_or_none() is not None
-    
+
     async def find_by_id(self, entity_id) -> Optional[DomainMarketData]:
         """Find market data by ID."""
         async with get_db_session() as session:
@@ -304,31 +311,40 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
             if market_data:
                 return self._mapper.to_domain(market_data)
             return None
-    
-    async def find_by_symbol(self, symbol: str, limit: int = 100, offset: int = 0) -> List[DomainMarketData]:
+
+    async def find_by_symbol(
+        self, symbol: str, limit: int = 100, offset: int = 0
+    ) -> List[DomainMarketData]:
         """Find market data by symbol."""
         async with get_db_session() as session:
-            query = select(MarketData).where(MarketData.symbol == symbol).order_by(desc(MarketData.time)).limit(limit).offset(offset)
+            query = (
+                select(MarketData)
+                .where(MarketData.symbol == symbol)
+                .order_by(desc(MarketData.time))
+                .limit(limit)
+                .offset(offset)
+            )
             result = await session.execute(query)
             market_data_list = result.scalars().all()
             return [self._mapper.to_domain(data) for data in market_data_list]
-    
-    async def find_by_symbol_and_timestamp(self, symbol: str, timestamp: datetime) -> Optional[DomainMarketData]:
+
+    async def find_by_symbol_and_timestamp(
+        self, symbol: str, timestamp: datetime
+    ) -> Optional[DomainMarketData]:
         """Find market data by symbol and timestamp."""
         async with get_db_session() as session:
             query = select(MarketData).where(
-                and_(
-                    MarketData.symbol == symbol,
-                    MarketData.time == timestamp
-                )
+                and_(MarketData.symbol == symbol, MarketData.time == timestamp)
             )
             result = await session.execute(query)
             market_data = result.scalar_one_or_none()
             if market_data:
                 return self._mapper.to_domain(market_data)
             return None
-    
-    async def find_latest_by_symbols(self, symbols: List[str]) -> Dict[str, DomainMarketData]:
+
+    async def find_latest_by_symbols(
+        self, symbols: List[str]
+    ) -> Dict[str, DomainMarketData]:
         """Find latest market data for multiple symbols."""
         result = {}
         for symbol in symbols:
@@ -336,29 +352,37 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
             if latest:
                 result[symbol] = latest
         return result
-    
-    async def find_missing_dates(self, symbol: str, start_date: datetime, end_date: datetime) -> List[datetime]:
+
+    async def find_missing_dates(
+        self, symbol: str, start_date: datetime, end_date: datetime
+    ) -> List[datetime]:
         """Find missing dates for a symbol in a date range."""
         # Simple implementation - returns empty list
         return []
-    
+
     async def get_available_symbols(self) -> List[str]:
         """Get all available symbols."""
         async with get_db_session() as session:
             query = select(MarketData.symbol.distinct())
             result = await session.execute(query)
             return [row[0] for row in result.fetchall()]
-    
-    async def get_date_range_for_symbol(self, symbol: str) -> Optional[tuple[datetime, datetime]]:
+
+    async def get_date_range_for_symbol(
+        self, symbol: str
+    ) -> Optional[tuple[datetime, datetime]]:
         """Get date range for a symbol."""
         async with get_db_session() as session:
-            query = select(MarketData).where(MarketData.symbol == symbol).order_by(MarketData.time)
+            query = (
+                select(MarketData)
+                .where(MarketData.symbol == symbol)
+                .order_by(MarketData.time)
+            )
             result = await session.execute(query)
             records = result.scalars().all()
             if records:
                 return (records[0].time, records[-1].time)
             return None
-    
+
     async def update(self, entity: DomainMarketData) -> DomainMarketData:
         """Update market data."""
         return await self.save(entity)

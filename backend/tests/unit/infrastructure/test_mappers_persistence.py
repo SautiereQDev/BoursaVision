@@ -6,10 +6,11 @@ Couvre UserMapper, PortfolioMapper, MarketDataMapper, InvestmentMapper.
 """
 
 import sys
-from pathlib import Path
 from datetime import datetime
-from uuid import UUID, uuid4
+from pathlib import Path
 from unittest.mock import MagicMock
+from uuid import UUID, uuid4
+
 import pytest
 
 # Configuration path pour imports
@@ -19,15 +20,16 @@ if str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
 try:
-    from boursa_vision.infrastructure.persistence.mappers import (
-        UserMapper,
-        PortfolioMapper,
-        MarketDataMapper,
-        InvestmentMapper,
-    )
     from boursa_vision.domain.entities.user import UserRole
     from boursa_vision.domain.value_objects.money import Currency, Money
     from boursa_vision.domain.value_objects.price import Price
+    from boursa_vision.infrastructure.persistence.mappers import (
+        InvestmentMapper,
+        MarketDataMapper,
+        PortfolioMapper,
+        UserMapper,
+    )
+
     MAPPERS_AVAILABLE = True
 except ImportError as e:
     print(f"Import warning: {e}")
@@ -95,7 +97,7 @@ class TestUserMapper:
     def test_to_domain_conversion(self, mock_user_model):
         """Test conversion modèle SQLAlchemy vers entité domaine."""
         domain_user = UserMapper.to_domain(mock_user_model)
-        
+
         assert domain_user.id == mock_user_model.id
         assert domain_user.email == "test@example.com"
         assert domain_user.username == "testuser"
@@ -112,8 +114,8 @@ class TestUserMapper:
         """Test conversion avec rôle None."""
         mock_user_model.role = None
         domain_user = UserMapper.to_domain(mock_user_model)
-        
-        assert domain_user.role == UserRole.BASIC
+
+        assert domain_user.role == UserRole.VIEWER
 
     @pytest.mark.skipif(not MAPPERS_AVAILABLE, reason="Mappers non disponibles")
     def test_to_persistence_conversion(self):
@@ -130,9 +132,9 @@ class TestUserMapper:
         mock_entity.email_verified = True
         mock_entity.created_at = datetime(2024, 1, 1, 12, 0, 0)
         mock_entity.last_login = datetime(2024, 1, 15, 10, 0, 0)
-        
+
         persistence_user = UserMapper.to_persistence(mock_entity)
-        
+
         assert persistence_user.id == mock_entity.id
         assert persistence_user.email == "test@example.com"
         assert persistence_user.username == "testuser"
@@ -141,7 +143,10 @@ class TestUserMapper:
         assert persistence_user.role == "ADMIN"
         assert persistence_user.is_active is True
         assert persistence_user.is_verified is True
-        assert "$2b$12$dummy.hash.for.development.purposes.only" in persistence_user.password_hash
+        assert (
+            "$2b$12$dummy.hash.for.development.purposes.only"
+            in persistence_user.password_hash
+        )
 
     @pytest.mark.skipif(not MAPPERS_AVAILABLE, reason="Mappers non disponibles")
     def test_update_model(self, mock_user_model):
@@ -152,20 +157,20 @@ class TestUserMapper:
         mock_entity.username = "updateduser"
         mock_entity.first_name = "Updated"
         mock_entity.last_name = "User"
-        mock_entity.role = UserRole.PREMIUM
+        mock_entity.role = UserRole.TRADER
         mock_entity.preferred_currency = Currency.EUR
         mock_entity.is_active = False
         mock_entity.email_verified = False
         mock_entity.two_factor_enabled = True
         mock_entity.last_login = datetime(2024, 1, 20, 14, 0, 0)
-        
+
         UserMapper.update_model(mock_user_model, mock_entity)
-        
+
         assert mock_user_model.email == "updated@example.com"
         assert mock_user_model.username == "updateduser"
         assert mock_user_model.first_name == "Updated"
         assert mock_user_model.last_name == "User"
-        assert mock_user_model.role == UserRole.PREMIUM
+        assert mock_user_model.role == UserRole.TRADER
         assert mock_user_model.preferred_currency == "EUR"
         assert mock_user_model.is_active is False
         assert mock_user_model.email_verified is False
@@ -183,16 +188,19 @@ class TestPortfolioMapper:
             mock_create = MagicMock()
             mock_domain_portfolio = MagicMock()
             mock_create.return_value = mock_domain_portfolio
-            
+
             # Patcher la méthode create si disponible
             try:
-                from boursa_vision.domain.entities.portfolio import Portfolio as DomainPortfolio
+                from boursa_vision.domain.entities.portfolio import (
+                    Portfolio as DomainPortfolio,
+                )
+
                 m.setattr(DomainPortfolio, "create", mock_create)
             except ImportError:
                 pytest.skip("Portfolio domain entity non disponible")
-            
+
             domain_portfolio = PortfolioMapper.to_domain(mock_portfolio_model)
-            
+
             mock_create.assert_called_once_with(
                 user_id=mock_portfolio_model.user_id,
                 name="Test Portfolio",
@@ -217,9 +225,9 @@ class TestPortfolioMapper:
         mock_entity.total_value.amount = 11200.0
         mock_entity.created_at = datetime(2024, 1, 1, 12, 0, 0)
         mock_entity.updated_at = datetime(2024, 1, 15, 12, 0, 0)
-        
+
         portfolio_model = PortfolioMapper.to_model(mock_entity)
-        
+
         assert portfolio_model.id == mock_entity.id
         assert portfolio_model.user_id == mock_entity.user_id
         assert portfolio_model.name == "Test Portfolio"
@@ -243,9 +251,9 @@ class TestPortfolioMapper:
         mock_entity.total_invested.amount = 3000.0
         mock_entity.total_value.amount = 16500.0
         mock_entity.updated_at = datetime(2024, 1, 20, 15, 0, 0)
-        
+
         PortfolioMapper.update_model(mock_portfolio_model, mock_entity)
-        
+
         assert mock_portfolio_model.name == "Updated Portfolio"
         assert mock_portfolio_model.description == "Portfolio mis à jour"
         assert mock_portfolio_model.base_currency == "EUR"
@@ -264,25 +272,28 @@ class TestMarketDataMapper:
         """Test conversion modèle SQLAlchemy vers entité domaine."""
         # Simplifier le test en évitant les enums complexes
         mock_market_data_model.interval_type = "1d"  # String simple
-        
+
         # Mock MarketData.create comme méthode statique
         with pytest.MonkeyPatch.context() as m:
             mock_create = MagicMock()
             mock_domain_data = MagicMock()
             mock_create.return_value = mock_domain_data
-            
+
             try:
-                from boursa_vision.domain.entities.market_data import MarketData as DomainMarketData
+                from boursa_vision.domain.entities.market_data import (
+                    MarketData as DomainMarketData,
+                )
+
                 m.setattr(DomainMarketData, "create", mock_create)
             except ImportError:
                 pytest.skip("MarketData domain entity non disponible")
-            
+
             domain_data = MarketDataMapper.to_domain(mock_market_data_model)
-            
+
             # Vérifier que create a été appelé
             mock_create.assert_called_once()
             args = mock_create.call_args[0][0]  # Premier argument (MarketDataArgs)
-            
+
             assert args.symbol == "AAPL"
             assert args.timestamp == datetime(2024, 1, 15, 16, 0, 0)
             assert args.volume == 1000000
@@ -302,9 +313,9 @@ class TestMarketDataMapper:
         mock_entity.close_price.amount = 153.5
         mock_entity.volume = 1000000
         mock_entity.source = "yahoo_finance"
-        
+
         market_model = MarketDataMapper.to_model(mock_entity)
-        
+
         assert market_model.time == datetime(2024, 1, 15, 16, 0, 0)
         assert market_model.symbol == "AAPL"
         assert market_model.interval_type == "1d"
@@ -346,15 +357,16 @@ class TestInvestmentMapper:
             mock_create = MagicMock()
             mock_domain_investment = MagicMock()
             mock_create.return_value = mock_domain_investment
-            
+
             try:
                 from boursa_vision.domain.entities.investment import Investment
+
                 m.setattr(Investment, "create", mock_create)
             except ImportError:
                 pytest.skip("Investment domain entity non disponible")
-            
+
             domain_investment = investment_mapper.to_domain(mock_investment_model)
-            
+
             mock_create.assert_called_once_with(
                 symbol="AAPL",
                 name="Apple Inc.",
@@ -365,24 +377,27 @@ class TestInvestmentMapper:
             assert domain_investment == mock_domain_investment
 
     @pytest.mark.skipif(not MAPPERS_AVAILABLE, reason="Mappers non disponibles")
-    def test_to_domain_with_missing_data(self, investment_mapper, mock_investment_model):
+    def test_to_domain_with_missing_data(
+        self, investment_mapper, mock_investment_model
+    ):
         """Test conversion avec données manquantes."""
         mock_investment_model.sector = None
         mock_investment_model.industry = None
-        
+
         with pytest.MonkeyPatch.context() as m:
             mock_create = MagicMock()
             mock_domain_investment = MagicMock()
             mock_create.return_value = mock_domain_investment
-            
+
             try:
                 from boursa_vision.domain.entities.investment import Investment
+
                 m.setattr(Investment, "create", mock_create)
             except ImportError:
                 pytest.skip("Investment domain entity non disponible")
-            
+
             domain_investment = investment_mapper.to_domain(mock_investment_model)
-            
+
             mock_create.assert_called_once_with(
                 symbol="AAPL",
                 name="Apple Inc.",
@@ -395,14 +410,16 @@ class TestInvestmentMapper:
     def test_to_persistence_conversion(self, investment_mapper):
         """Test conversion entité domaine vers modèle SQLAlchemy."""
         # Simplifier en évitant les vrais modèles SQLAlchemy
-        pytest.skip("Test simplifié - évite les problèmes SQLAlchemy dans les tests unitaires")
+        pytest.skip(
+            "Test simplifié - évite les problèmes SQLAlchemy dans les tests unitaires"
+        )
 
     @pytest.mark.skipif(not MAPPERS_AVAILABLE, reason="Mappers non disponibles")
     def test_update_instrument_model(self):
         """Test mise à jour du modèle Instrument SQLAlchemy."""
         # Créer un mock modèle Instrument
         mock_model = MagicMock()
-        
+
         # Simuler une entité domaine Investment
         mock_entity = MagicMock()
         mock_entity.symbol = "AAPL"
@@ -412,9 +429,9 @@ class TestInvestmentMapper:
         mock_entity.currency.value = "USD"
         mock_entity.sector = "Technology"
         mock_entity.industry = "Consumer Electronics"
-        
+
         InvestmentMapper.update_instrument_model(mock_model, mock_entity)
-        
+
         assert mock_model.symbol == "AAPL"
         assert mock_model.name == "Apple Inc."
         assert mock_model.instrument_type == "STOCK"
@@ -443,16 +460,16 @@ class TestMappersIntegration:
         assert callable(UserMapper.to_domain)
         assert callable(UserMapper.to_persistence)
         assert callable(UserMapper.update_model)
-        
+
         # PortfolioMapper
         assert callable(PortfolioMapper.to_domain)
         assert callable(PortfolioMapper.to_model)
         assert callable(PortfolioMapper.update_model)
-        
+
         # MarketDataMapper
         assert callable(MarketDataMapper.to_domain)
         assert callable(MarketDataMapper.to_model)
-        
+
         # InvestmentMapper - instance methods
         mapper = InvestmentMapper()
         assert callable(mapper.to_domain)

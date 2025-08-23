@@ -9,24 +9,25 @@ Tests couvrant l'ensemble du service de scan de marché incluant :
 - Gestion des résultats et des erreurs
 """
 
-import pytest
-from datetime import datetime, timezone, timedelta
-from unittest.mock import Mock, MagicMock, patch, AsyncMock
-from typing import Dict, List, Any
 import asyncio
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 
 # Import du module à tester
 from boursa_vision.application.services.market_scanner import (
-    ScanStrategy,
-    ScanResult,
-    ScanConfig,
-    ScanResultObserver,
-    MarketScannerStrategy,
     FullMarketStrategy,
-    SectorStrategy,
-    TechnicalAnalyzer,
     FundamentalAnalyzer,
     MarketScannerService,
+    MarketScannerStrategy,
+    ScanConfig,
+    ScanResult,
+    ScanResultObserver,
+    ScanStrategy,
+    SectorStrategy,
+    TechnicalAnalyzer,
 )
 
 
@@ -53,7 +54,7 @@ class TestScanResult:
             macd_signal="BUY",
             technical_score=75.0,
             fundamental_score=80.0,
-            overall_score=77.5
+            overall_score=77.5,
         )
 
         assert result.symbol == "AAPL"
@@ -94,7 +95,7 @@ class TestScanResult:
             macd_signal="SELL",
             technical_score=40.0,
             fundamental_score=85.0,
-            overall_score=67.0
+            overall_score=67.0,
         )
 
         result_dict = result.to_dict()
@@ -137,7 +138,7 @@ class TestScanResult:
             macd_signal="NEUTRAL",
             technical_score=50.0,
             fundamental_score=50.0,
-            overall_score=50.0
+            overall_score=50.0,
         )
 
         assert result.sector is None
@@ -184,7 +185,7 @@ class TestScanConfig:
             include_fundamentals=False,
             include_technicals=False,
             parallel_requests=25,
-            timeout_per_symbol=5.0
+            timeout_per_symbol=5.0,
         )
 
         assert config.strategy == ScanStrategy.BY_SECTOR
@@ -265,15 +266,24 @@ class TestFullMarketStrategy:
     def test_full_market_strategy_technology_symbols(self, strategy):
         """Test des symboles technologiques"""
         tech_symbols = strategy.SECTOR_SYMBOLS["technology"]
-        
-        expected_symbols = ["AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "TSLA", "META", "NVDA"]
+
+        expected_symbols = [
+            "AAPL",
+            "MSFT",
+            "GOOGL",
+            "GOOG",
+            "AMZN",
+            "TSLA",
+            "META",
+            "NVDA",
+        ]
         for symbol in expected_symbols:
             assert symbol in tech_symbols
 
     def test_full_market_strategy_healthcare_symbols(self, strategy):
         """Test des symboles de santé"""
         healthcare_symbols = strategy.SECTOR_SYMBOLS["healthcare"]
-        
+
         expected_symbols = ["JNJ", "PFE", "UNH", "ABBV", "TMO"]
         for symbol in expected_symbols:
             assert symbol in healthcare_symbols
@@ -297,8 +307,7 @@ class TestFullMarketStrategy:
         """Test avec des symboles exclus"""
         exclude_symbols = {"AAPL", "MSFT", "GOOGL"}
         config = ScanConfig(
-            strategy=ScanStrategy.FULL_MARKET,
-            exclude_symbols=exclude_symbols
+            strategy=ScanStrategy.FULL_MARKET, exclude_symbols=exclude_symbols
         )
 
         symbols = await strategy.get_symbols_to_scan(config)
@@ -310,10 +319,7 @@ class TestFullMarketStrategy:
     @pytest.mark.asyncio
     async def test_get_symbols_to_scan_max_symbols_limit(self, strategy):
         """Test de la limite max_symbols"""
-        config = ScanConfig(
-            strategy=ScanStrategy.FULL_MARKET,
-            max_symbols=10
-        )
+        config = ScanConfig(strategy=ScanStrategy.FULL_MARKET, max_symbols=10)
 
         symbols = await strategy.get_symbols_to_scan(config)
 
@@ -425,9 +431,9 @@ class TestTechnicalAnalyzer:
         """Test RSI avec données suffisantes"""
         # Simuler des prix avec tendance haussière
         prices = [100 + i * 0.5 for i in range(20)]
-        
+
         rsi = analyzer.calculate_rsi(prices)
-        
+
         assert isinstance(rsi, float)
         assert 0 <= rsi <= 100
         # Avec une tendance haussière, RSI devrait être >= 50
@@ -436,60 +442,60 @@ class TestTechnicalAnalyzer:
     def test_calculate_rsi_insufficient_data(self, analyzer):
         """Test RSI avec données insuffisantes"""
         prices = [100, 101, 102]  # Moins de 15 valeurs
-        
+
         rsi = analyzer.calculate_rsi(prices)
-        
+
         assert rsi == 50.0  # Valeur par défaut
 
     def test_calculate_rsi_empty_data(self, analyzer):
         """Test RSI avec données vides"""
         prices = []
-        
+
         rsi = analyzer.calculate_rsi(prices)
-        
+
         assert rsi == 50.0
 
-    @patch('boursa_vision.application.services.market_scanner.YF_AVAILABLE', False)
+    @patch("boursa_vision.application.services.market_scanner.YF_AVAILABLE", False)
     def test_calculate_rsi_yf_unavailable(self, analyzer):
         """Test RSI quand YFinance n'est pas disponible"""
         prices = [100 + i for i in range(20)]
-        
+
         rsi = analyzer.calculate_rsi(prices)
-        
+
         assert rsi == 50.0
 
     def test_calculate_macd_signal_sufficient_data(self, analyzer):
         """Test signal MACD avec données suffisantes"""
         # Simuler des prix avec crossover haussier
         prices = [100] * 10 + [100 + i * 0.1 for i in range(20)]
-        
+
         signal = analyzer.calculate_macd_signal(prices)
-        
+
         assert signal in ["BUY", "SELL", "NEUTRAL"]
 
     def test_calculate_macd_signal_insufficient_data(self, analyzer):
         """Test signal MACD avec données insuffisantes"""
         prices = [100, 101, 102]  # Moins de 26 valeurs
-        
+
         signal = analyzer.calculate_macd_signal(prices)
-        
+
         assert signal == "NEUTRAL"
 
     def test_calculate_macd_signal_empty_data(self, analyzer):
         """Test signal MACD avec données vides"""
         prices = []
-        
+
         signal = analyzer.calculate_macd_signal(prices)
-        
+
         assert signal == "NEUTRAL"
 
-    @patch('boursa_vision.application.services.market_scanner.YF_AVAILABLE', False)
+    @patch("boursa_vision.application.services.market_scanner.YF_AVAILABLE", False)
     def test_calculate_macd_signal_yf_unavailable(self, analyzer):
         """Test signal MACD quand YFinance n'est pas disponible"""
         prices = [100 + i for i in range(30)]
-        
+
         signal = analyzer.calculate_macd_signal(prices)
-        
+
         assert signal == "NEUTRAL"
 
     def test_calculate_technical_score_bullish_indicators(self, analyzer):
@@ -500,7 +506,9 @@ class TestTechnicalAnalyzer:
         sma_50 = 105.0
         sma_200 = 100.0  # Tendance haussière
 
-        score = analyzer.calculate_technical_score(rsi, macd_signal, price, sma_50, sma_200)
+        score = analyzer.calculate_technical_score(
+            rsi, macd_signal, price, sma_50, sma_200
+        )
 
         assert isinstance(score, float)
         assert 0 <= score <= 100
@@ -514,7 +522,9 @@ class TestTechnicalAnalyzer:
         sma_50 = 100.0
         sma_200 = 110.0  # Tendance baissière
 
-        score = analyzer.calculate_technical_score(rsi, macd_signal, price, sma_50, sma_200)
+        score = analyzer.calculate_technical_score(
+            rsi, macd_signal, price, sma_50, sma_200
+        )
 
         assert isinstance(score, float)
         assert 0 <= score <= 100
@@ -528,7 +538,9 @@ class TestTechnicalAnalyzer:
         sma_50 = 100.0
         sma_200 = 100.0
 
-        score = analyzer.calculate_technical_score(rsi, macd_signal, price, sma_50, sma_200)
+        score = analyzer.calculate_technical_score(
+            rsi, macd_signal, price, sma_50, sma_200
+        )
 
         assert isinstance(score, float)
         assert 0 <= score <= 100
@@ -543,7 +555,9 @@ class TestTechnicalAnalyzer:
         sma_50 = 150.0
         sma_200 = 100.0
 
-        score = analyzer.calculate_technical_score(rsi, macd_signal, price, sma_50, sma_200)
+        score = analyzer.calculate_technical_score(
+            rsi, macd_signal, price, sma_50, sma_200
+        )
         assert 0 <= score <= 100
 
         # RSI très bas
@@ -553,7 +567,9 @@ class TestTechnicalAnalyzer:
         sma_50 = 75.0
         sma_200 = 100.0
 
-        score = analyzer.calculate_technical_score(rsi, macd_signal, price, sma_50, sma_200)
+        score = analyzer.calculate_technical_score(
+            rsi, macd_signal, price, sma_50, sma_200
+        )
         assert 0 <= score <= 100
 
 
@@ -678,7 +694,7 @@ class TestFundamentalAnalyzer:
             pb_ratio=0.8,
             roe=25.0,
             debt_to_equity=0.2,
-            dividend_yield=4.0
+            dividend_yield=4.0,
         )
 
         assert isinstance(score, float)
@@ -688,11 +704,7 @@ class TestFundamentalAnalyzer:
     def test_calculate_fundamental_score_all_poor(self, analyzer):
         """Test score fondamental avec toutes métriques faibles"""
         score = analyzer.calculate_fundamental_score(
-            pe_ratio=50.0,
-            pb_ratio=5.0,
-            roe=3.0,
-            debt_to_equity=2.0,
-            dividend_yield=0.0
+            pe_ratio=50.0, pb_ratio=5.0, roe=3.0, debt_to_equity=2.0, dividend_yield=0.0
         )
 
         assert isinstance(score, float)
@@ -703,10 +715,10 @@ class TestFundamentalAnalyzer:
         """Test score fondamental avec métriques mixtes"""
         score = analyzer.calculate_fundamental_score(
             pe_ratio=15.0,  # Bon
-            pb_ratio=3.0,   # Faible
-            roe=20.0,       # Excellent
+            pb_ratio=3.0,  # Faible
+            roe=20.0,  # Excellent
             debt_to_equity=1.0,  # Moyen
-            dividend_yield=2.0   # Modéré
+            dividend_yield=2.0,  # Modéré
         )
 
         assert isinstance(score, float)
@@ -720,7 +732,7 @@ class TestFundamentalAnalyzer:
             pb_ratio=None,
             roe=20.0,
             debt_to_equity=None,
-            dividend_yield=None
+            dividend_yield=None,
         )
 
         assert isinstance(score, float)
@@ -735,7 +747,7 @@ class TestFundamentalAnalyzer:
             pb_ratio=None,
             roe=None,
             debt_to_equity=None,
-            dividend_yield=None
+            dividend_yield=None,
         )
 
         assert isinstance(score, float)
@@ -817,7 +829,7 @@ class TestMarketScannerService:
     async def test_notify_result(self, service, mock_observer):
         """Test de notification de résultat"""
         service.add_observer(mock_observer)
-        
+
         result = ScanResult(
             symbol="TEST",
             name="Test",
@@ -835,7 +847,7 @@ class TestMarketScannerService:
             macd_signal="NEUTRAL",
             technical_score=50.0,
             fundamental_score=50.0,
-            overall_score=50.0
+            overall_score=50.0,
         )
 
         await service._notify_result(result)
@@ -847,7 +859,7 @@ class TestMarketScannerService:
         """Test de notification avec exception"""
         service.add_observer(mock_observer)
         mock_observer.on_scan_result.side_effect = Exception("Test error")
-        
+
         result = ScanResult(
             symbol="TEST",
             name="Test",
@@ -865,7 +877,7 @@ class TestMarketScannerService:
             macd_signal="NEUTRAL",
             technical_score=50.0,
             fundamental_score=50.0,
-            overall_score=50.0
+            overall_score=50.0,
         )
 
         # Ne devrait pas lever d'exception
@@ -892,10 +904,7 @@ class TestMarketScannerService:
 
     def test_create_strategy_by_sector(self, service):
         """Test de création de stratégie par secteur"""
-        config = ScanConfig(
-            strategy=ScanStrategy.BY_SECTOR,
-            sectors=["technology"]
-        )
+        config = ScanConfig(strategy=ScanStrategy.BY_SECTOR, sectors=["technology"])
         strategy = service._create_strategy(config)
 
         assert isinstance(strategy, SectorStrategy)
@@ -924,7 +933,7 @@ class TestMarketScannerService:
             "priceToBook": 3.5,
             "returnOnEquity": 0.15,  # 15%
             "debtToEquity": 0.5,
-            "dividendYield": 0.02,   # 2%
+            "dividendYield": 0.02,  # 2%
         }
 
         data = service._extract_fundamental_data(info)
@@ -966,25 +975,61 @@ class TestMarketScannerService:
         """Test de récupération des meilleures opportunités"""
         results = [
             ScanResult(
-                symbol="HIGH1", name="High1", sector=None, market_cap=1e9,
-                price=100.0, change_percent=1.0, volume=1000000,
-                pe_ratio=None, pb_ratio=None, roe=None, debt_to_equity=None,
-                dividend_yield=None, rsi=None, macd_signal="NEUTRAL",
-                technical_score=50.0, fundamental_score=50.0, overall_score=85.0
+                symbol="HIGH1",
+                name="High1",
+                sector=None,
+                market_cap=1e9,
+                price=100.0,
+                change_percent=1.0,
+                volume=1000000,
+                pe_ratio=None,
+                pb_ratio=None,
+                roe=None,
+                debt_to_equity=None,
+                dividend_yield=None,
+                rsi=None,
+                macd_signal="NEUTRAL",
+                technical_score=50.0,
+                fundamental_score=50.0,
+                overall_score=85.0,
             ),
             ScanResult(
-                symbol="HIGH2", name="High2", sector=None, market_cap=1e9,
-                price=100.0, change_percent=1.0, volume=1000000,
-                pe_ratio=None, pb_ratio=None, roe=None, debt_to_equity=None,
-                dividend_yield=None, rsi=None, macd_signal="NEUTRAL",
-                technical_score=50.0, fundamental_score=50.0, overall_score=75.0
+                symbol="HIGH2",
+                name="High2",
+                sector=None,
+                market_cap=1e9,
+                price=100.0,
+                change_percent=1.0,
+                volume=1000000,
+                pe_ratio=None,
+                pb_ratio=None,
+                roe=None,
+                debt_to_equity=None,
+                dividend_yield=None,
+                rsi=None,
+                macd_signal="NEUTRAL",
+                technical_score=50.0,
+                fundamental_score=50.0,
+                overall_score=75.0,
             ),
             ScanResult(
-                symbol="LOW1", name="Low1", sector=None, market_cap=1e9,
-                price=100.0, change_percent=1.0, volume=1000000,
-                pe_ratio=None, pb_ratio=None, roe=None, debt_to_equity=None,
-                dividend_yield=None, rsi=None, macd_signal="NEUTRAL",
-                technical_score=50.0, fundamental_score=50.0, overall_score=60.0
+                symbol="LOW1",
+                name="Low1",
+                sector=None,
+                market_cap=1e9,
+                price=100.0,
+                change_percent=1.0,
+                volume=1000000,
+                pe_ratio=None,
+                pb_ratio=None,
+                roe=None,
+                debt_to_equity=None,
+                dividend_yield=None,
+                rsi=None,
+                macd_signal="NEUTRAL",
+                technical_score=50.0,
+                fundamental_score=50.0,
+                overall_score=60.0,
             ),
         ]
 
@@ -999,11 +1044,23 @@ class TestMarketScannerService:
         """Test avec limite d'opportunités"""
         results = [
             ScanResult(
-                symbol=f"HIGH{i}", name=f"High{i}", sector=None, market_cap=1e9,
-                price=100.0, change_percent=1.0, volume=1000000,
-                pe_ratio=None, pb_ratio=None, roe=None, debt_to_equity=None,
-                dividend_yield=None, rsi=None, macd_signal="NEUTRAL",
-                technical_score=50.0, fundamental_score=50.0, overall_score=75.0
+                symbol=f"HIGH{i}",
+                name=f"High{i}",
+                sector=None,
+                market_cap=1e9,
+                price=100.0,
+                change_percent=1.0,
+                volume=1000000,
+                pe_ratio=None,
+                pb_ratio=None,
+                roe=None,
+                debt_to_equity=None,
+                dividend_yield=None,
+                rsi=None,
+                macd_signal="NEUTRAL",
+                technical_score=50.0,
+                fundamental_score=50.0,
+                overall_score=75.0,
             )
             for i in range(10)
         ]
@@ -1016,25 +1073,61 @@ class TestMarketScannerService:
         """Test de récupération des leaders par secteur"""
         results = [
             ScanResult(
-                symbol="TECH1", name="Tech1", sector="Technology", market_cap=1e9,
-                price=100.0, change_percent=1.0, volume=1000000,
-                pe_ratio=None, pb_ratio=None, roe=None, debt_to_equity=None,
-                dividend_yield=None, rsi=None, macd_signal="NEUTRAL",
-                technical_score=50.0, fundamental_score=50.0, overall_score=85.0
+                symbol="TECH1",
+                name="Tech1",
+                sector="Technology",
+                market_cap=1e9,
+                price=100.0,
+                change_percent=1.0,
+                volume=1000000,
+                pe_ratio=None,
+                pb_ratio=None,
+                roe=None,
+                debt_to_equity=None,
+                dividend_yield=None,
+                rsi=None,
+                macd_signal="NEUTRAL",
+                technical_score=50.0,
+                fundamental_score=50.0,
+                overall_score=85.0,
             ),
             ScanResult(
-                symbol="TECH2", name="Tech2", sector="Technology", market_cap=1e9,
-                price=100.0, change_percent=1.0, volume=1000000,
-                pe_ratio=None, pb_ratio=None, roe=None, debt_to_equity=None,
-                dividend_yield=None, rsi=None, macd_signal="NEUTRAL",
-                technical_score=50.0, fundamental_score=50.0, overall_score=75.0
+                symbol="TECH2",
+                name="Tech2",
+                sector="Technology",
+                market_cap=1e9,
+                price=100.0,
+                change_percent=1.0,
+                volume=1000000,
+                pe_ratio=None,
+                pb_ratio=None,
+                roe=None,
+                debt_to_equity=None,
+                dividend_yield=None,
+                rsi=None,
+                macd_signal="NEUTRAL",
+                technical_score=50.0,
+                fundamental_score=50.0,
+                overall_score=75.0,
             ),
             ScanResult(
-                symbol="HEALTH1", name="Health1", sector="Healthcare", market_cap=1e9,
-                price=100.0, change_percent=1.0, volume=1000000,
-                pe_ratio=None, pb_ratio=None, roe=None, debt_to_equity=None,
-                dividend_yield=None, rsi=None, macd_signal="NEUTRAL",
-                technical_score=50.0, fundamental_score=50.0, overall_score=80.0
+                symbol="HEALTH1",
+                name="Health1",
+                sector="Healthcare",
+                market_cap=1e9,
+                price=100.0,
+                change_percent=1.0,
+                volume=1000000,
+                pe_ratio=None,
+                pb_ratio=None,
+                roe=None,
+                debt_to_equity=None,
+                dividend_yield=None,
+                rsi=None,
+                macd_signal="NEUTRAL",
+                technical_score=50.0,
+                fundamental_score=50.0,
+                overall_score=80.0,
             ),
         ]
 
@@ -1059,11 +1152,23 @@ class TestMarketScannerService:
         """Test avec résultats sans secteurs"""
         results = [
             ScanResult(
-                symbol="TEST1", name="Test1", sector=None, market_cap=1e9,
-                price=100.0, change_percent=1.0, volume=1000000,
-                pe_ratio=None, pb_ratio=None, roe=None, debt_to_equity=None,
-                dividend_yield=None, rsi=None, macd_signal="NEUTRAL",
-                technical_score=50.0, fundamental_score=50.0, overall_score=75.0
+                symbol="TEST1",
+                name="Test1",
+                sector=None,
+                market_cap=1e9,
+                price=100.0,
+                change_percent=1.0,
+                volume=1000000,
+                pe_ratio=None,
+                pb_ratio=None,
+                roe=None,
+                debt_to_equity=None,
+                dividend_yield=None,
+                rsi=None,
+                macd_signal="NEUTRAL",
+                technical_score=50.0,
+                fundamental_score=50.0,
+                overall_score=75.0,
             ),
         ]
 
@@ -1103,7 +1208,7 @@ class TestMarketScannerEdgeCases:
             macd_signal="BUY",
             technical_score=0.0,
             fundamental_score=100.0,
-            overall_score=50.0
+            overall_score=50.0,
         )
 
         assert result.symbol == "EXTREME"
@@ -1114,13 +1219,13 @@ class TestMarketScannerEdgeCases:
     def test_technical_analyzer_with_extreme_rsi(self):
         """Test analyseur technique avec RSI extrême"""
         analyzer = TechnicalAnalyzer()
-        
+
         score = analyzer.calculate_technical_score(
             rsi=0.0,  # RSI minimum
             macd_signal="SELL",
             price=50.0,
             sma_50=100.0,
-            sma_200=150.0
+            sma_200=150.0,
         )
         assert 0 <= score <= 100
 
@@ -1129,7 +1234,7 @@ class TestMarketScannerEdgeCases:
             macd_signal="BUY",
             price=200.0,
             sma_50=150.0,
-            sma_200=100.0
+            sma_200=100.0,
         )
         assert 0 <= score <= 100
 
@@ -1142,7 +1247,7 @@ class TestMarketScannerEdgeCases:
             pb_ratio=50.0,
             roe=-100.0,
             debt_to_equity=20.0,
-            dividend_yield=0.0
+            dividend_yield=0.0,
         )
         assert 0 <= score <= 100
 
@@ -1151,17 +1256,19 @@ class TestMarketScannerEdgeCases:
             pb_ratio=0.01,
             roe=100.0,
             debt_to_equity=0.01,
-            dividend_yield=20.0
+            dividend_yield=20.0,
         )
         assert 0 <= score <= 100
 
-    @patch('boursa_vision.application.services.market_scanner.YF_AVAILABLE', False)
+    @patch("boursa_vision.application.services.market_scanner.YF_AVAILABLE", False)
     def test_market_scanner_without_yfinance(self):
         """Test du scanner sans YFinance disponible"""
         service = MarketScannerService()
-        
+
         # Les méthodes qui dépendent de YFinance doivent gérer l'absence gracieusement
-        result = service._scan_single_symbol("AAPL", ScanConfig(ScanStrategy.FULL_MARKET), FullMarketStrategy())
+        result = service._scan_single_symbol(
+            "AAPL", ScanConfig(ScanStrategy.FULL_MARKET), FullMarketStrategy()
+        )
         assert result is None
 
     @pytest.mark.asyncio
@@ -1174,9 +1281,9 @@ class TestMarketScannerEdgeCases:
             min_market_cap=0,
             min_volume=0,
             parallel_requests=1,
-            timeout_per_symbol=0.1
+            timeout_per_symbol=0.1,
         )
-        
+
         strategy = FullMarketStrategy()
         symbols = await strategy.get_symbols_to_scan(config)
         assert len(symbols) == 0  # max_symbols = 0
@@ -1185,7 +1292,7 @@ class TestMarketScannerEdgeCases:
         config = ScanConfig(
             strategy=ScanStrategy.FULL_MARKET,
             max_symbols=999999,
-            parallel_requests=1000
+            parallel_requests=1000,
         )
         symbols = await strategy.get_symbols_to_scan(config)
         assert isinstance(symbols, list)
@@ -1193,25 +1300,28 @@ class TestMarketScannerEdgeCases:
     def test_sector_strategy_case_insensitive(self):
         """Test que SectorStrategy gère les casses différentes"""
         strategy = SectorStrategy(["Technology", "HEALTHCARE"])
-        
+
         # Test avec différentes casses
         assert strategy.should_include_symbol("AAPL", {"sector": "technology"}) is True
         assert strategy.should_include_symbol("JNJ", {"sector": "HEALTHCARE"}) is True
         assert strategy.should_include_symbol("JNJ", {"sector": "Healthcare"}) is True
-        assert strategy.should_include_symbol("MSFT", {"sector": "Technology Software"}) is True
+        assert (
+            strategy.should_include_symbol("MSFT", {"sector": "Technology Software"})
+            is True
+        )
 
 
 class TestImportErrorHandling:
     """Tests pour gérer l'absence de yfinance/pandas"""
-    
+
     def test_yfinance_unavailable_rsi(self):
         """Teste RSI quand yfinance n'est pas disponible"""
         from boursa_vision.application.services import market_scanner
-        
+
         # Sauvegarder et simuler l'absence de yfinance
         original_yf = market_scanner.YF_AVAILABLE
         market_scanner.YF_AVAILABLE = False
-        
+
         try:
             rsi = market_scanner.TechnicalAnalyzer.calculate_rsi([100, 101, 102])
             assert rsi == 50.0
@@ -1221,12 +1331,14 @@ class TestImportErrorHandling:
     def test_yfinance_unavailable_macd(self):
         """Teste MACD quand yfinance n'est pas disponible"""
         from boursa_vision.application.services import market_scanner
-        
+
         original_yf = market_scanner.YF_AVAILABLE
         market_scanner.YF_AVAILABLE = False
-        
+
         try:
-            macd = market_scanner.TechnicalAnalyzer.calculate_macd_signal([100, 101, 102])
+            macd = market_scanner.TechnicalAnalyzer.calculate_macd_signal(
+                [100, 101, 102]
+            )
             assert macd == "NEUTRAL"
         finally:
             market_scanner.YF_AVAILABLE = original_yf
@@ -1234,20 +1346,20 @@ class TestImportErrorHandling:
 
 class TestTechnicalScoreEdgeCases:
     """Tests pour les cas limites du score technique"""
-    
+
     def test_technical_score_edge_trend_conditions(self):
         """Teste les conditions de tendance spécifiques"""
         # Test condition: price < sma_50 < sma_200
         analyzer = TechnicalAnalyzer()
-        
+
         # La méthode calculate_technical_score prend (rsi, macd_signal, price, sma_50, sma_200)
         # Simuler des conditions où prix < SMA50 < SMA200 pour tester ligne 435
         score = analyzer.calculate_technical_score(
-            rsi=45,           # RSI bas
+            rsi=45,  # RSI bas
             macd_signal="SELL",  # Signal bearish
-            price=90,         # Prix bas
-            sma_50=100,       # SMA50 supérieure au prix
-            sma_200=110       # SMA200 supérieure à SMA50
+            price=90,  # Prix bas
+            sma_50=100,  # SMA50 supérieure au prix
+            sma_200=110,  # SMA200 supérieure à SMA50
         )
         assert isinstance(score, float)
         assert 0 <= score <= 100
@@ -1255,9 +1367,25 @@ class TestTechnicalScoreEdgeCases:
     def test_rsi_edge_case_exactly_50(self):
         """Teste RSI retournant exactement 50"""
         # Créer des données qui donnent RSI = 50
-        prices = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]
+        prices = [
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+            100,
+        ]
         rsi = TechnicalAnalyzer.calculate_rsi(prices)
-        
+
         # Avec des prix constants, RSI devrait être proche de 50
         assert 49 <= rsi <= 51
 
@@ -1266,6 +1394,6 @@ class TestTechnicalScoreEdgeCases:
         # Test condition pour signal BUY (lignes 399-400)
         # Créer des prix où MACD croise au-dessus du signal
         rising_prices = [100 + i * 0.5 for i in range(30)]
-        
+
         signal = TechnicalAnalyzer.calculate_macd_signal(rising_prices)
         assert signal in ["BUY", "SELL", "NEUTRAL"]

@@ -14,29 +14,35 @@ class BoursaVisionError(Exception):
 
 class ConfigurationError(BoursaVisionError):
     """Raised when there's a configuration issue."""
+
     pass
 
 
 class DatabaseError(BoursaVisionError):
     """Raised when there's a database-related issue."""
+
     pass
 
 
 class ExternalServiceError(BoursaVisionError):
     """Raised when an external service fails."""
+
     pass
 
 
 class DataValidationError(BoursaVisionError):
     """Raised when data validation fails."""
+
     pass
 
 
 class ArchivingError(BoursaVisionError):
     """Raised when archiving operations fail."""
+
     pass
 
 
 class RecommendationError(BoursaVisionError):
     """Raised when recommendation generation fails."""
+
     pass

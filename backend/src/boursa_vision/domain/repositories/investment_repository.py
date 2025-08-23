@@ -47,22 +47,22 @@ class IInvestmentRepository(ABC):
     @abstractmethod
     async def delete(self, investment: Investment) -> bool:
         """Delete investment.
-        
+
         Returns:
             bool: True if deletion was successful, False if not found
         """
         pass
-    
+
     @abstractmethod
     async def find_all(self) -> List[Investment]:
-        """Find all investments (alias for find_all_active).""" 
+        """Find all investments (alias for find_all_active)."""
         pass
-        
+
     @abstractmethod
     async def find_by_market_cap(self, market_cap: str) -> List[Investment]:
         """Find investments by market cap."""
         pass
-        
+
     @abstractmethod
     async def search_by_name(self, name_pattern: str) -> List[Investment]:
         """Search investments by name pattern."""

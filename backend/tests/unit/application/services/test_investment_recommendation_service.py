@@ -6,20 +6,21 @@ Tests unitaires complets pour le service de recommandations d'investissement.
 Ce service utilise l'analyse avancée pour générer des recommandations de portfolio optimisées.
 """
 
-import pytest
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, Mock, patch
 from typing import List
+from unittest.mock import AsyncMock, Mock, patch
 
-from boursa_vision.application.services.investment_recommendation_service import (
-    InvestmentRecommendationService,
-    RecommendationRequest,
-    InvestmentRecommendation,
-    PortfolioRecommendation,
-)
+import pytest
+
 from boursa_vision.application.services.advanced_analysis_service import (
     ComprehensiveAnalysisResult,
+)
+from boursa_vision.application.services.investment_recommendation_service import (
+    InvestmentRecommendation,
+    InvestmentRecommendationService,
+    PortfolioRecommendation,
+    RecommendationRequest,
 )
 
 
@@ -29,7 +30,7 @@ class TestRecommendationRequest:
     def test_default_values(self):
         """Test des valeurs par défaut."""
         request = RecommendationRequest()
-        
+
         assert request.symbols is None
         assert request.max_recommendations == 10
         assert request.risk_tolerance == "MODERATE"
@@ -42,7 +43,7 @@ class TestRecommendationRequest:
         """Test avec des valeurs personnalisées."""
         symbols = ["AAPL", "MSFT", "GOOGL"]
         exclude_sectors = ["Energy", "Materials"]
-        
+
         request = RecommendationRequest(
             symbols=symbols,
             max_recommendations=5,
@@ -50,9 +51,9 @@ class TestRecommendationRequest:
             investment_horizon="LONG",
             exclude_sectors=exclude_sectors,
             min_score=70.0,
-            max_risk_level="MODERATE"
+            max_risk_level="MODERATE",
         )
-        
+
         assert request.symbols == symbols
         assert request.max_recommendations == 5
         assert request.risk_tolerance == "LOW"
@@ -99,9 +100,9 @@ class TestInvestmentRecommendation:
             risk_level="MODERATE",
             technical_score=80.0,
             fundamental_score=85.0,
-            momentum_score=90.0
+            momentum_score=90.0,
         )
-        
+
         assert recommendation.symbol == "AAPL"
         assert recommendation.name == "Apple Inc."
         assert abs(recommendation.current_price - 150.0) < 0.001
@@ -127,9 +128,9 @@ class TestInvestmentRecommendation:
             risk_level="MODERATE",
             technical_score=80.0,
             fundamental_score=85.0,
-            momentum_score=90.0
+            momentum_score=90.0,
         )
-        
+
         assert recommendation.target_price is None
         assert recommendation.stop_loss is None
         assert recommendation.upside_potential is None
@@ -154,9 +155,9 @@ class TestInvestmentRecommendation:
             fundamental_score=85.0,
             momentum_score=90.0,
             target_price=180.0,
-            upside_potential=20.0  # (180-150)/150 * 100
+            upside_potential=20.0,  # (180-150)/150 * 100
         )
-        
+
         assert abs(recommendation.upside_potential - 20.0) < 0.001
 
     def test_with_detailed_analysis(self):
@@ -164,7 +165,7 @@ class TestInvestmentRecommendation:
         strengths = ["Strong financials", "Market leadership"]
         weaknesses = ["High valuation", "Market saturation"]
         insights = ["AI growth potential", "Services expansion"]
-        
+
         recommendation = InvestmentRecommendation(
             symbol="AAPL",
             name="Apple Inc.",
@@ -183,9 +184,9 @@ class TestInvestmentRecommendation:
             strengths=strengths,
             weaknesses=weaknesses,
             key_insights=insights,
-            data_quality="EXCELLENT"
+            data_quality="EXCELLENT",
         )
-        
+
         assert recommendation.strengths == strengths
         assert recommendation.weaknesses == weaknesses
         assert recommendation.key_insights == insights
@@ -209,23 +210,23 @@ class TestPortfolioRecommendation:
                 risk_level="MODERATE",
                 technical_score=80.0,
                 fundamental_score=85.0,
-                momentum_score=90.0
+                momentum_score=90.0,
             )
         ]
-        
+
         portfolio_metrics = {"total_recommendations": 1}
         analysis_summary = {"total_analyzed": 10}
         risk_assessment = {"average_risk_score": 50.0}
         sector_allocation = {"Technology": 100.0}
-        
+
         portfolio_recommendation = PortfolioRecommendation(
             recommendations=recommendations,
             portfolio_metrics=portfolio_metrics,
             analysis_summary=analysis_summary,
             risk_assessment=risk_assessment,
-            sector_allocation=sector_allocation
+            sector_allocation=sector_allocation,
         )
-        
+
         assert len(portfolio_recommendation.recommendations) == 1
         assert portfolio_recommendation.portfolio_metrics == portfolio_metrics
         assert portfolio_recommendation.analysis_summary == analysis_summary
@@ -266,13 +267,13 @@ class TestInvestmentRecommendationService:
             stop_loss=140.0,
             strengths=["Strong fundamentals"],
             weaknesses=["High valuation"],
-            insights=["Growth potential"]
+            insights=["Growth potential"],
         )
 
     def test_initialization(self):
         """Test de l'initialisation du service."""
         service = InvestmentRecommendationService()
-        
+
         assert service.analyzer is not None
         assert service._cache == {}
         assert service._cache_ttl == 3600
@@ -280,12 +281,12 @@ class TestInvestmentRecommendationService:
     def test_indices_symbols_structure(self):
         """Test de la structure des symboles d'indices."""
         service = InvestmentRecommendationService()
-        
+
         assert "cac40" in service.INDICES_SYMBOLS
         assert "nasdaq100" in service.INDICES_SYMBOLS
         assert "ftse100" in service.INDICES_SYMBOLS
         assert "dax40" in service.INDICES_SYMBOLS
-        
+
         # Vérifier que chaque indice a des symboles
         for index_name, symbols in service.INDICES_SYMBOLS.items():
             assert isinstance(symbols, list)
@@ -298,65 +299,74 @@ class TestInvestmentRecommendationService:
         """Test avec symboles personnalisés."""
         request = RecommendationRequest(symbols=["AAPL", "MSFT", "GOOGL"])
         symbols = service._get_symbols_to_analyze(request)
-        
+
         assert symbols == ["AAPL", "MSFT", "GOOGL"]
 
     def test_get_symbols_to_analyze_with_all_indices(self, service):
         """Test avec tous les symboles d'indices."""
         request = RecommendationRequest()
         symbols = service._get_symbols_to_analyze(request)
-        
+
         # Doit retourner tous les symboles uniques des indices
         assert len(symbols) > 0
         assert isinstance(symbols, list)
-        
+
         # Vérifier qu'il n'y a pas de doublons
         assert len(symbols) == len(set(symbols))
-        
+
         # Vérifier que certains symboles connus sont présents
         all_symbols_from_indices = []
         for index_symbols in service.INDICES_SYMBOLS.values():
             all_symbols_from_indices.extend(index_symbols)
-        
+
         # Tous les symboles uniques doivent être présents
         expected_symbols = list(dict.fromkeys(all_symbols_from_indices))
         assert symbols == expected_symbols
 
-    @patch('boursa_vision.application.services.investment_recommendation_service.ThreadPoolExecutor')
-    def test_analyze_investments_parallel_success(self, mock_executor_class, service, mock_analyzer):
+    @patch(
+        "boursa_vision.application.services.investment_recommendation_service.ThreadPoolExecutor"
+    )
+    def test_analyze_investments_parallel_success(
+        self, mock_executor_class, service, mock_analyzer
+    ):
         """Test d'analyse parallèle réussie."""
         # Configuration des mocks
         mock_executor = Mock()
         mock_executor_class.return_value.__enter__.return_value = mock_executor
-        
+
         # Mock des futures
         future1 = Mock()
         future1.result.return_value = self._create_mock_analysis("AAPL")
         future2 = Mock()
         future2.result.return_value = self._create_mock_analysis("MSFT")
-        
+
         mock_executor.submit.side_effect = [future1, future2]
-        
+
         # Mock de as_completed
-        with patch('boursa_vision.application.services.investment_recommendation_service.as_completed') as mock_as_completed:
+        with patch(
+            "boursa_vision.application.services.investment_recommendation_service.as_completed"
+        ) as mock_as_completed:
             mock_as_completed.return_value = [future1, future2]
-            
+
             symbols = ["AAPL", "MSFT"]
             analyses = service._analyze_investments_parallel(symbols)
-            
+
             assert len(analyses) == 2
-            assert all(isinstance(analysis, ComprehensiveAnalysisResult) for analysis in analyses)
+            assert all(
+                isinstance(analysis, ComprehensiveAnalysisResult)
+                for analysis in analyses
+            )
 
     def test_analyze_with_cache_new_symbol(self, service):
         """Test d'analyse avec cache pour un nouveau symbole."""
         symbol = "AAPL"
-        
+
         # Premier appel - doit utiliser l'analyseur
         analysis = service._analyze_with_cache(symbol)
-        
+
         assert analysis is not None
         assert analysis.investment_symbol == symbol
-        
+
         # Vérifier que le cache contient maintenant le résultat
         assert len(service._cache) == 1
 
@@ -364,15 +374,16 @@ class TestInvestmentRecommendationService:
         """Test d'analyse avec cache pour un symbole déjà en cache."""
         symbol = "AAPL"
         cached_analysis = self._create_mock_analysis(symbol)
-        
+
         # Mettre en cache manuellement
         import time
+
         cache_key = f"analysis_{symbol}_{int(time.time() // service._cache_ttl)}"
         service._cache[cache_key] = cached_analysis
-        
+
         # L'appel doit retourner le résultat en cache
         analysis = service._analyze_with_cache(symbol)
-        
+
         assert analysis == cached_analysis
         # L'analyseur ne doit pas être appelé
         mock_analyzer.analyze_investment.assert_not_called()
@@ -394,13 +405,13 @@ class TestInvestmentRecommendationService:
                 stop_loss=None,
                 strengths=[],
                 weaknesses=[],
-                insights=[]
-            )
+                insights=[],
+            ),
         ]
-        
+
         request = RecommendationRequest(min_score=60.0)
         filtered = service._filter_analyses(analyses, request)
-        
+
         # Seul AAPL doit passer le filtre
         assert len(filtered) == 1
         assert filtered[0].investment_symbol == "AAPL"
@@ -422,13 +433,13 @@ class TestInvestmentRecommendationService:
                 stop_loss=None,
                 strengths=[],
                 weaknesses=[],
-                insights=[]
-            )
+                insights=[],
+            ),
         ]
-        
+
         request = RecommendationRequest(max_risk_level="MODERATE")
         filtered = service._filter_analyses(analyses, request)
-        
+
         # Seul AAPL doit passer le filtre
         assert len(filtered) == 1
         assert filtered[0].investment_symbol == "AAPL"
@@ -450,14 +461,14 @@ class TestInvestmentRecommendationService:
                 stop_loss=None,
                 strengths=[],
                 weaknesses=[],
-                insights=[]
-            )
+                insights=[],
+            ),
         ]
-        
+
         # Avec min_score élevé, SELL doit être exclu
         request = RecommendationRequest(min_score=60.0)
         filtered = service._filter_analyses(analyses, request)
-        
+
         assert len(filtered) == 1
         assert filtered[0].investment_symbol == "AAPL"
 
@@ -465,7 +476,7 @@ class TestInvestmentRecommendationService:
         """Test de création d'une recommandation."""
         analysis = self._create_mock_analysis("AAPL")
         recommendation = service._create_recommendation(analysis)
-        
+
         assert isinstance(recommendation, InvestmentRecommendation)
         assert recommendation.symbol == "AAPL"
         assert recommendation.recommendation == "BUY"
@@ -498,7 +509,7 @@ class TestInvestmentRecommendationService:
                 technical_score=80.0,
                 fundamental_score=85.0,
                 momentum_score=90.0,
-                data_quality="EXCELLENT"
+                data_quality="EXCELLENT",
             ),
             InvestmentRecommendation(
                 symbol="MSFT",
@@ -512,12 +523,12 @@ class TestInvestmentRecommendationService:
                 technical_score=70.0,
                 fundamental_score=75.0,
                 momentum_score=80.0,
-                data_quality="GOOD"
+                data_quality="GOOD",
             ),
         ]
-        
+
         metrics = service._calculate_portfolio_metrics(recommendations)
-        
+
         assert metrics["total_recommendations"] == 2
         assert abs(metrics["average_score"] - 80.0) < 0.001  # (85 + 75) / 2
         assert abs(metrics["score_range"]["min"] - 75.0) < 0.001
@@ -547,7 +558,7 @@ class TestInvestmentRecommendationService:
                 risk_level="MODERATE",
                 technical_score=80.0,
                 fundamental_score=85.0,
-                momentum_score=90.0
+                momentum_score=90.0,
             ),
             InvestmentRecommendation(
                 symbol="RISKY",
@@ -560,24 +571,26 @@ class TestInvestmentRecommendationService:
                 risk_level="HIGH",
                 technical_score=65.0,
                 fundamental_score=70.0,
-                momentum_score=75.0
+                momentum_score=75.0,
             ),
         ]
-        
+
         risk_assessment = service._assess_portfolio_risk(recommendations)
-        
+
         assert "risk_distribution" in risk_assessment
         assert risk_assessment["risk_distribution"]["MODERATE"] == 1
         assert risk_assessment["risk_distribution"]["HIGH"] == 1
         assert "average_risk_score" in risk_assessment
-        assert abs(risk_assessment["average_risk_score"] - 62.5) < 0.001  # (50 + 75) / 2
+        assert (
+            abs(risk_assessment["average_risk_score"] - 62.5) < 0.001
+        )  # (50 + 75) / 2
         assert "risk_assessment" in risk_assessment
         assert "diversification_score" in risk_assessment
 
     def test_categorize_portfolio_risk(self, service):
         """Test de catégorisation du risque du portfolio."""
         assert service._categorize_portfolio_risk(15.0) == "VERY_CONSERVATIVE"
-        assert service._categorize_portfolio_risk(30.0) == "CONSERVATIVE" 
+        assert service._categorize_portfolio_risk(30.0) == "CONSERVATIVE"
         assert service._categorize_portfolio_risk(45.0) == "MODERATE"
         assert service._categorize_portfolio_risk(60.0) == "AGGRESSIVE"
         assert service._categorize_portfolio_risk(80.0) == "VERY_AGGRESSIVE"
@@ -596,7 +609,7 @@ class TestInvestmentRecommendationService:
                 risk_level="MODERATE",
                 technical_score=80.0,
                 fundamental_score=85.0,
-                momentum_score=90.0
+                momentum_score=90.0,
             ),
             InvestmentRecommendation(
                 symbol="MSFT",
@@ -609,30 +622,32 @@ class TestInvestmentRecommendationService:
                 risk_level="MODERATE",
                 technical_score=70.0,
                 fundamental_score=75.0,
-                momentum_score=80.0
+                momentum_score=80.0,
             ),
         ]
-        
+
         allocation = service._calculate_sector_allocation(recommendations)
-        
+
         # Les deux sont des actions tech selon la logique du service
         assert "Technology" in allocation
         assert abs(allocation["Technology"] - 100.0) < 0.001
 
-    @patch.object(InvestmentRecommendationService, '_analyze_investments_parallel')
-    @patch.object(InvestmentRecommendationService, '_get_symbols_to_analyze')
-    def test_get_investment_recommendations_success(self, mock_get_symbols, mock_analyze, service):
+    @patch.object(InvestmentRecommendationService, "_analyze_investments_parallel")
+    @patch.object(InvestmentRecommendationService, "_get_symbols_to_analyze")
+    def test_get_investment_recommendations_success(
+        self, mock_get_symbols, mock_analyze, service
+    ):
         """Test de génération de recommandations réussie."""
         # Configuration des mocks
         mock_get_symbols.return_value = ["AAPL", "MSFT"]
         mock_analyze.return_value = [
             self._create_mock_analysis("AAPL"),
-            self._create_mock_analysis("MSFT")
+            self._create_mock_analysis("MSFT"),
         ]
-        
+
         request = RecommendationRequest(max_recommendations=2)
         result = service.get_investment_recommendations(request)
-        
+
         assert isinstance(result, PortfolioRecommendation)
         assert len(result.recommendations) <= 2
         assert "total_recommendations" in result.portfolio_metrics
@@ -640,15 +655,17 @@ class TestInvestmentRecommendationService:
         assert isinstance(result.risk_assessment, dict)
         assert isinstance(result.sector_allocation, dict)
 
-    @patch.object(InvestmentRecommendationService, '_get_symbols_to_analyze')
-    def test_get_investment_recommendations_error_handling(self, mock_get_symbols, service):
+    @patch.object(InvestmentRecommendationService, "_get_symbols_to_analyze")
+    def test_get_investment_recommendations_error_handling(
+        self, mock_get_symbols, service
+    ):
         """Test de gestion d'erreur lors de la génération."""
         # Faire échouer l'obtention des symboles
         mock_get_symbols.side_effect = Exception("Test error")
-        
+
         request = RecommendationRequest()
         result = service.get_investment_recommendations(request)
-        
+
         # Doit retourner un résultat vide avec erreur
         assert isinstance(result, PortfolioRecommendation)
         assert result.recommendations == []
@@ -661,23 +678,23 @@ class TestInvestmentRecommendationService:
         """Test de gestion du timeout lors de l'analyse concurrente."""
         # Simuler un timeout
         mock_analyzer.analyze_investment.side_effect = Exception("Timeout")
-        
-        with patch('builtins.print'):  # Supprimer les prints pendant le test
+
+        with patch("builtins.print"):  # Supprimer les prints pendant le test
             analyses = service._analyze_investments_parallel(["AAPL"])
-        
+
         # Ne doit pas planter et retourner une liste vide
         assert isinstance(analyses, list)
 
     def test_cache_key_generation_time_based(self, service):
         """Test de génération de clé de cache basée sur le temps."""
         symbol = "AAPL"
-        
+
         # Analyser le même symbole deux fois dans la même fenêtre de cache
         analysis1 = service._analyze_with_cache(symbol)
         analysis2 = service._analyze_with_cache(symbol)
-        
+
         # Les deux résultats doivent être identiques (du cache)
         assert analysis1 == analysis2
-        
+
         # Ne doit y avoir qu'un seul appel à l'analyseur
         assert service.analyzer.analyze_investment.call_count == 1

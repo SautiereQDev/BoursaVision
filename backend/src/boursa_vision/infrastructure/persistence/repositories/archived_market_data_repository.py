@@ -21,7 +21,9 @@ except ImportError:
     RealDictCursor = None
 
 from boursa_vision.domain.entities.market_data import MarketData as DomainMarketData
-from boursa_vision.domain.repositories.market_data_repository import IMarketDataRepository
+from boursa_vision.domain.repositories.market_data_repository import (
+    IMarketDataRepository,
+)
 
 logger = logging.getLogger(__name__)
 

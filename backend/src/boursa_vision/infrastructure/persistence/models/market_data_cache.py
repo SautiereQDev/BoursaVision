@@ -82,9 +82,11 @@ class MarketDataCache(Base):
         default=lambda: datetime.now(timezone.utc),
     )
     data_age_hours = Column(Numeric(10, 2), nullable=True)
-    
+
     # Timestamps (remplacent TimestampMixin)
-    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     updated_at = Column(
         TIMESTAMP(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -94,7 +96,7 @@ class MarketDataCache(Base):
     # Constraints
     __table_args__ = (
         # Clé primaire composite explicite
-        PrimaryKeyConstraint('time', 'symbol', 'interval_type'),
+        PrimaryKeyConstraint("time", "symbol", "interval_type"),
         # Index optimisés pour TimescaleDB
         Index("idx_market_data_cache_symbol_time", "symbol", "time"),
         Index("idx_market_data_cache_time_desc", "time", postgresql_using="btree"),
@@ -150,7 +152,9 @@ class TimelineMetrics(Base):
     significant_gaps_count = Column(Integer, nullable=False, default=0)
 
     # Timestamps (remplacent TimestampMixin)
-    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     updated_at = Column(
         TIMESTAMP(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -222,7 +226,9 @@ class CacheStatistics(Base):
     cache_entries_count = Column(Integer, nullable=False, default=0)
 
     # Timestamps (remplacent TimestampMixin)
-    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     updated_at = Column(
         TIMESTAMP(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -263,7 +269,9 @@ class DataGaps(Base):
     interval_type = Column(String(5), nullable=False)
 
     # Timestamps (remplacent TimestampMixin)
-    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     updated_at = Column(
         TIMESTAMP(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -313,7 +321,9 @@ class PrecisionPolicies(Base):
     volume_min = Column(BigInteger, nullable=True)
 
     # Timestamps (remplacent TimestampMixin)
-    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     updated_at = Column(
         TIMESTAMP(timezone=True),
         default=lambda: datetime.now(timezone.utc),

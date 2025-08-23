@@ -7,10 +7,11 @@ Utilise SQLite en mémoire pour des tests rapides et isolés.
 """
 
 import asyncio
+from typing import AsyncGenerator
+
 import pytest
 import pytest_asyncio
-from typing import AsyncGenerator
-from sqlalchemy import text
+from sqlalchemy import MetaData, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -18,13 +19,14 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.pool import NullPool
-from sqlalchemy import MetaData
 
 # Import des modèles nécessaires
 # Base sera importé dynamiquement dans les fixtures
 try:
-    from boursa_vision.infrastructure.persistence.models.investment import InvestmentModel
-    from boursa_vision.infrastructure.persistence.models.users import User as UserModel  
+    from boursa_vision.infrastructure.persistence.models.investment import (
+        InvestmentModel,
+    )
+    from boursa_vision.infrastructure.persistence.models.users import User as UserModel
 except ImportError:
     # Les imports échoueront dans l'IDE mais fonctionneront à l'exécution
     pass
@@ -40,14 +42,14 @@ async def event_loop():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     yield loop
-    
+
     # Proper cleanup of all pending tasks
     pending_tasks = asyncio.all_tasks(loop)
     if pending_tasks:
         for task in pending_tasks:
             task.cancel()
         await asyncio.gather(*pending_tasks, return_exceptions=True)
-    
+
     loop.close()
 
 
@@ -55,20 +57,20 @@ async def event_loop():
 async def test_db_engine() -> AsyncGenerator[AsyncEngine, None]:
     """
     Moteur de base de données SQLite en mémoire pour les tests.
-    
+
     Utilise SQLite en mémoire pour les tests rapides et isolés.
     Compatible seulement avec les modèles sans types PostgreSQL spécifiques.
     """
     # Utiliser une base temporaire partagée au lieu de :memory: pour éviter les problèmes de connexions multiples
-    import tempfile
     import os
-    
+    import tempfile
+
     # Créer un fichier temporaire pour la base de test
-    db_fd, db_path = tempfile.mkstemp(suffix='.db')
+    db_fd, db_path = tempfile.mkstemp(suffix=".db")
     os.close(db_fd)  # Fermer le descripteur, on utilisera seulement le chemin
-    
+
     database_url = f"sqlite+aiosqlite:///{db_path}"
-    
+
     engine = create_async_engine(
         database_url,
         echo=False,  # Désactiver les logs SQL
@@ -77,12 +79,14 @@ async def test_db_engine() -> AsyncGenerator[AsyncEngine, None]:
         },
         future=True,
     )
-    
+
     try:
         # Créer seulement les tables compatibles avec SQLite
         async with engine.begin() as conn:
             # Créer seulement la table investments manuellement pour éviter JSONB
-            await conn.execute(text("""
+            await conn.execute(
+                text(
+                    """
                 CREATE TABLE investments (
                     id INTEGER PRIMARY KEY,
                     symbol VARCHAR(20) NOT NULL UNIQUE,
@@ -95,10 +99,12 @@ async def test_db_engine() -> AsyncGenerator[AsyncEngine, None]:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
-            """))
-        
+            """
+                )
+            )
+
         yield engine
-        
+
     finally:
         # Nettoyer l'engine
         await engine.dispose()
@@ -115,13 +121,13 @@ async def test_session(
 ) -> AsyncGenerator[AsyncSession, None]:
     """
     Session de base de données pour les tests avec proper cleanup.
-    
+
     Chaque test reçoit une session fraîche qui utilise la base en mémoire.
     La session est correctement fermée après chaque test.
-    
+
     Args:
         test_db_engine: Le moteur de base de données de test
-        
+
     Yields:
         AsyncSession: Session SQLAlchemy pour le test
     """
@@ -133,7 +139,7 @@ async def test_session(
         autocommit=False,
         autoflush=False,
     )
-    
+
     async with async_session() as session:
         try:
             yield session
@@ -152,15 +158,17 @@ async def test_session(
 async def clean_db(test_session: AsyncSession) -> None:
     """
     Nettoie la base de données avant chaque test.
-    
+
     Cette fixture s'assure que chaque test démarre avec une base vide.
     Utilisée principalement pour les tests qui nécessitent un état propre.
-    
+
     Args:
         test_session: Session de base de données de test
     """
     # Vider la table investments (seule table créée dans les tests d'intégration)
-    from boursa_vision.infrastructure.persistence.models.investment import InvestmentModel
-    
+    from boursa_vision.infrastructure.persistence.models.investment import (
+        InvestmentModel,
+    )
+
     await test_session.execute(InvestmentModel.__table__.delete())
     await test_session.commit()

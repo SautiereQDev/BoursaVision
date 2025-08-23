@@ -226,7 +226,14 @@ class OptimizedYFinanceClient:
 
             return result
 
-        except (YFinanceError, RateLimitError, TemporaryFailureError, ConnectionError, TimeoutError, ValueError):
+        except (
+            YFinanceError,
+            RateLimitError,
+            TemporaryFailureError,
+            ConnectionError,
+            TimeoutError,
+            ValueError,
+        ):
             # Re-raise specific exceptions that should be handled by callers
             raise
         except Exception as e:
@@ -442,11 +449,10 @@ class OptimizedYFinanceClient:
             # Transform standard network errors to YFinance errors
             if isinstance(e, TimeoutError):
                 raise YFinanceTimeoutError(f"Timeout error for {symbol}: {e}") from e
-            else:
-                raise YFinanceError(f"Network error for {symbol}: {e}") from e
+            raise YFinanceError(f"Network error for {symbol}: {e}") from e
 
         except ValueError as e:
-            # Transform ValueError to YFinanceError 
+            # Transform ValueError to YFinanceError
             raise YFinanceError(f"Value error for {symbol}: {e}") from e
 
         except Exception as e:

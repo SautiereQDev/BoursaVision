@@ -29,7 +29,9 @@ class SimpleInvestmentMapper:
             symbol=entity.symbol,
             name=entity.name,
             exchange=entity.exchange,
-            sector=entity.sector.value if hasattr(entity.sector, "value") else str(entity.sector),
+            sector=entity.sector.value
+            if hasattr(entity.sector, "value")
+            else str(entity.sector),
             industry=getattr(entity, "industry", None),
             market_cap=getattr(entity, "market_cap", None),
             description=getattr(entity, "description", None),

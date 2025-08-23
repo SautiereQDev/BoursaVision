@@ -3,16 +3,17 @@ Basic infrastructure tests for OptimizedYFinanceClient - Priority #4
 Testing configuration, metrics, and exception classes
 """
 
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, MagicMock, patch
 
 from boursa_vision.infrastructure.external.yfinance_client import (
+    OptimizedYFinanceClient,
+    RequestMetrics,
     YFinanceConfig,
-    RequestMetrics, 
     YFinanceError,
     YFinanceRateLimitError,
     YFinanceTimeoutError,
-    OptimizedYFinanceClient
 )
 
 
@@ -22,7 +23,7 @@ class TestYFinanceConfig:
     def test_yfinance_config_default_values(self):
         """Test default configuration values."""
         config = YFinanceConfig()
-        
+
         # Default values
         assert config.max_requests_per_minute == 2000
         assert config.rate_limit_window == 60
@@ -43,9 +44,9 @@ class TestYFinanceConfig:
             max_requests_per_minute=100,
             request_timeout=15.0,
             max_retries=5,
-            enable_cache=False
+            enable_cache=False,
         )
-        
+
         assert config.max_requests_per_minute == 100
         assert config.request_timeout == 15.0
         assert config.max_retries == 5
@@ -61,7 +62,7 @@ class TestRequestMetrics:
     def test_request_metrics_initialization(self):
         """Test metrics initialization."""
         metrics = RequestMetrics()
-        
+
         assert metrics.successful_requests == 0
         assert metrics.failed_requests == 0
         assert metrics.total_requests == 0
@@ -74,7 +75,7 @@ class TestRequestMetrics:
     def test_success_rate_calculation_zero_requests(self):
         """Test success rate calculation with zero requests."""
         metrics = RequestMetrics()
-        
+
         assert metrics.success_rate() == 0.0
 
     def test_success_rate_calculation_with_requests(self):
@@ -83,13 +84,13 @@ class TestRequestMetrics:
         metrics.successful_requests = 8
         metrics.failed_requests = 2
         metrics.total_requests = 10
-        
+
         assert abs(metrics.success_rate() - 80.0) < 0.001
 
     def test_cache_hit_rate_calculation_zero_cache_requests(self):
         """Test cache hit rate with no cache requests."""
         metrics = RequestMetrics()
-        
+
         assert metrics.cache_hit_rate() == 0.0
 
     def test_cache_hit_rate_calculation_with_cache_requests(self):
@@ -97,7 +98,7 @@ class TestRequestMetrics:
         metrics = RequestMetrics()
         metrics.cache_hits = 7
         metrics.cache_misses = 3
-        
+
         assert abs(metrics.cache_hit_rate() - 70.0) < 0.001
 
 
@@ -131,11 +132,11 @@ class TestYFinanceClientIntegration:
     def test_config_dataclass_functionality(self):
         """Test that config works as a dataclass."""
         config = YFinanceConfig()
-        
+
         # Test field access
-        assert hasattr(config, 'max_requests_per_minute')
-        assert hasattr(config, 'enable_cache')
-        
+        assert hasattr(config, "max_requests_per_minute")
+        assert hasattr(config, "enable_cache")
+
         # Test modification
         config.max_requests_per_minute = 500
         assert config.max_requests_per_minute == 500
@@ -143,19 +144,19 @@ class TestYFinanceClientIntegration:
     def test_metrics_calculations(self):
         """Test metrics calculation methods."""
         metrics = RequestMetrics()
-        
+
         # Test empty metrics
         assert metrics.success_rate() == 0.0
         assert metrics.cache_hit_rate() == 0.0
         assert metrics.average_response_time == 0.0
-        
+
         # Add some data
         metrics.successful_requests = 5
         metrics.total_requests = 10
         metrics.cache_hits = 3
         metrics.cache_misses = 2
         metrics.average_response_time = 2.0
-        
+
         # Test calculations
         assert abs(metrics.success_rate() - 50.0) < 0.001
         assert abs(metrics.cache_hit_rate() - 60.0) < 0.001
@@ -166,12 +167,12 @@ class TestYFinanceClientIntegration:
         # Base exception
         base_error = YFinanceError("base")
         assert isinstance(base_error, Exception)
-        
+
         # Rate limit error
         rate_error = YFinanceRateLimitError("rate")
         assert isinstance(rate_error, YFinanceError)
         assert isinstance(rate_error, Exception)
-        
+
         # Timeout error
         timeout_error = YFinanceTimeoutError("timeout")
         assert isinstance(timeout_error, YFinanceError)
@@ -184,40 +185,38 @@ class TestOptimizedYFinanceClientBasics:
     def test_client_initialization_mocked(self):
         """Test client initialization with mocked dependencies."""
         config = YFinanceConfig(enable_cache=False)
-        
+
         with patch.multiple(
-            'boursa_vision.infrastructure.external.yfinance_client',
+            "boursa_vision.infrastructure.external.yfinance_client",
             yf=MagicMock(),
             AdaptiveRateLimiter=MagicMock(),
-            CircuitBreaker=MagicMock(), 
+            CircuitBreaker=MagicMock(),
             RetryHandler=MagicMock(),
             ThreadPoolExecutor=MagicMock(),
         ):
             client = OptimizedYFinanceClient(config)
-            
+
             assert client.config == config
-            assert hasattr(client, 'metrics')
+            assert hasattr(client, "metrics")
             assert client.cache is None  # Cache disabled
-            assert hasattr(client, 'executor')
+            assert hasattr(client, "executor")
 
     def test_client_with_custom_config(self):
         """Test client with custom configuration."""
         config = YFinanceConfig(
-            max_requests_per_minute=100,
-            enable_cache=False,
-            max_concurrent_requests=5
+            max_requests_per_minute=100, enable_cache=False, max_concurrent_requests=5
         )
-        
+
         with patch.multiple(
-            'boursa_vision.infrastructure.external.yfinance_client',
+            "boursa_vision.infrastructure.external.yfinance_client",
             yf=MagicMock(),
             AdaptiveRateLimiter=MagicMock(),
             CircuitBreaker=MagicMock(),
-            RetryHandler=MagicMock(), 
+            RetryHandler=MagicMock(),
             ThreadPoolExecutor=MagicMock(),
         ):
             client = OptimizedYFinanceClient(config)
-            
+
             assert client.config.max_requests_per_minute == 100
             assert client.config.max_concurrent_requests == 5
             assert client.config.enable_cache is False

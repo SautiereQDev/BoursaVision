@@ -6,22 +6,31 @@ Tests complets pour les gestionnaires de requêtes CQRS.
 Test des opérations de lecture, transformation et gestion d'erreurs.
 """
 
-import pytest
 from datetime import datetime
-from uuid import UUID, uuid4
 from unittest.mock import AsyncMock, MagicMock
+from uuid import UUID, uuid4
+
+import pytest
 
 from boursa_vision.application.handlers.query_handlers import (
+    AnalyzePortfolioQueryHandler,
     FindInvestmentsQueryHandler,
     GetInvestmentByIdQueryHandler,
     GetPortfolioByIdQueryHandler,
-    AnalyzePortfolioQueryHandler,
     GetUserPortfoliosQueryHandler,
 )
-from boursa_vision.application.queries.investment.find_investments_query import FindInvestmentsQuery
-from boursa_vision.application.queries.investment.get_investment_by_id_query import GetInvestmentByIdQuery
-from boursa_vision.application.queries.portfolio.get_portfolio_by_id_query import GetPortfolioByIdQuery
-from boursa_vision.application.queries.portfolio.analyze_portfolio_query import AnalyzePortfolioQuery
+from boursa_vision.application.queries.investment.find_investments_query import (
+    FindInvestmentsQuery,
+)
+from boursa_vision.application.queries.investment.get_investment_by_id_query import (
+    GetInvestmentByIdQuery,
+)
+from boursa_vision.application.queries.portfolio.analyze_portfolio_query import (
+    AnalyzePortfolioQuery,
+)
+from boursa_vision.application.queries.portfolio.get_portfolio_by_id_query import (
+    GetPortfolioByIdQuery,
+)
 
 
 class TestFindInvestmentsQueryHandler:
@@ -67,7 +76,11 @@ class TestFindInvestmentsQueryHandler:
         assert handler._find_investments_use_case == mock_find_investments_use_case
 
     async def test_handle_find_investments_success(
-        self, handler, find_investments_query, mock_search_result, mock_find_investments_use_case
+        self,
+        handler,
+        find_investments_query,
+        mock_search_result,
+        mock_find_investments_use_case,
     ):
         """Test recherche d'investissements réussie"""
         # Arrange
@@ -78,7 +91,9 @@ class TestFindInvestmentsQueryHandler:
 
         # Assert
         assert result == mock_search_result
-        mock_find_investments_use_case.execute.assert_called_once_with(find_investments_query)
+        mock_find_investments_use_case.execute.assert_called_once_with(
+            find_investments_query
+        )
 
     async def test_handle_use_case_error(
         self, handler, find_investments_query, mock_find_investments_use_case
@@ -124,9 +139,7 @@ class TestGetInvestmentByIdQueryHandler:
     @pytest.fixture
     def get_investment_query(self):
         """Query pour récupérer un investissement"""
-        return GetInvestmentByIdQuery(
-            investment_id=uuid4()
-        )
+        return GetInvestmentByIdQuery(investment_id=uuid4())
 
     @pytest.fixture
     def mock_investment(self):
@@ -163,8 +176,10 @@ class TestGetInvestmentByIdQueryHandler:
         result = await handler.handle(get_investment_query)
 
         # Assert
-        assert hasattr(result, 'symbol') or isinstance(result, dict)
-        mock_investment_repository.find_by_id.assert_called_once_with(get_investment_query.investment_id)
+        assert hasattr(result, "symbol") or isinstance(result, dict)
+        mock_investment_repository.find_by_id.assert_called_once_with(
+            get_investment_query.investment_id
+        )
 
     async def test_handle_investment_not_found(
         self, handler, get_investment_query, mock_investment_repository
@@ -177,7 +192,9 @@ class TestGetInvestmentByIdQueryHandler:
         with pytest.raises(ValueError, match="Investment .+ not found"):
             await handler.handle(get_investment_query)
 
-        mock_investment_repository.find_by_id.assert_called_once_with(get_investment_query.investment_id)
+        mock_investment_repository.find_by_id.assert_called_once_with(
+            get_investment_query.investment_id
+        )
 
     async def test_handle_repository_error(
         self, handler, get_investment_query, mock_investment_repository
@@ -190,9 +207,7 @@ class TestGetInvestmentByIdQueryHandler:
         with pytest.raises(Exception, match="Database error"):
             await handler.handle(get_investment_query)
 
-    def test_map_investment_to_dto_method(
-        self, handler, mock_investment
-    ):
+    def test_map_investment_to_dto_method(self, handler, mock_investment):
         """Test méthode de mapping vers DTO"""
         # Act
         result = handler._map_investment_to_dto(mock_investment)
@@ -220,10 +235,7 @@ class TestGetPortfolioByIdQueryHandler:
     @pytest.fixture
     def get_portfolio_query(self):
         """Query pour récupérer un portfolio"""
-        return GetPortfolioByIdQuery(
-            portfolio_id=uuid4(),
-            include_positions=True
-        )
+        return GetPortfolioByIdQuery(portfolio_id=uuid4(), include_positions=True)
 
     @pytest.fixture
     def mock_portfolio(self):
@@ -261,7 +273,9 @@ class TestGetPortfolioByIdQueryHandler:
 
         # Assert
         assert result is not None
-        mock_portfolio_repository.find_by_id.assert_called_once_with(get_portfolio_query.portfolio_id)
+        mock_portfolio_repository.find_by_id.assert_called_once_with(
+            get_portfolio_query.portfolio_id
+        )
 
     async def test_handle_portfolio_not_found(
         self, handler, get_portfolio_query, mock_portfolio_repository
@@ -281,11 +295,8 @@ class TestGetPortfolioByIdQueryHandler:
         handler = GetPortfolioByIdQueryHandler(
             portfolio_repository=mock_portfolio_repository
         )
-        
-        query = GetPortfolioByIdQuery(
-            portfolio_id=uuid4(),
-            include_positions=False
-        )
+
+        query = GetPortfolioByIdQuery(portfolio_id=uuid4(), include_positions=False)
 
         mock_portfolio_repository.find_by_id.return_value = mock_portfolio
 
@@ -295,9 +306,7 @@ class TestGetPortfolioByIdQueryHandler:
         # Assert
         assert result is not None
 
-    def test_map_portfolio_to_dto_method(
-        self, handler, mock_portfolio
-    ):
+    def test_map_portfolio_to_dto_method(self, handler, mock_portfolio):
         """Test méthode de mapping vers DTO"""
         # Act
         result = handler._map_portfolio_to_dto(mock_portfolio, include_positions=True)
@@ -327,7 +336,7 @@ class TestAnalyzePortfolioQueryHandler:
         return AnalyzePortfolioQuery(
             portfolio_id=uuid4(),
             benchmark_symbol="SPY",
-            include_technical_analysis=True
+            include_technical_analysis=True,
         )
 
     @pytest.fixture
@@ -350,7 +359,11 @@ class TestAnalyzePortfolioQueryHandler:
         assert handler._analyze_portfolio_use_case == mock_analyze_portfolio_use_case
 
     async def test_handle_analyze_portfolio_success(
-        self, handler, analyze_portfolio_query, mock_analysis_result, mock_analyze_portfolio_use_case
+        self,
+        handler,
+        analyze_portfolio_query,
+        mock_analysis_result,
+        mock_analyze_portfolio_use_case,
     ):
         """Test analyse de portfolio réussie"""
         # Arrange
@@ -361,14 +374,18 @@ class TestAnalyzePortfolioQueryHandler:
 
         # Assert
         assert result == mock_analysis_result
-        mock_analyze_portfolio_use_case.execute.assert_called_once_with(analyze_portfolio_query)
+        mock_analyze_portfolio_use_case.execute.assert_called_once_with(
+            analyze_portfolio_query
+        )
 
     async def test_handle_use_case_error(
         self, handler, analyze_portfolio_query, mock_analyze_portfolio_use_case
     ):
         """Test gestion d'erreur du use case"""
         # Arrange
-        mock_analyze_portfolio_use_case.execute.side_effect = Exception("Analysis error")
+        mock_analyze_portfolio_use_case.execute.side_effect = Exception(
+            "Analysis error"
+        )
 
         # Act & Assert
         with pytest.raises(Exception, match="Analysis error"):
@@ -383,8 +400,7 @@ class TestAnalyzePortfolioQueryHandler:
         )
 
         query = AnalyzePortfolioQuery(
-            portfolio_id=uuid4(),
-            include_technical_analysis=False
+            portfolio_id=uuid4(), include_technical_analysis=False
         )
 
         mock_analyze_portfolio_use_case.execute.return_value = mock_analysis_result
@@ -414,10 +430,7 @@ class TestGetUserPortfoliosQueryHandler:
     @pytest.fixture
     def user_portfolios_query(self):
         """Query pour les portfolios d'un utilisateur"""
-        return {
-            "user_id": uuid4(),
-            "include_positions": True
-        }
+        return {"user_id": uuid4(), "include_positions": True}
 
     @pytest.fixture
     def mock_portfolios(self):
@@ -431,7 +444,7 @@ class TestGetUserPortfoliosQueryHandler:
         portfolio1.cash_balance = 1000.0
         portfolio1.created_at = datetime.now()
         portfolio1.updated_at = datetime.now()
-        
+
         portfolio2 = MagicMock()
         portfolio2.id = uuid4()
         portfolio2.user_id = uuid4()
@@ -441,7 +454,7 @@ class TestGetUserPortfoliosQueryHandler:
         portfolio2.cash_balance = 2000.0
         portfolio2.created_at = datetime.now()
         portfolio2.updated_at = datetime.now()
-        
+
         return [portfolio1, portfolio2]
 
     def test_handler_initialization(self, mock_portfolio_repository):
@@ -465,7 +478,9 @@ class TestGetUserPortfoliosQueryHandler:
         # Assert
         assert isinstance(result, list)
         assert len(result) == 2
-        mock_portfolio_repository.find_by_user_id.assert_called_once_with(user_portfolios_query["user_id"])
+        mock_portfolio_repository.find_by_user_id.assert_called_once_with(
+            user_portfolios_query["user_id"]
+        )
 
     async def test_handle_no_portfolios_found(
         self, handler, user_portfolios_query, mock_portfolio_repository
@@ -485,11 +500,8 @@ class TestGetUserPortfoliosQueryHandler:
         self, handler, mock_portfolios, mock_portfolio_repository
     ):
         """Test query sans inclure les positions"""
-        query = {
-            "user_id": uuid4(),
-            "include_positions": False
-        }
-        
+        query = {"user_id": uuid4(), "include_positions": False}
+
         mock_portfolio_repository.find_by_user_id.return_value = mock_portfolios
 
         # Act
@@ -504,7 +516,9 @@ class TestGetUserPortfoliosQueryHandler:
     ):
         """Test gestion d'erreur du repository"""
         # Arrange
-        mock_portfolio_repository.find_by_user_id.side_effect = Exception("Database error")
+        mock_portfolio_repository.find_by_user_id.side_effect = Exception(
+            "Database error"
+        )
 
         # Act & Assert
         with pytest.raises(Exception, match="Database error"):
@@ -526,8 +540,8 @@ class TestGetUserPortfoliosQueryHandler:
         result = handler._map_portfolio_to_dto(portfolio, include_positions=True)
 
         # Assert
-        assert hasattr(result, 'id') or 'id' in result
-        assert hasattr(result, 'name') or 'name' in result
+        assert hasattr(result, "id") or "id" in result
+        assert hasattr(result, "name") or "name" in result
 
 
 class TestQueryHandlersIntegration:
@@ -544,7 +558,9 @@ class TestQueryHandlersIntegration:
         ]
 
         for handler_class in handlers:
-            assert hasattr(handler_class, "handle"), f"{handler_class.__name__} must have handle method"
+            assert hasattr(
+                handler_class, "handle"
+            ), f"{handler_class.__name__} must have handle method"
 
     def test_handlers_dependency_injection(self):
         """Test l'injection de dépendances dans tous les handlers"""
@@ -569,7 +585,7 @@ class TestQueryHandlersIntegration:
     def test_query_handlers_async_compatibility(self):
         """Test que tous les handlers sont compatibles async"""
         import inspect
-        
+
         handlers = [
             FindInvestmentsQueryHandler,
             GetInvestmentByIdQueryHandler,
@@ -580,7 +596,9 @@ class TestQueryHandlersIntegration:
 
         for handler_class in handlers:
             handle_method = getattr(handler_class, "handle")
-            assert inspect.iscoroutinefunction(handle_method), f"{handler_class.__name__}.handle must be async"
+            assert inspect.iscoroutinefunction(
+                handle_method
+            ), f"{handler_class.__name__}.handle must be async"
 
     def test_handlers_error_propagation(self):
         """Test que les handlers propagent correctement les erreurs"""
@@ -598,4 +616,5 @@ class TestQueryHandlersIntegration:
 
         # Run the test
         import asyncio
+
         asyncio.run(test_error_propagation())

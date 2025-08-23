@@ -6,9 +6,10 @@ Tests to improve JWT Service coverage from 87.7% to 95%+
 Targeting missing lines: 201-213 (validate_access_token method)
 """
 
-import pytest
 from datetime import datetime, timedelta
+
 import jwt
+import pytest
 
 from boursa_vision.application.services.jwt_service import JWTService
 
@@ -23,7 +24,7 @@ class TestJWTServiceCoverage:
             secret_key="test_secret_key_for_coverage_testing",
             algorithm="HS256",
             access_token_expire_minutes=30,
-            refresh_token_expire_days=7
+            refresh_token_expire_days=7,
         )
 
     def test_validate_access_token_valid_token(self, jwt_service):
@@ -33,10 +34,10 @@ class TestJWTServiceCoverage:
         email = "test@example.com"
         role = "user"
         permissions = ["read", "write"]
-        
+
         token_obj = jwt_service.create_access_token(user_id, email, role, permissions)
         token_string = token_obj.token  # Extract the actual JWT string
-        
+
         # Should return True for valid token
         result = jwt_service.validate_access_token(token_string)
         assert result is True
@@ -54,10 +55,12 @@ class TestJWTServiceCoverage:
         payload = {
             "user_id": "test-user",
             "token_type": "access",
-            "exp": datetime.utcnow() - timedelta(minutes=1)  # Expired 1 minute ago
+            "exp": datetime.utcnow() - timedelta(minutes=1),  # Expired 1 minute ago
         }
-        expired_token = jwt.encode(payload, jwt_service.secret_key, algorithm=jwt_service.algorithm)
-        
+        expired_token = jwt.encode(
+            payload, jwt_service.secret_key, algorithm=jwt_service.algorithm
+        )
+
         # Should return False for expired token
         result = jwt_service.validate_access_token(expired_token)
         assert result is False
@@ -68,7 +71,7 @@ class TestJWTServiceCoverage:
         user_id = "test-user-123"
         refresh_token_obj = jwt_service.create_refresh_token(user_id)
         refresh_token_string = refresh_token_obj.token  # Extract JWT string
-        
+
         # Should return False for wrong token type
         result = jwt_service.validate_access_token(refresh_token_string)
         assert result is False
@@ -82,7 +85,7 @@ class TestJWTServiceCoverage:
             "too.many.parts.in.this.token",  # Too many parts
             "invalid_base64.invalid_base64.invalid_base64",  # Invalid base64
         ]
-        
+
         for token in malformed_tokens:
             result = jwt_service.validate_access_token(token)
             assert result is False
@@ -94,18 +97,20 @@ class TestJWTServiceCoverage:
             secret_key="different_secret_key",
             algorithm="HS256",
             access_token_expire_minutes=30,
-            refresh_token_expire_days=7
+            refresh_token_expire_days=7,
         )
-        
+
         # Create token with different secret
         user_id = "test-user-123"
         email = "test@example.com"
         role = "user"
         permissions = ["read", "write"]
-        
-        token_obj = different_service.create_access_token(user_id, email, role, permissions)
+
+        token_obj = different_service.create_access_token(
+            user_id, email, role, permissions
+        )
         token_with_wrong_signature = token_obj.token  # Extract JWT string
-        
+
         # Should return False when verified with original service
         result = jwt_service.validate_access_token(token_with_wrong_signature)
         assert result is False
@@ -120,11 +125,11 @@ class TestJWTServiceCoverage:
         # Test with various non-string inputs
         non_string_inputs = [
             123,  # Integer
-            [],   # List
-            {},   # Dict
+            [],  # List
+            {},  # Dict
             object(),  # Object
         ]
-        
+
         for input_value in non_string_inputs:
             result = jwt_service.validate_access_token(input_value)
             assert result is False

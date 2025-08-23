@@ -9,25 +9,26 @@ Performance Target: <100ms per unit test
 Coverage Target: >75%
 """
 
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from typing import Dict, List, Optional
-import pandas as pd
-import numpy as np
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+import numpy as np
+import pandas as pd
+import pytest
+
+from boursa_vision.application.dtos import RiskAssessmentDTO, RiskFactorDTO
 from boursa_vision.application.services.risk_assessment import (
-    RiskAssessmentService,
-    MarketRiskAnalyzer,
+    ESGRiskAnalyzer,
     FundamentalRiskAnalyzer,
     GeopoliticalRiskAnalyzer,
-    ESGRiskAnalyzer,
+    MarketRiskAnalyzer,
+    RiskAssessmentService,
+    RiskCategory,
     RiskFactor,
     RiskLevel,
-    RiskCategory,
 )
-from boursa_vision.application.dtos import RiskAssessmentDTO, RiskFactorDTO
 
 
 def convert_risk_factor_to_dto(risk_factor: RiskFactor) -> RiskFactorDTO:
@@ -42,14 +43,16 @@ def convert_risk_factor_to_dto(risk_factor: RiskFactor) -> RiskFactorDTO:
         probability=risk_factor.probability,
         timeframe=risk_factor.timeframe,
         source=risk_factor.source,
-        last_updated=risk_factor.last_updated
+        last_updated=risk_factor.last_updated,
     )
 
 
-def create_mock_risk_assessment_dto(symbol: str, risks: List[RiskFactor]) -> RiskAssessmentDTO:
+def create_mock_risk_assessment_dto(
+    symbol: str, risks: List[RiskFactor]
+) -> RiskAssessmentDTO:
     """Create a mock RiskAssessmentDTO for testing"""
     risk_dtos = [convert_risk_factor_to_dto(risk) for risk in risks]
-    
+
     # Group by category
     risks_by_category = {}
     for dto in risk_dtos:
@@ -57,7 +60,7 @@ def create_mock_risk_assessment_dto(symbol: str, risks: List[RiskFactor]) -> Ris
         if category not in risks_by_category:
             risks_by_category[category] = []
         risks_by_category[category].append(dto)
-    
+
     return RiskAssessmentDTO(
         symbol=symbol,
         overall_risk_score=50.0,
@@ -67,7 +70,7 @@ def create_mock_risk_assessment_dto(symbol: str, risks: List[RiskFactor]) -> Ris
         risks_by_category=risks_by_category,
         all_risk_factors=risk_dtos,
         analysis_timestamp=datetime.now(),
-        summary="Mock assessment for testing"
+        summary="Mock assessment for testing",
     )
 
 
@@ -100,7 +103,7 @@ class TestRiskFactor:
             probability=probability,
             timeframe=timeframe,
             source=source,
-            last_updated=timestamp
+            last_updated=timestamp,
         )
 
         # Assert
@@ -128,7 +131,7 @@ class TestRiskFactor:
                 probability="MEDIUM",
                 timeframe="MEDIUM",
                 source="Test",
-                last_updated=datetime.now()
+                last_updated=datetime.now(),
             )
             assert risk_factor.level == level
 
@@ -145,7 +148,7 @@ class TestRiskFactor:
                 probability="MEDIUM",
                 timeframe="MEDIUM",
                 source="Test",
-                last_updated=datetime.now()
+                last_updated=datetime.now(),
             )
             assert risk_factor.category == category
 
@@ -169,47 +172,46 @@ class TestMarketRiskAnalyzer:
         assert category == RiskCategory.MARKET
 
     @pytest.mark.asyncio
-    @patch('yfinance.Ticker')
-    @patch('yfinance.download')
-    async def test_should_analyze_market_risks_successfully(self, mock_download, mock_ticker):
+    @patch("yfinance.Ticker")
+    @patch("yfinance.download")
+    async def test_should_analyze_market_risks_successfully(
+        self, mock_download, mock_ticker
+    ):
         # Arrange
         mock_ticker_instance = MagicMock()
         mock_ticker.return_value = mock_ticker_instance
 
         # Setup mock data
-        mock_info = {
-            'beta': 1.2,
-            'marketCap': 2000000000000
-        }
+        mock_info = {"beta": 1.2, "marketCap": 2000000000000}
         mock_ticker_instance.info = mock_info
 
         # Create mock price data
         rng = np.random.default_rng(42)  # Fixed seed for reproducible tests
-        dates = pd.date_range('2023-01-01', periods=252, freq='D')
+        dates = pd.date_range("2023-01-01", periods=252, freq="D")
         prices = rng.uniform(150, 180, 252)
-        prices[100:150] = np.linspace(prices[99], prices[99] * 0.7, 50)  # Simulate drawdown
-        
-        mock_hist = pd.DataFrame({
-            'Close': prices
-        }, index=dates)
+        prices[100:150] = np.linspace(
+            prices[99], prices[99] * 0.7, 50
+        )  # Simulate drawdown
+
+        mock_hist = pd.DataFrame({"Close": prices}, index=dates)
         mock_ticker_instance.history.return_value = mock_hist
 
         # Mock SPY data for correlation
         spy_prices = rng.uniform(400, 450, 252)
-        mock_spy_data = pd.DataFrame({
-            'Close': spy_prices
-        }, index=dates)
+        mock_spy_data = pd.DataFrame({"Close": spy_prices}, index=dates)
         mock_download.return_value = mock_spy_data
 
         # Act
         risks = await self.analyzer.analyze(self.symbol, self.market_data)
 
         # Assert
-        assert len(risks) >= 3  # Should have volatility, beta, correlation, drawdown risks
+        assert (
+            len(risks) >= 3
+        )  # Should have volatility, beta, correlation, drawdown risks
         risk_names = [risk.name for risk in risks]
         assert "Volatility Risk" in risk_names
         assert "Market Beta Risk" in risk_names
-        
+
         # Check risk factors have correct category
         for risk in risks:
             assert risk.category == RiskCategory.MARKET
@@ -217,7 +219,7 @@ class TestMarketRiskAnalyzer:
             assert 0 <= risk.score <= 100
 
     @pytest.mark.asyncio
-    @patch('yfinance.Ticker')
+    @patch("yfinance.Ticker")
     async def test_should_handle_market_data_unavailable_error(self, mock_ticker):
         # Arrange
         mock_ticker.side_effect = Exception("Network error")
@@ -238,7 +240,7 @@ class TestMarketRiskAnalyzer:
             (35.0, RiskLevel.HIGH, 75),
             (25.0, RiskLevel.MODERATE, 50),
             (15.0, RiskLevel.LOW, 25),
-            (5.0, RiskLevel.VERY_LOW, 10)
+            (5.0, RiskLevel.VERY_LOW, 10),
         ]
 
         for volatility, expected_level, expected_score in test_cases:
@@ -258,7 +260,7 @@ class TestMarketRiskAnalyzer:
             (0.2, RiskLevel.LOW, 30.0),
             (1.9, RiskLevel.MODERATE, 60.0),
             (1.4, RiskLevel.LOW, 30.0),
-            (1.1, RiskLevel.VERY_LOW, 15.0)
+            (1.1, RiskLevel.VERY_LOW, 15.0),
         ]
 
         for beta, expected_level, expected_score in test_cases:
@@ -274,10 +276,10 @@ class TestMarketRiskAnalyzer:
     def test_should_assess_correlation_risk_correctly(self):
         # Arrange
         test_cases = [
-            (0.9, RiskLevel.MODERATE, 60),   # High positive correlation
-            (-0.85, RiskLevel.MODERATE, 60), # High negative correlation
-            (0.7, RiskLevel.LOW, 35),        # Medium correlation
-            (0.4, RiskLevel.VERY_LOW, 20),   # Low correlation
+            (0.9, RiskLevel.MODERATE, 60),  # High positive correlation
+            (-0.85, RiskLevel.MODERATE, 60),  # High negative correlation
+            (0.7, RiskLevel.LOW, 35),  # Medium correlation
+            (0.4, RiskLevel.VERY_LOW, 20),  # Low correlation
         ]
 
         for correlation, expected_level, expected_score in test_cases:
@@ -294,10 +296,10 @@ class TestMarketRiskAnalyzer:
         # Arrange
         test_cases = [
             (-60.0, RiskLevel.VERY_HIGH, 95),  # Severe drawdown
-            (-35.0, RiskLevel.HIGH, 80),       # High drawdown
-            (-25.0, RiskLevel.MODERATE, 60),   # Moderate drawdown
-            (-15.0, RiskLevel.LOW, 35),        # Low drawdown
-            (-5.0, RiskLevel.VERY_LOW, 15)     # Very low drawdown
+            (-35.0, RiskLevel.HIGH, 80),  # High drawdown
+            (-25.0, RiskLevel.MODERATE, 60),  # Moderate drawdown
+            (-15.0, RiskLevel.LOW, 35),  # Low drawdown
+            (-5.0, RiskLevel.VERY_LOW, 15),  # Very low drawdown
         ]
 
         for drawdown, expected_level, expected_score in test_cases:
@@ -330,26 +332,26 @@ class TestFundamentalRiskAnalyzer:
         assert category == RiskCategory.FUNDAMENTAL
 
     @pytest.mark.asyncio
-    @patch('yfinance.Ticker')
+    @patch("yfinance.Ticker")
     async def test_should_analyze_fundamental_risks_successfully(self, mock_ticker):
         # Arrange
         mock_ticker_instance = MagicMock()
         mock_ticker.return_value = mock_ticker_instance
 
         mock_info = {
-            'debtToEquity': 45.0,
-            'currentRatio': 1.8,
-            'returnOnEquity': 0.25,
-            'trailingPE': 18.5,
-            'revenueGrowth': 0.12,
-            'profitMargins': 0.15
+            "debtToEquity": 45.0,
+            "currentRatio": 1.8,
+            "returnOnEquity": 0.25,
+            "trailingPE": 18.5,
+            "revenueGrowth": 0.12,
+            "profitMargins": 0.15,
         }
         mock_ticker_instance.info = mock_info
 
         # Mock financials data
-        mock_financials = pd.DataFrame({
-            'Total Revenue': [100000, 110000, 120000, 135000]
-        })
+        mock_financials = pd.DataFrame(
+            {"Total Revenue": [100000, 110000, 120000, 135000]}
+        )
         mock_ticker_instance.financials = mock_financials
         mock_ticker_instance.balance_sheet = pd.DataFrame()
 
@@ -357,19 +359,21 @@ class TestFundamentalRiskAnalyzer:
         risks = await self.analyzer.analyze(self.symbol, self.market_data)
 
         # Assert
-        assert len(risks) >= 4  # Should have debt, liquidity, profitability, valuation, growth risks
+        assert (
+            len(risks) >= 4
+        )  # Should have debt, liquidity, profitability, valuation, growth risks
         risk_names = [risk.name for risk in risks]
         assert "Debt Risk" in risk_names
         assert "Liquidity Risk" in risk_names
         assert "Profitability Risk" in risk_names
         assert "Valuation Risk" in risk_names
-        
+
         # Check risk factors have correct category
         for risk in risks:
             assert risk.category == RiskCategory.FUNDAMENTAL
 
     @pytest.mark.asyncio
-    @patch('yfinance.Ticker')
+    @patch("yfinance.Ticker")
     async def test_should_handle_fundamental_data_error(self, mock_ticker):
         # Arrange
         mock_ticker.side_effect = Exception("Data retrieval error")
@@ -386,15 +390,15 @@ class TestFundamentalRiskAnalyzer:
         # Arrange
         test_cases = [
             (250.0, RiskLevel.VERY_HIGH, 90),  # Very high debt
-            (150.0, RiskLevel.HIGH, 75),       # High debt
-            (75.0, RiskLevel.MODERATE, 50),    # Moderate debt
-            (35.0, RiskLevel.LOW, 25),         # Low debt
-            (15.0, RiskLevel.VERY_LOW, 10)     # Very low debt
+            (150.0, RiskLevel.HIGH, 75),  # High debt
+            (75.0, RiskLevel.MODERATE, 50),  # Moderate debt
+            (35.0, RiskLevel.LOW, 25),  # Low debt
+            (15.0, RiskLevel.VERY_LOW, 10),  # Very low debt
         ]
 
         for debt_ratio, expected_level, expected_score in test_cases:
             # Arrange
-            info = {'debtToEquity': debt_ratio}
+            info = {"debtToEquity": debt_ratio}
 
             # Act
             risk = self.analyzer._assess_debt_risk(info)
@@ -417,16 +421,16 @@ class TestFundamentalRiskAnalyzer:
     def test_should_assess_liquidity_risk_correctly(self):
         # Arrange
         test_cases = [
-            (0.6, RiskLevel.VERY_HIGH, 85),   # Very poor liquidity
-            (0.9, RiskLevel.HIGH, 70),        # Poor liquidity
-            (1.2, RiskLevel.MODERATE, 45),    # Moderate liquidity
-            (1.7, RiskLevel.LOW, 25),         # Good liquidity
-            (2.5, RiskLevel.VERY_LOW, 10)     # Excellent liquidity
+            (0.6, RiskLevel.VERY_HIGH, 85),  # Very poor liquidity
+            (0.9, RiskLevel.HIGH, 70),  # Poor liquidity
+            (1.2, RiskLevel.MODERATE, 45),  # Moderate liquidity
+            (1.7, RiskLevel.LOW, 25),  # Good liquidity
+            (2.5, RiskLevel.VERY_LOW, 10),  # Excellent liquidity
         ]
 
         for current_ratio, expected_level, expected_score in test_cases:
             # Arrange
-            info = {'currentRatio': current_ratio}
+            info = {"currentRatio": current_ratio}
 
             # Act
             risk = self.analyzer._assess_liquidity_risk(info)
@@ -439,15 +443,15 @@ class TestFundamentalRiskAnalyzer:
     def test_should_assess_profitability_risk_correctly(self):
         # Arrange
         test_cases = [
-            (0.02, RiskLevel.HIGH, 80),      # 2% ROE - Poor
+            (0.02, RiskLevel.HIGH, 80),  # 2% ROE - Poor
             (0.08, RiskLevel.MODERATE, 60),  # 8% ROE - Moderate
-            (0.12, RiskLevel.LOW, 30),       # 12% ROE - Good  
-            (0.20, RiskLevel.VERY_LOW, 15)   # 20% ROE - Excellent
+            (0.12, RiskLevel.LOW, 30),  # 12% ROE - Good
+            (0.20, RiskLevel.VERY_LOW, 15),  # 20% ROE - Excellent
         ]
 
         for roe, expected_level, expected_score in test_cases:
             # Arrange
-            info = {'returnOnEquity': roe}
+            info = {"returnOnEquity": roe}
 
             # Act
             risk = self.analyzer._assess_profitability_risk(info)
@@ -460,16 +464,16 @@ class TestFundamentalRiskAnalyzer:
     def test_should_assess_valuation_risk_correctly(self):
         # Arrange
         test_cases = [
-            (60.0, RiskLevel.HIGH, 80),        # Very high P/E
-            (35.0, RiskLevel.MODERATE, 60),    # High P/E
-            (25.0, RiskLevel.LOW, 35),         # Moderate P/E
-            (15.0, RiskLevel.VERY_LOW, 20),    # Reasonable P/E
-            (5.0, RiskLevel.LOW, 40)           # Very low P/E (potential issues)
+            (60.0, RiskLevel.HIGH, 80),  # Very high P/E
+            (35.0, RiskLevel.MODERATE, 60),  # High P/E
+            (25.0, RiskLevel.LOW, 35),  # Moderate P/E
+            (15.0, RiskLevel.VERY_LOW, 20),  # Reasonable P/E
+            (5.0, RiskLevel.LOW, 40),  # Very low P/E (potential issues)
         ]
 
         for pe_ratio, expected_level, expected_score in test_cases:
             # Arrange
-            info = {'trailingPE': pe_ratio}
+            info = {"trailingPE": pe_ratio}
 
             # Act
             risk = self.analyzer._assess_valuation_risk(info)
@@ -499,17 +503,17 @@ class TestGeopoliticalRiskAnalyzer:
         assert category == RiskCategory.GEOPOLITICAL
 
     @pytest.mark.asyncio
-    @patch('yfinance.Ticker')
+    @patch("yfinance.Ticker")
     async def test_should_analyze_geopolitical_risks_successfully(self, mock_ticker):
         # Arrange
         mock_ticker_instance = MagicMock()
         mock_ticker.return_value = mock_ticker_instance
 
         mock_info = {
-            'country': 'China',
-            'sector': 'Technology',
-            'industry': 'Semiconductors',
-            'marketCap': 500000000000  # $500B
+            "country": "China",
+            "sector": "Technology",
+            "industry": "Semiconductors",
+            "marketCap": 500000000000,  # $500B
         }
         mock_ticker_instance.info = mock_info
 
@@ -521,7 +525,7 @@ class TestGeopoliticalRiskAnalyzer:
         risk_names = [risk.name for risk in risks]
         assert "Country Risk" in risk_names
         assert "Sector Geopolitical Risk" in risk_names
-        
+
         # Check risk factors have correct category
         for risk in risks:
             assert risk.category == RiskCategory.GEOPOLITICAL
@@ -535,12 +539,12 @@ class TestGeopoliticalRiskAnalyzer:
             ("Turkey", RiskLevel.MODERATE, 55),
             ("United States", RiskLevel.VERY_LOW, 15),
             ("Germany", RiskLevel.VERY_LOW, 15),
-            ("France", RiskLevel.LOW, 30)  # Default case
+            ("France", RiskLevel.LOW, 30),  # Default case
         ]
 
         for country, expected_level, expected_score in test_cases:
             # Arrange
-            info = {'country': country}
+            info = {"country": country}
 
             # Act
             risk = self.analyzer._assess_country_risk(info)
@@ -559,12 +563,12 @@ class TestGeopoliticalRiskAnalyzer:
             ("Defense", RiskLevel.HIGH, 75),
             ("Consumer Staples", RiskLevel.LOW, 25),
             ("Utilities", RiskLevel.LOW, 25),
-            ("Healthcare", RiskLevel.MODERATE, 45)  # Default case
+            ("Healthcare", RiskLevel.MODERATE, 45),  # Default case
         ]
 
         for sector, expected_level, expected_score in test_cases:
             # Arrange
-            info = {'sector': sector, 'industry': ''}
+            info = {"sector": sector, "industry": ""}
 
             # Act
             risk = self.analyzer._assess_sector_geopolitical_risk(info)
@@ -578,13 +582,13 @@ class TestGeopoliticalRiskAnalyzer:
         # Arrange
         test_cases = [
             (150_000_000_000, "Technology", RiskLevel.MODERATE, 60),  # Large tech
-            (80_000_000_000, "Energy", RiskLevel.LOW, 35),           # Large non-tech
+            (80_000_000_000, "Energy", RiskLevel.LOW, 35),  # Large non-tech
             (10_000_000_000, "Healthcare", RiskLevel.VERY_LOW, 20),  # Small company
         ]
 
         for market_cap, sector, expected_level, expected_score in test_cases:
             # Arrange
-            info = {'marketCap': market_cap, 'sector': sector}
+            info = {"marketCap": market_cap, "sector": sector}
 
             # Act
             risk = self.analyzer._assess_international_exposure_risk(info)
@@ -614,18 +618,18 @@ class TestESGRiskAnalyzer:
         assert category == RiskCategory.ESG
 
     @pytest.mark.asyncio
-    @patch('yfinance.Ticker')
+    @patch("yfinance.Ticker")
     async def test_should_analyze_esg_risks_successfully(self, mock_ticker):
         # Arrange
         mock_ticker_instance = MagicMock()
         mock_ticker.return_value = mock_ticker_instance
 
         mock_info = {
-            'sector': 'Energy',
-            'industry': 'Oil & Gas',
-            'heldByInsiders': 0.15,
-            'heldByInstitutions': 0.75,
-            'fullTimeEmployees': 75000
+            "sector": "Energy",
+            "industry": "Oil & Gas",
+            "heldByInsiders": 0.15,
+            "heldByInstitutions": 0.75,
+            "fullTimeEmployees": 75000,
         }
         mock_ticker_instance.info = mock_info
 
@@ -637,7 +641,7 @@ class TestESGRiskAnalyzer:
         risk_names = [risk.name for risk in risks]
         assert "Environmental Risk" in risk_names
         assert "Governance Risk" in risk_names
-        
+
         # Check risk factors have correct category
         for risk in risks:
             assert risk.category == RiskCategory.ESG
@@ -649,12 +653,12 @@ class TestESGRiskAnalyzer:
             ("Materials", "Mining", RiskLevel.HIGH, 75),
             ("Technology", "Software", RiskLevel.LOW, 25),
             ("Healthcare", "Pharmaceuticals", RiskLevel.LOW, 25),
-            ("Consumer Discretionary", "Retail", RiskLevel.MODERATE, 45)  # Default
+            ("Consumer Discretionary", "Retail", RiskLevel.MODERATE, 45),  # Default
         ]
 
         for sector, industry, expected_level, expected_score in test_cases:
             # Arrange
-            info = {'sector': sector, 'industry': industry}
+            info = {"sector": sector, "industry": industry}
 
             # Act
             risk = self.analyzer._assess_environmental_risk(info)
@@ -667,16 +671,21 @@ class TestESGRiskAnalyzer:
     def test_should_assess_governance_risk_correctly(self):
         # Arrange
         test_cases = [
-            (0.6, 0.3, RiskLevel.MODERATE, 60),   # High insider ownership
-            (0.2, 0.2, RiskLevel.MODERATE, 55),   # Low institutional ownership
-            (0.1, 0.8, RiskLevel.LOW, 30),        # Balanced ownership
+            (0.6, 0.3, RiskLevel.MODERATE, 60),  # High insider ownership
+            (0.2, 0.2, RiskLevel.MODERATE, 55),  # Low institutional ownership
+            (0.1, 0.8, RiskLevel.LOW, 30),  # Balanced ownership
         ]
 
-        for insider_pct, institutional_pct, expected_level, expected_score in test_cases:
+        for (
+            insider_pct,
+            institutional_pct,
+            expected_level,
+            expected_score,
+        ) in test_cases:
             # Arrange
             info = {
-                'heldByInsiders': insider_pct,
-                'heldByInstitutions': institutional_pct
+                "heldByInsiders": insider_pct,
+                "heldByInstitutions": institutional_pct,
             }
 
             # Act
@@ -690,15 +699,25 @@ class TestESGRiskAnalyzer:
     def test_should_assess_social_risk_correctly(self):
         # Arrange
         test_cases = [
-            ("Technology", 150000, RiskLevel.MODERATE, 55),      # Large sensitive sector
-            ("Healthcare", 600000, RiskLevel.MODERATE, 55),      # Large sensitive sector (first condition matches)
-            ("Consumer Discretionary", 120000, RiskLevel.MODERATE, 55),  # Large sensitive sector
-            ("Utilities", 50000, RiskLevel.LOW, 30),             # Small/moderate company
+            ("Technology", 150000, RiskLevel.MODERATE, 55),  # Large sensitive sector
+            (
+                "Healthcare",
+                600000,
+                RiskLevel.MODERATE,
+                55,
+            ),  # Large sensitive sector (first condition matches)
+            (
+                "Consumer Discretionary",
+                120000,
+                RiskLevel.MODERATE,
+                55,
+            ),  # Large sensitive sector
+            ("Utilities", 50000, RiskLevel.LOW, 30),  # Small/moderate company
         ]
 
         for sector, employees, expected_level, expected_score in test_cases:
             # Arrange
-            info = {'sector': sector, 'fullTimeEmployees': employees}
+            info = {"sector": sector, "fullTimeEmployees": employees}
 
             # Act
             risk = self.analyzer._assess_social_risk(info)
@@ -722,7 +741,9 @@ class TestRiskAssessmentService:
     def test_should_initialize_with_all_analyzers(self):
         # Arrange & Act & Assert
         assert len(self.service._analyzers) == 4
-        analyzer_types = [type(analyzer).__name__ for analyzer in self.service._analyzers]
+        analyzer_types = [
+            type(analyzer).__name__ for analyzer in self.service._analyzers
+        ]
         assert "MarketRiskAnalyzer" in analyzer_types
         assert "FundamentalRiskAnalyzer" in analyzer_types
         assert "GeopoliticalRiskAnalyzer" in analyzer_types
@@ -731,11 +752,15 @@ class TestRiskAssessmentService:
     @pytest.mark.asyncio
     async def test_should_assess_comprehensive_risk_successfully(self):
         # Arrange
-        with patch.object(self.service._analyzers[0], 'analyze') as mock_market, \
-             patch.object(self.service._analyzers[1], 'analyze') as mock_fundamental, \
-             patch.object(self.service._analyzers[2], 'analyze') as mock_geopolitical, \
-             patch.object(self.service._analyzers[3], 'analyze') as mock_esg:
-            
+        with patch.object(
+            self.service._analyzers[0], "analyze"
+        ) as mock_market, patch.object(
+            self.service._analyzers[1], "analyze"
+        ) as mock_fundamental, patch.object(
+            self.service._analyzers[2], "analyze"
+        ) as mock_geopolitical, patch.object(
+            self.service._analyzers[3], "analyze"
+        ) as mock_esg:
             # Setup mock returns
             mock_market.return_value = [
                 RiskFactor(
@@ -748,10 +773,10 @@ class TestRiskAssessmentService:
                     probability="MEDIUM",
                     timeframe="SHORT",
                     source="Market Analysis",
-                    last_updated=datetime.now()
+                    last_updated=datetime.now(),
                 )
             ]
-            
+
             mock_fundamental.return_value = [
                 RiskFactor(
                     name="Debt Risk",
@@ -763,18 +788,32 @@ class TestRiskAssessmentService:
                     probability="MEDIUM",
                     timeframe="LONG",
                     source="Fundamental Analysis",
-                    last_updated=datetime.now()
+                    last_updated=datetime.now(),
                 )
             ]
-            
+
             mock_geopolitical.return_value = []
             mock_esg.return_value = []
 
             # Mock the entire assess_comprehensive_risk method to return correct DTO
-            with patch.object(self.service, 'assess_comprehensive_risk') as mock_assess:
-                expected_dto = create_mock_risk_assessment_dto(self.symbol, [
-                    RiskFactor("Test Risk", RiskCategory.MARKET, RiskLevel.HIGH, 75.0, "", "", "", "", "", datetime.now())
-                ])
+            with patch.object(self.service, "assess_comprehensive_risk") as mock_assess:
+                expected_dto = create_mock_risk_assessment_dto(
+                    self.symbol,
+                    [
+                        RiskFactor(
+                            "Test Risk",
+                            RiskCategory.MARKET,
+                            RiskLevel.HIGH,
+                            75.0,
+                            "",
+                            "",
+                            "",
+                            "",
+                            "",
+                            datetime.now(),
+                        )
+                    ],
+                )
                 mock_assess.return_value = expected_dto
 
                 # Act
@@ -792,11 +831,11 @@ class TestRiskAssessmentService:
     @pytest.mark.asyncio
     async def test_should_handle_analyzer_errors_gracefully(self):
         # Arrange
-        with patch.object(self.service._analyzers[0], 'analyze') as mock_analyzer:
+        with patch.object(self.service._analyzers[0], "analyze") as mock_analyzer:
             mock_analyzer.side_effect = Exception("Network error")
 
             # Mock the method to return a valid DTO even with errors
-            with patch.object(self.service, 'assess_comprehensive_risk') as mock_assess:
+            with patch.object(self.service, "assess_comprehensive_risk") as mock_assess:
                 expected_dto = create_mock_risk_assessment_dto(self.symbol, [])
                 mock_assess.return_value = expected_dto
 
@@ -811,9 +850,42 @@ class TestRiskAssessmentService:
     def test_should_calculate_overall_risk_score_correctly(self):
         # Arrange
         risks = [
-            RiskFactor("Market Risk", RiskCategory.MARKET, RiskLevel.HIGH, 80.0, "", "", "", "", "", datetime.now()),
-            RiskFactor("Fundamental Risk", RiskCategory.FUNDAMENTAL, RiskLevel.MODERATE, 60.0, "", "", "", "", "", datetime.now()),
-            RiskFactor("ESG Risk", RiskCategory.ESG, RiskLevel.LOW, 30.0, "", "", "", "", "", datetime.now()),
+            RiskFactor(
+                "Market Risk",
+                RiskCategory.MARKET,
+                RiskLevel.HIGH,
+                80.0,
+                "",
+                "",
+                "",
+                "",
+                "",
+                datetime.now(),
+            ),
+            RiskFactor(
+                "Fundamental Risk",
+                RiskCategory.FUNDAMENTAL,
+                RiskLevel.MODERATE,
+                60.0,
+                "",
+                "",
+                "",
+                "",
+                "",
+                datetime.now(),
+            ),
+            RiskFactor(
+                "ESG Risk",
+                RiskCategory.ESG,
+                RiskLevel.LOW,
+                30.0,
+                "",
+                "",
+                "",
+                "",
+                "",
+                datetime.now(),
+            ),
         ]
 
         # Act
@@ -841,7 +913,7 @@ class TestRiskAssessmentService:
             (80.0, RiskLevel.HIGH),
             (60.0, RiskLevel.MODERATE),
             (40.0, RiskLevel.LOW),
-            (20.0, RiskLevel.VERY_LOW)
+            (20.0, RiskLevel.VERY_LOW),
         ]
 
         for score, expected_level in test_cases:
@@ -854,9 +926,42 @@ class TestRiskAssessmentService:
     def test_should_group_risks_by_category_correctly(self):
         # Arrange
         risks = [
-            RiskFactor("Market Risk 1", RiskCategory.MARKET, RiskLevel.HIGH, 80.0, "", "", "", "", "", datetime.now()),
-            RiskFactor("Market Risk 2", RiskCategory.MARKET, RiskLevel.LOW, 20.0, "", "", "", "", "", datetime.now()),
-            RiskFactor("ESG Risk", RiskCategory.ESG, RiskLevel.MODERATE, 50.0, "", "", "", "", "", datetime.now()),
+            RiskFactor(
+                "Market Risk 1",
+                RiskCategory.MARKET,
+                RiskLevel.HIGH,
+                80.0,
+                "",
+                "",
+                "",
+                "",
+                "",
+                datetime.now(),
+            ),
+            RiskFactor(
+                "Market Risk 2",
+                RiskCategory.MARKET,
+                RiskLevel.LOW,
+                20.0,
+                "",
+                "",
+                "",
+                "",
+                "",
+                datetime.now(),
+            ),
+            RiskFactor(
+                "ESG Risk",
+                RiskCategory.ESG,
+                RiskLevel.MODERATE,
+                50.0,
+                "",
+                "",
+                "",
+                "",
+                "",
+                datetime.now(),
+            ),
         ]
 
         # Act
@@ -872,9 +977,42 @@ class TestRiskAssessmentService:
     def test_should_generate_risk_summary_correctly(self):
         # Arrange
         risks = [
-            RiskFactor("High Risk 1", RiskCategory.MARKET, RiskLevel.HIGH, 80.0, "", "", "", "", "", datetime.now()),
-            RiskFactor("High Risk 2", RiskCategory.FUNDAMENTAL, RiskLevel.VERY_HIGH, 90.0, "", "", "", "", "", datetime.now()),
-            RiskFactor("Low Risk", RiskCategory.ESG, RiskLevel.LOW, 20.0, "", "", "", "", "", datetime.now()),
+            RiskFactor(
+                "High Risk 1",
+                RiskCategory.MARKET,
+                RiskLevel.HIGH,
+                80.0,
+                "",
+                "",
+                "",
+                "",
+                "",
+                datetime.now(),
+            ),
+            RiskFactor(
+                "High Risk 2",
+                RiskCategory.FUNDAMENTAL,
+                RiskLevel.VERY_HIGH,
+                90.0,
+                "",
+                "",
+                "",
+                "",
+                "",
+                datetime.now(),
+            ),
+            RiskFactor(
+                "Low Risk",
+                RiskCategory.ESG,
+                RiskLevel.LOW,
+                20.0,
+                "",
+                "",
+                "",
+                "",
+                "",
+                datetime.now(),
+            ),
         ]
         overall_level = RiskLevel.HIGH
 
@@ -903,42 +1041,69 @@ class TestRiskAssessmentService:
         symbol = "TEST"
 
         # Mock all external dependencies but test real structure
-        with patch('yfinance.Ticker') as mock_ticker:
+        with patch("yfinance.Ticker") as mock_ticker:
             mock_ticker_instance = MagicMock()
             mock_ticker.return_value = mock_ticker_instance
-            
+
             # Setup realistic mock data
             rng = np.random.default_rng(42)  # Fixed seed for reproducible tests
             mock_ticker_instance.info = {
-                'beta': 1.2,
-                'country': 'United States',
-                'sector': 'Technology',
-                'marketCap': 2000000000000,
-                'debtToEquity': 45.0,
-                'currentRatio': 1.8,
-                'returnOnEquity': 0.25
+                "beta": 1.2,
+                "country": "United States",
+                "sector": "Technology",
+                "marketCap": 2000000000000,
+                "debtToEquity": 45.0,
+                "currentRatio": 1.8,
+                "returnOnEquity": 0.25,
             }
-            
+
             # Mock price history
-            dates = pd.date_range('2023-01-01', periods=100, freq='D')
-            mock_ticker_instance.history.return_value = pd.DataFrame({
-                'Close': rng.uniform(150, 180, 100)
-            }, index=dates)
-            
+            dates = pd.date_range("2023-01-01", periods=100, freq="D")
+            mock_ticker_instance.history.return_value = pd.DataFrame(
+                {"Close": rng.uniform(150, 180, 100)}, index=dates
+            )
+
             mock_ticker_instance.financials = pd.DataFrame()
             mock_ticker_instance.balance_sheet = pd.DataFrame()
 
-            with patch('yfinance.download') as mock_download:
-                mock_download.return_value = pd.DataFrame({
-                    'Close': rng.uniform(400, 450, 100)
-                }, index=dates)
+            with patch("yfinance.download") as mock_download:
+                mock_download.return_value = pd.DataFrame(
+                    {"Close": rng.uniform(400, 450, 100)}, index=dates
+                )
 
                 # Mock the assess_comprehensive_risk method to return proper DTO
-                with patch.object(self.service, 'assess_comprehensive_risk') as mock_assess:
-                    expected_dto = create_mock_risk_assessment_dto(symbol, [
-                        RiskFactor("Market Risk", RiskCategory.MARKET, RiskLevel.MODERATE, 50.0, "", "", "", "", "", datetime.now()),
-                        RiskFactor("ESG Risk", RiskCategory.ESG, RiskLevel.LOW, 30.0, "", "", "", "", "", datetime.now())
-                    ])
+                with patch.object(
+                    self.service, "assess_comprehensive_risk"
+                ) as mock_assess:
+                    expected_dto = create_mock_risk_assessment_dto(
+                        symbol,
+                        [
+                            RiskFactor(
+                                "Market Risk",
+                                RiskCategory.MARKET,
+                                RiskLevel.MODERATE,
+                                50.0,
+                                "",
+                                "",
+                                "",
+                                "",
+                                "",
+                                datetime.now(),
+                            ),
+                            RiskFactor(
+                                "ESG Risk",
+                                RiskCategory.ESG,
+                                RiskLevel.LOW,
+                                30.0,
+                                "",
+                                "",
+                                "",
+                                "",
+                                "",
+                                datetime.now(),
+                            ),
+                        ],
+                    )
                     mock_assess.return_value = expected_dto
 
                     # Act
@@ -949,14 +1114,16 @@ class TestRiskAssessmentService:
                     assert result.symbol == symbol
                     assert result.total_risk_factors >= 0
                     assert 0 <= result.overall_risk_score <= 100
-                    assert result.overall_risk_level in [level.value for level in RiskLevel]
+                    assert result.overall_risk_level in [
+                        level.value for level in RiskLevel
+                    ]
                     assert isinstance(result.risks_by_category, dict)
                     assert len(result.all_risk_factors) == 2
                     assert len(result.summary) > 0
 
 
 @pytest.mark.unit
-@pytest.mark.risk  
+@pytest.mark.risk
 @pytest.mark.performance
 class TestRiskAssessmentPerformance:
     """Test performance aspects of risk assessment"""
@@ -971,17 +1138,19 @@ class TestRiskAssessmentPerformance:
         # Arrange
         start_time = datetime.now()
 
-        with patch('yfinance.Ticker') as mock_ticker, \
-             patch('yfinance.download') as mock_download:
-            
+        with patch("yfinance.Ticker") as mock_ticker, patch(
+            "yfinance.download"
+        ) as mock_download:
             # Setup minimal mock data for speed
             mock_ticker_instance = MagicMock()
             mock_ticker.return_value = mock_ticker_instance
-            mock_ticker_instance.info = {'beta': 1.0}
-            mock_ticker_instance.history.return_value = pd.DataFrame({'Close': [100, 110, 105]})
+            mock_ticker_instance.info = {"beta": 1.0}
+            mock_ticker_instance.history.return_value = pd.DataFrame(
+                {"Close": [100, 110, 105]}
+            )
             mock_ticker_instance.financials = pd.DataFrame()
             mock_ticker_instance.balance_sheet = pd.DataFrame()
-            mock_download.return_value = pd.DataFrame({'Close': [400, 410, 405]})
+            mock_download.return_value = pd.DataFrame({"Close": [400, 410, 405]})
 
             # Act
             result = await self.service.assess_comprehensive_risk(self.symbol)
@@ -1004,10 +1173,10 @@ class TestRiskAssessmentPerformance:
                 score=50.0 + (i % 10),
                 description=f"Description {i}",
                 impact="MEDIUM",
-                probability="MEDIUM", 
+                probability="MEDIUM",
                 timeframe="MEDIUM",
                 source="Performance Test",
-                last_updated=datetime.now()
+                last_updated=datetime.now(),
             )
             large_risk_list.append(risk)
 
@@ -1016,7 +1185,9 @@ class TestRiskAssessmentPerformance:
         # Act
         score = self.service._calculate_overall_risk_score(large_risk_list)
         grouped = self.service._group_risks_by_category(large_risk_list)
-        summary = self.service._generate_risk_summary(large_risk_list, RiskLevel.MODERATE)
+        summary = self.service._generate_risk_summary(
+            large_risk_list, RiskLevel.MODERATE
+        )
 
         end_time = datetime.now()
 

@@ -5,7 +5,9 @@ RefreshToken Mapper - Domain to Persistence
 Mapper for RefreshToken domain entity ↔ SQLAlchemy model.
 """
 
-from boursa_vision.domain.entities.refresh_token import RefreshToken as DomainRefreshToken
+from boursa_vision.domain.entities.refresh_token import (
+    RefreshToken as DomainRefreshToken,
+)
 from boursa_vision.infrastructure.persistence.models.refresh_tokens import RefreshToken
 
 

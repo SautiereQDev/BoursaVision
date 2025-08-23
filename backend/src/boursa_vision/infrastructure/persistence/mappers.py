@@ -32,7 +32,7 @@ class UserMapper:
             username=model.username,
             first_name=model.first_name,
             last_name=model.last_name,
-            role=UserRole(model.role.lower()) if model.role else UserRole.BASIC,
+            role=UserRole(model.role.lower()) if model.role else UserRole.VIEWER,
             preferred_currency=Currency.USD,  # Default for now
             is_active=model.is_active,
             email_verified=model.is_verified,
@@ -181,7 +181,7 @@ class InvestmentMapper:
     def to_domain(self, model: "InvestmentModel") -> Investment:
         """Convert SQLAlchemy InvestmentModel to domain Investment entity."""
         from .models.investment import InvestmentModel
-        
+
         return Investment.create(
             symbol=model.symbol,
             name=model.name,

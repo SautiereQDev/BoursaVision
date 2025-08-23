@@ -5,20 +5,23 @@ Tests unitaires pour FindInvestmentsUseCase
 Tests unitaires pour le use case de recherche d'investissements.
 """
 
-import pytest
 from decimal import Decimal
 from unittest.mock import AsyncMock
 
-from boursa_vision.application.use_cases.find_investments import FindInvestmentsUseCase
-from boursa_vision.application.queries.investment.find_investments_query import FindInvestmentsQuery
+import pytest
+
 from boursa_vision.application.dtos import InvestmentSearchResultDTO
+from boursa_vision.application.queries.investment.find_investments_query import (
+    FindInvestmentsQuery,
+)
+from boursa_vision.application.use_cases.find_investments import FindInvestmentsUseCase
 from boursa_vision.domain.entities.investment import (
     Investment,
-    InvestmentType,
     InvestmentSector,
+    InvestmentType,
     MarketCap,
 )
-from boursa_vision.domain.value_objects.money import Money, Currency
+from boursa_vision.domain.value_objects.money import Currency, Money
 
 
 class TestFindInvestmentsQuery:
@@ -49,7 +52,7 @@ class TestFindInvestmentsQuery:
             max_price=200.0,
             search_term="Apple",
             limit=25,
-            offset=50
+            offset=50,
         )
 
         assert query.sectors == ["TECHNOLOGY", "HEALTHCARE"]
@@ -84,7 +87,7 @@ class TestFindInvestmentsUseCase:
         use_case = FindInvestmentsUseCase(
             investment_repository=mock_investment_repository,
             technical_analyzer=mock_technical_analyzer,
-            signal_generator=mock_signal_generator
+            signal_generator=mock_signal_generator,
         )
 
         query = FindInvestmentsQuery()
@@ -110,7 +113,7 @@ class TestFindInvestmentsUseCase:
             market_cap=MarketCap.LARGE,
             exchange="NASDAQ",
             currency=Currency.USD,
-            current_price=Money(Decimal("150.00"), Currency.USD)
+            current_price=Money(Decimal("150.00"), Currency.USD),
         )
 
         mock_investment_repository = AsyncMock()
@@ -126,7 +129,7 @@ class TestFindInvestmentsUseCase:
         use_case = FindInvestmentsUseCase(
             investment_repository=mock_investment_repository,
             technical_analyzer=mock_technical_analyzer,
-            signal_generator=mock_signal_generator
+            signal_generator=mock_signal_generator,
         )
 
         query = FindInvestmentsQuery(sectors=["TECHNOLOGY"])
@@ -157,14 +160,14 @@ class TestFindInvestmentsUseCase:
         use_case = FindInvestmentsUseCase(
             investment_repository=mock_investment_repository,
             technical_analyzer=mock_technical_analyzer,
-            signal_generator=mock_signal_generator
+            signal_generator=mock_signal_generator,
         )
 
         query = FindInvestmentsQuery(
             sectors=["TECHNOLOGY"],
             search_term="Apple",
             min_price=100.0,
-            max_price=200.0
+            max_price=200.0,
         )
 
         # Act
@@ -175,11 +178,11 @@ class TestFindInvestmentsUseCase:
         call_args = mock_investment_repository.find_by_criteria.call_args
 
         # Vérifier les critères passés
-        criteria = call_args.kwargs['criteria']
-        assert criteria['sectors'] == ["TECHNOLOGY"]
-        assert criteria['search_term'] == "Apple"
-        assert criteria['price_range'] == (100.0, 200.0)
+        criteria = call_args.kwargs["criteria"]
+        assert criteria["sectors"] == ["TECHNOLOGY"]
+        assert criteria["search_term"] == "Apple"
+        assert criteria["price_range"] == (100.0, 200.0)
 
         # Vérifier les paramètres de pagination
-        assert call_args.kwargs['limit'] == 50
-        assert call_args.kwargs['offset'] == 0
+        assert call_args.kwargs["limit"] == 50
+        assert call_args.kwargs["offset"] == 0

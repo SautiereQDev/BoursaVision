@@ -59,7 +59,9 @@ class TestPortfolioCreatedEventHandler:
         event.occurred_at = datetime.now()
         return event
 
-    def test_handler_initialization(self, mock_notification_service, mock_audit_service):
+    def test_handler_initialization(
+        self, mock_notification_service, mock_audit_service
+    ):
         """Test l'initialisation du handler"""
         handler = PortfolioCreatedEventHandler(
             notification_service=mock_notification_service,
@@ -70,7 +72,11 @@ class TestPortfolioCreatedEventHandler:
         assert handler._audit_service == mock_audit_service
 
     async def test_handle_portfolio_created_success(
-        self, handler, portfolio_created_event, mock_audit_service, mock_notification_service
+        self,
+        handler,
+        portfolio_created_event,
+        mock_audit_service,
+        mock_notification_service,
     ):
         """Test traitement event portfolio créé avec succès"""
         # Act
@@ -84,7 +90,7 @@ class TestPortfolioCreatedEventHandler:
             timestamp=portfolio_created_event.occurred_at,
             details={
                 "portfolio_name": portfolio_created_event.name,
-                "action": "CREATE"
+                "action": "CREATE",
             },
         )
 
@@ -125,7 +131,11 @@ class TestPortfolioCreatedEventHandler:
         )
 
     async def test_handle_audit_service_error(
-        self, handler, portfolio_created_event, mock_audit_service, mock_notification_service
+        self,
+        handler,
+        portfolio_created_event,
+        mock_audit_service,
+        mock_notification_service,
     ):
         """Test erreur du service audit"""
         # Arrange
@@ -136,11 +146,17 @@ class TestPortfolioCreatedEventHandler:
             await handler.handle(portfolio_created_event)
 
     async def test_handle_notification_service_error(
-        self, handler, portfolio_created_event, mock_audit_service, mock_notification_service
+        self,
+        handler,
+        portfolio_created_event,
+        mock_audit_service,
+        mock_notification_service,
     ):
         """Test erreur du service notification"""
         # Arrange
-        mock_notification_service.send_notification.side_effect = Exception("Notification error")
+        mock_notification_service.send_notification.side_effect = Exception(
+            "Notification error"
+        )
 
         # Act & Assert
         with pytest.raises(Exception, match="Notification error"):
@@ -166,7 +182,9 @@ class TestInvestmentAddedEventHandler:
         return AsyncMock()
 
     @pytest.fixture
-    def handler(self, mock_notification_service, mock_audit_service, mock_analytics_service):
+    def handler(
+        self, mock_notification_service, mock_audit_service, mock_analytics_service
+    ):
         """Handler instance"""
         return InvestmentAddedEventHandler(
             notification_service=mock_notification_service,
@@ -202,8 +220,12 @@ class TestInvestmentAddedEventHandler:
         assert handler._analytics_service == mock_analytics_service
 
     async def test_handle_investment_added_success(
-        self, handler, investment_added_event, mock_audit_service, 
-        mock_analytics_service, mock_notification_service
+        self,
+        handler,
+        investment_added_event,
+        mock_audit_service,
+        mock_analytics_service,
+        mock_notification_service,
     ):
         """Test traitement event investment ajouté avec succès"""
         # Act
@@ -246,7 +268,11 @@ class TestInvestmentAddedEventHandler:
         )
 
     async def test_handle_event_with_defaults(
-        self, handler, mock_audit_service, mock_analytics_service, mock_notification_service
+        self,
+        handler,
+        mock_audit_service,
+        mock_analytics_service,
+        mock_notification_service,
     ):
         """Test traitement event avec valeurs par défaut"""
         # Arrange
@@ -310,7 +336,11 @@ class TestInvestmentCreatedEventHandler:
         assert handler._cache_service == mock_cache_service
 
     async def test_handle_investment_created_success(
-        self, handler, investment_created_event, mock_market_data_service, mock_cache_service
+        self,
+        handler,
+        investment_created_event,
+        mock_market_data_service,
+        mock_cache_service,
     ):
         """Test traitement event investment créé avec succès"""
         # Act
@@ -347,11 +377,17 @@ class TestInvestmentCreatedEventHandler:
         mock_market_data_service.fetch_current_price.assert_called_once_with("")
 
     async def test_handle_market_data_fetch_error(
-        self, handler, investment_created_event, mock_market_data_service, mock_cache_service
+        self,
+        handler,
+        investment_created_event,
+        mock_market_data_service,
+        mock_cache_service,
     ):
         """Test erreur lors du fetch des données marché"""
         # Arrange
-        mock_market_data_service.fetch_current_price.side_effect = Exception("Market data unavailable")
+        mock_market_data_service.fetch_current_price.side_effect = Exception(
+            "Market data unavailable"
+        )
 
         # Act - should not raise exception
         await handler.handle(investment_created_event)
@@ -361,7 +397,11 @@ class TestInvestmentCreatedEventHandler:
         assert mock_cache_service.invalidate_pattern.call_count == 2
 
     async def test_handle_cache_service_error(
-        self, handler, investment_created_event, mock_market_data_service, mock_cache_service
+        self,
+        handler,
+        investment_created_event,
+        mock_market_data_service,
+        mock_cache_service,
     ):
         """Test erreur du service cache"""
         # Arrange
@@ -410,7 +450,9 @@ class TestSignalGeneratedEventHandler:
         event.occurred_at = datetime.now()
         return event
 
-    def test_handler_initialization(self, mock_notification_service, mock_alert_service):
+    def test_handler_initialization(
+        self, mock_notification_service, mock_alert_service
+    ):
         """Test l'initialisation du handler"""
         handler = SignalGeneratedEventHandler(
             notification_service=mock_notification_service,
@@ -421,7 +463,11 @@ class TestSignalGeneratedEventHandler:
         assert handler._alert_service == mock_alert_service
 
     async def test_handle_high_confidence_buy_signal(
-        self, handler, signal_generated_event, mock_alert_service, mock_notification_service
+        self,
+        handler,
+        signal_generated_event,
+        mock_alert_service,
+        mock_notification_service,
     ):
         """Test traitement signal BUY haute confiance"""
         # Act
@@ -568,12 +614,14 @@ class TestPerformanceCalculatedEventHandler:
             "total_return": 0.15,
             "monthly_return": 0.05,
             "volatility": 0.12,
-            "sharpe_ratio": 1.25
+            "sharpe_ratio": 1.25,
         }
         event.occurred_at = datetime.now()
         return event
 
-    def test_handler_initialization(self, mock_analytics_service, mock_reporting_service):
+    def test_handler_initialization(
+        self, mock_analytics_service, mock_reporting_service
+    ):
         """Test l'initialisation du handler"""
         handler = PerformanceCalculatedEventHandler(
             analytics_service=mock_analytics_service,
@@ -584,7 +632,11 @@ class TestPerformanceCalculatedEventHandler:
         assert handler._reporting_service == mock_reporting_service
 
     async def test_handle_performance_calculated_success(
-        self, handler, performance_calculated_event, mock_analytics_service, mock_reporting_service
+        self,
+        handler,
+        performance_calculated_event,
+        mock_analytics_service,
+        mock_reporting_service,
     ):
         """Test traitement event performance calculée avec succès"""
         # Act
@@ -598,12 +650,17 @@ class TestPerformanceCalculatedEventHandler:
         )
 
     async def test_handle_first_day_of_month_generates_report(
-        self, handler, performance_calculated_event, mock_analytics_service, 
-        mock_reporting_service, monkeypatch
+        self,
+        handler,
+        performance_calculated_event,
+        mock_analytics_service,
+        mock_reporting_service,
+        monkeypatch,
     ):
         """Test génération rapport mensuel le premier du mois"""
         # Arrange - Mock datetime to return first day of month
         import datetime as dt_module
+
         mock_datetime = MagicMock()
         mock_datetime.now.return_value.day = 1
         monkeypatch.setattr(dt_module, "datetime", mock_datetime)
@@ -617,12 +674,17 @@ class TestPerformanceCalculatedEventHandler:
         )
 
     async def test_handle_not_first_day_no_report(
-        self, handler, performance_calculated_event, mock_analytics_service, 
-        mock_reporting_service, monkeypatch
+        self,
+        handler,
+        performance_calculated_event,
+        mock_analytics_service,
+        mock_reporting_service,
+        monkeypatch,
     ):
         """Test pas de rapport mensuel si pas le premier du mois"""
         # Arrange - Mock datetime to return non-first day
         import datetime as dt_module
+
         mock_datetime = MagicMock()
         mock_datetime.now.return_value.day = 15  # Mid-month
         monkeypatch.setattr(dt_module, "datetime", mock_datetime)
@@ -656,11 +718,17 @@ class TestPerformanceCalculatedEventHandler:
         )
 
     async def test_handle_analytics_service_error(
-        self, handler, performance_calculated_event, mock_analytics_service, mock_reporting_service
+        self,
+        handler,
+        performance_calculated_event,
+        mock_analytics_service,
+        mock_reporting_service,
     ):
         """Test erreur du service analytics"""
         # Arrange
-        mock_analytics_service.store_performance_snapshot.side_effect = Exception("Analytics error")
+        mock_analytics_service.store_performance_snapshot.side_effect = Exception(
+            "Analytics error"
+        )
 
         # Act & Assert
         with pytest.raises(Exception, match="Analytics error"):
@@ -697,7 +765,9 @@ class TestEventHandlersIntegration:
         assert portfolio_handler._audit_service == mock_service2
 
         # Investment added handler - 3 services
-        investment_handler = InvestmentAddedEventHandler(mock_service1, mock_service2, mock_service3)
+        investment_handler = InvestmentAddedEventHandler(
+            mock_service1, mock_service2, mock_service3
+        )
         assert investment_handler._notification_service == mock_service1
         assert investment_handler._audit_service == mock_service2
         assert investment_handler._analytics_service == mock_service3

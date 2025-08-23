@@ -10,10 +10,10 @@ def test_simple_addition():
     # Arrange
     a = 1
     b = 2
-    
+
     # Act
     result = a + b
-    
+
     # Assert
     assert result == 3
 
@@ -25,10 +25,10 @@ def test_string_operations():
     # Arrange
     prefix = "Hello"
     suffix = "World"
-    
+
     # Act
     result = f"{prefix} {suffix}"
-    
+
     # Assert
     assert result == "Hello World"
     assert len(result) == 11
@@ -40,10 +40,10 @@ def test_list_operations():
     """Test simple pour les opérations sur listes."""
     # Arrange
     items = [1, 2, 3]
-    
+
     # Act
     items.append(4)
-    
+
     # Assert
     assert len(items) == 4
     assert items[-1] == 4

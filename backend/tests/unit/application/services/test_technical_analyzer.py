@@ -5,12 +5,13 @@ Tests unitaires pour TechnicalAnalyzer
 Tests unitaires complets pour le service d'analyse technique.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
-from boursa_vision.application.services.technical_analyzer import TechnicalAnalyzer
+import pytest
+
 from boursa_vision.application.dtos import TechnicalAnalysisDTO
+from boursa_vision.application.services.technical_analyzer import TechnicalAnalyzer
 
 
 @pytest.fixture
@@ -46,11 +47,7 @@ def technical_analyzer(
 @pytest.fixture
 def sample_investment():
     """Investissement échantillon pour les tests."""
-    return Mock(
-        symbol="AAPL",
-        name="Apple Inc.",
-        investment_type="STOCK"
-    )
+    return Mock(symbol="AAPL", name="Apple Inc.", investment_type="STOCK")
 
 
 @pytest.fixture
@@ -70,7 +67,10 @@ class TestTechnicalAnalyzerCreation:
     @pytest.mark.unit
     @pytest.mark.fast
     def test_should_create_technical_analyzer_with_dependencies(
-        self, mock_investment_repository, mock_market_data_repository, mock_scoring_service
+        self,
+        mock_investment_repository,
+        mock_market_data_repository,
+        mock_scoring_service,
     ):
         """Test de création avec toutes les dépendances."""
         # Act
@@ -92,8 +92,12 @@ class TestTechnicalAnalyzerAnalyzeInvestment:
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_should_analyze_investment_successfully(
-        self, technical_analyzer, mock_investment_repository, 
-        mock_market_data_repository, sample_investment, sample_market_data
+        self,
+        technical_analyzer,
+        mock_investment_repository,
+        mock_market_data_repository,
+        sample_investment,
+        sample_market_data,
     ):
         """Test d'analyse réussie d'un investissement."""
         # Arrange
@@ -121,14 +125,19 @@ class TestTechnicalAnalyzerAnalyzeInvestment:
         mock_investment_repository.find_by_symbol.return_value = None
 
         # Act & Assert
-        with pytest.raises(ValueError, match=f"Investment with symbol {symbol} not found"):
+        with pytest.raises(
+            ValueError, match=f"Investment with symbol {symbol} not found"
+        ):
             await technical_analyzer.analyze_investment(symbol)
 
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_should_raise_error_for_insufficient_market_data(
-        self, technical_analyzer, mock_investment_repository,
-        mock_market_data_repository, sample_investment
+        self,
+        technical_analyzer,
+        mock_investment_repository,
+        mock_market_data_repository,
+        sample_investment,
     ):
         """Test d'erreur pour données de marché insuffisantes."""
         # Arrange
@@ -143,8 +152,11 @@ class TestTechnicalAnalyzerAnalyzeInvestment:
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_should_handle_empty_price_data(
-        self, technical_analyzer, mock_investment_repository,
-        mock_market_data_repository, sample_investment
+        self,
+        technical_analyzer,
+        mock_investment_repository,
+        mock_market_data_repository,
+        sample_investment,
     ):
         """Test de gestion des données de prix vides."""
         # Arrange
@@ -161,8 +173,12 @@ class TestTechnicalAnalyzerAnalyzeInvestment:
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_should_use_custom_period_days(
-        self, technical_analyzer, mock_investment_repository,
-        mock_market_data_repository, sample_investment, sample_market_data
+        self,
+        technical_analyzer,
+        mock_investment_repository,
+        mock_market_data_repository,
+        sample_investment,
+        sample_market_data,
     ):
         """Test d'utilisation d'une période personnalisée."""
         # Arrange
@@ -191,7 +207,9 @@ class TestTechnicalAnalyzerAnalyzeInvestment:
         """Test de retour d'analyse vide en cas d'erreur inattendue."""
         # Arrange
         symbol = "AAPL"
-        mock_investment_repository.find_by_symbol.side_effect = Exception("Unexpected error")
+        mock_investment_repository.find_by_symbol.side_effect = Exception(
+            "Unexpected error"
+        )
 
         # Act
         result = await technical_analyzer.analyze_investment(symbol)
@@ -209,8 +227,12 @@ class TestTechnicalAnalyzerMultipleAnalysis:
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_should_analyze_multiple_investments(
-        self, technical_analyzer, mock_investment_repository,
-        mock_market_data_repository, sample_investment, sample_market_data
+        self,
+        technical_analyzer,
+        mock_investment_repository,
+        mock_market_data_repository,
+        sample_investment,
+        sample_market_data,
     ):
         """Test d'analyse de multiples investissements."""
         # Arrange
@@ -231,18 +253,22 @@ class TestTechnicalAnalyzerMultipleAnalysis:
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_should_skip_failed_analyses_in_multiple_analysis(
-        self, technical_analyzer, mock_investment_repository,
-        mock_market_data_repository, sample_investment, sample_market_data
+        self,
+        technical_analyzer,
+        mock_investment_repository,
+        mock_market_data_repository,
+        sample_investment,
+        sample_market_data,
     ):
         """Test de gestion des échecs dans l'analyse multiple."""
         # Arrange
         symbols = ["AAPL", "INVALID", "GOOGL"]
-        
+
         def mock_find_by_symbol(symbol):
             if symbol == "INVALID":
                 return None
             return sample_investment
-            
+
         mock_investment_repository.find_by_symbol.side_effect = mock_find_by_symbol
         mock_market_data_repository.get_price_history.return_value = sample_market_data
 
@@ -302,11 +328,13 @@ class TestTechnicalAnalyzerHelperMethods:
     ):
         """Test de calcul des indicateurs techniques avec données valides."""
         # Act
-        indicators = technical_analyzer._calculate_technical_indicators(sample_market_data)
+        indicators = technical_analyzer._calculate_technical_indicators(
+            sample_market_data
+        )
 
         # Assert
         assert isinstance(indicators, dict)
-        # Les indicateurs devraient être calculés même si les valeurs exactes 
+        # Les indicateurs devraient être calculés même si les valeurs exactes
         # dépendent de l'implémentation
 
     @pytest.mark.unit
@@ -317,19 +345,25 @@ class TestTechnicalAnalyzerHelperMethods:
         invalid_market_data.price_data = None
 
         # Act
-        indicators = technical_analyzer._calculate_technical_indicators(invalid_market_data)
+        indicators = technical_analyzer._calculate_technical_indicators(
+            invalid_market_data
+        )
 
         # Assert
         assert indicators == {}
 
     @pytest.mark.unit
-    def test_should_handle_market_data_without_price_data_attribute(self, technical_analyzer):
+    def test_should_handle_market_data_without_price_data_attribute(
+        self, technical_analyzer
+    ):
         """Test de gestion des données sans attribut price_data."""
         # Arrange
         invalid_market_data = Mock(spec=[])  # Mock sans attribut price_data
 
         # Act
-        indicators = technical_analyzer._calculate_technical_indicators(invalid_market_data)
+        indicators = technical_analyzer._calculate_technical_indicators(
+            invalid_market_data
+        )
 
         # Assert
         assert indicators == {}
@@ -355,8 +389,11 @@ class TestTechnicalAnalyzerEdgeCases:
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_should_handle_zero_period_days(
-        self, technical_analyzer, mock_investment_repository,
-        mock_market_data_repository, sample_investment
+        self,
+        technical_analyzer,
+        mock_investment_repository,
+        mock_market_data_repository,
+        sample_investment,
     ):
         """Test de gestion d'une période de 0 jours."""
         # Arrange
@@ -371,8 +408,11 @@ class TestTechnicalAnalyzerEdgeCases:
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_should_handle_negative_period_days(
-        self, technical_analyzer, mock_investment_repository,
-        mock_market_data_repository, sample_investment
+        self,
+        technical_analyzer,
+        mock_investment_repository,
+        mock_market_data_repository,
+        sample_investment,
     ):
         """Test de gestion d'une période négative."""
         # Arrange
@@ -393,27 +433,43 @@ class TestTechnicalAnalyzerPrivateMethods:
     def test_calculate_rsi_with_valid_data(self, technical_analyzer):
         """Test de calcul RSI avec données valides."""
         # Arrange - Prix simulant une tendance avec gains/pertes
-        prices = [100.0, 102.0, 101.0, 103.0, 102.5, 104.0, 103.0, 105.0, 
-                 104.5, 106.0, 105.0, 107.0, 106.5, 108.0, 107.0, 109.0]
-        
+        prices = [
+            100.0,
+            102.0,
+            101.0,
+            103.0,
+            102.5,
+            104.0,
+            103.0,
+            105.0,
+            104.5,
+            106.0,
+            105.0,
+            107.0,
+            106.5,
+            108.0,
+            107.0,
+            109.0,
+        ]
+
         # Act
         rsi = technical_analyzer._calculate_rsi(prices, period=14)
-        
+
         # Assert
         assert rsi is not None
         assert 0 <= rsi <= 100
         assert isinstance(rsi, float)
 
     @pytest.mark.unit
-    @pytest.mark.fast 
+    @pytest.mark.fast
     def test_calculate_rsi_with_insufficient_data(self, technical_analyzer):
         """Test RSI avec données insuffisantes."""
         # Arrange
         prices = [100.0, 102.0, 101.0]  # Seulement 3 prix
-        
+
         # Act
         rsi = technical_analyzer._calculate_rsi(prices, period=14)
-        
+
         # Assert
         assert rsi is None
 
@@ -422,12 +478,27 @@ class TestTechnicalAnalyzerPrivateMethods:
     def test_calculate_rsi_with_no_losses(self, technical_analyzer):
         """Test RSI avec que des gains (pas de pertes)."""
         # Arrange - Prix uniquement croissants
-        prices = [100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.0, 107.0,
-                 108.0, 109.0, 110.0, 111.0, 112.0, 113.0, 114.0]
-        
+        prices = [
+            100.0,
+            101.0,
+            102.0,
+            103.0,
+            104.0,
+            105.0,
+            106.0,
+            107.0,
+            108.0,
+            109.0,
+            110.0,
+            111.0,
+            112.0,
+            113.0,
+            114.0,
+        ]
+
         # Act
         rsi = technical_analyzer._calculate_rsi(prices, period=14)
-        
+
         # Assert
         assert rsi is not None
         assert abs(rsi - 100.0) < 0.01  # RSI = 100 quand avg_loss = 0
@@ -438,10 +509,10 @@ class TestTechnicalAnalyzerPrivateMethods:
         """Test RSI avec données invalides."""
         # Arrange
         prices = ["invalid", None, 100.0]
-        
+
         # Act
         rsi = technical_analyzer._calculate_rsi(prices, period=14)
-        
+
         # Assert
         assert rsi is None
 
@@ -451,10 +522,10 @@ class TestTechnicalAnalyzerPrivateMethods:
         """Test de calcul MACD avec données valides."""
         # Arrange - 30 prix pour permettre calcul EMA 26
         prices = [100.0 + i * 0.5 for i in range(30)]
-        
+
         # Act
         macd = technical_analyzer._calculate_macd(prices)
-        
+
         # Assert
         assert macd is not None
         assert isinstance(macd, float)
@@ -465,10 +536,10 @@ class TestTechnicalAnalyzerPrivateMethods:
         """Test MACD avec données insuffisantes."""
         # Arrange
         prices = [100.0, 101.0, 102.0]  # Moins de 26 prix requis
-        
+
         # Act
         macd = technical_analyzer._calculate_macd(prices)
-        
+
         # Assert
         assert macd is None
 
@@ -477,13 +548,27 @@ class TestTechnicalAnalyzerPrivateMethods:
     def test_calculate_ema_with_valid_data(self, technical_analyzer):
         """Test de calcul EMA avec données valides."""
         # Arrange
-        prices = [100.0, 102.0, 101.0, 103.0, 102.5, 104.0, 103.0, 105.0, 
-                 104.5, 106.0, 105.0, 107.0, 106.5, 108.0]
+        prices = [
+            100.0,
+            102.0,
+            101.0,
+            103.0,
+            102.5,
+            104.0,
+            103.0,
+            105.0,
+            104.5,
+            106.0,
+            105.0,
+            107.0,
+            106.5,
+            108.0,
+        ]
         period = 12
-        
+
         # Act
         ema = technical_analyzer._calculate_ema(prices, period)
-        
+
         # Assert
         assert ema is not None
         assert isinstance(ema, float)
@@ -496,10 +581,10 @@ class TestTechnicalAnalyzerPrivateMethods:
         # Arrange
         prices = [100.0, 101.0]  # Moins que period requis
         period = 12
-        
+
         # Act
         ema = technical_analyzer._calculate_ema(prices, period)
-        
+
         # Assert
         assert ema is None
 
@@ -510,10 +595,10 @@ class TestTechnicalAnalyzerPrivateMethods:
         # Arrange
         prices = [100.0, "invalid", None, 103.0]
         period = 3
-        
+
         # Act
         ema = technical_analyzer._calculate_ema(prices, period)
-        
+
         # Assert
         assert ema is None
 
@@ -524,10 +609,10 @@ class TestTechnicalAnalyzerPrivateMethods:
         # Arrange
         prices = [100.0, 102.0, 104.0, 106.0, 108.0]
         period = 5
-        
+
         # Act
         sma = technical_analyzer._calculate_sma(prices, period)
-        
+
         # Assert
         assert sma is not None
         assert abs(sma - 104.0) < 0.01
@@ -540,10 +625,10 @@ class TestTechnicalAnalyzerPrivateMethods:
         # Arrange
         prices = [100.0, 102.0]  # Moins que period
         period = 5
-        
+
         # Act
         sma = technical_analyzer._calculate_sma(prices, period)
-        
+
         # Assert
         assert sma is None
 
@@ -554,10 +639,10 @@ class TestTechnicalAnalyzerPrivateMethods:
         # Arrange
         prices = [100.0, "invalid", None]
         period = 2
-        
+
         # Act
         sma = technical_analyzer._calculate_sma(prices, period)
-        
+
         # Assert
         assert sma is None
 
@@ -566,13 +651,33 @@ class TestTechnicalAnalyzerPrivateMethods:
     def test_calculate_bollinger_position_with_valid_data(self, technical_analyzer):
         """Test de calcul position Bollinger avec données valides."""
         # Arrange
-        prices = [100.0, 102.0, 101.0, 103.0, 102.5, 104.0, 103.0, 105.0, 
-                 104.5, 106.0, 105.0, 107.0, 106.5, 108.0, 107.0, 109.0,
-                 108.0, 110.0, 109.0, 111.0, 110.0]  # 21 prix
-        
+        prices = [
+            100.0,
+            102.0,
+            101.0,
+            103.0,
+            102.5,
+            104.0,
+            103.0,
+            105.0,
+            104.5,
+            106.0,
+            105.0,
+            107.0,
+            106.5,
+            108.0,
+            107.0,
+            109.0,
+            108.0,
+            110.0,
+            109.0,
+            111.0,
+            110.0,
+        ]  # 21 prix
+
         # Act
         position = technical_analyzer._calculate_bollinger_position(prices, period=20)
-        
+
         # Assert
         assert position is not None
         assert 0 <= position <= 1
@@ -580,27 +685,31 @@ class TestTechnicalAnalyzerPrivateMethods:
 
     @pytest.mark.unit
     @pytest.mark.fast
-    def test_calculate_bollinger_position_with_insufficient_data(self, technical_analyzer):
+    def test_calculate_bollinger_position_with_insufficient_data(
+        self, technical_analyzer
+    ):
         """Test position Bollinger avec données insuffisantes."""
         # Arrange
         prices = [100.0, 102.0, 101.0]  # Moins de 20 prix
-        
+
         # Act
         position = technical_analyzer._calculate_bollinger_position(prices, period=20)
-        
+
         # Assert
         assert position is None
 
     @pytest.mark.unit
     @pytest.mark.fast
-    def test_calculate_bollinger_position_with_zero_volatility(self, technical_analyzer):
+    def test_calculate_bollinger_position_with_zero_volatility(
+        self, technical_analyzer
+    ):
         """Test position Bollinger avec prix identiques (volatilité nulle)."""
         # Arrange - Prix identiques = std_dev = 0
         prices = [100.0] * 25
-        
+
         # Act
         position = technical_analyzer._calculate_bollinger_position(prices, period=20)
-        
+
         # Assert
         assert position is not None
         assert abs(position - 0.5) < 0.01
@@ -611,24 +720,44 @@ class TestTechnicalAnalyzerPrivateMethods:
         """Test position Bollinger avec données invalides."""
         # Arrange
         prices = [100.0, "invalid", None] + [102.0] * 18
-        
+
         # Act
         position = technical_analyzer._calculate_bollinger_position(prices, period=20)
-        
+
         # Assert
         assert position is None
 
     @pytest.mark.unit
-    @pytest.mark.fast  
+    @pytest.mark.fast
     def test_calculate_volume_trend_with_valid_data(self, technical_analyzer):
         """Test de calcul tendance volume avec données valides."""
         # Arrange - Volume croissant puis décroissant
-        volumes = [1000.0, 1100.0, 1200.0, 1300.0, 1400.0, 1500.0, 1600.0, 1700.0, 1800.0, 1900.0,
-                  1800.0, 1700.0, 1600.0, 1500.0, 1400.0, 1300.0, 1200.0, 1100.0, 1000.0, 900.0]
-        
+        volumes = [
+            1000.0,
+            1100.0,
+            1200.0,
+            1300.0,
+            1400.0,
+            1500.0,
+            1600.0,
+            1700.0,
+            1800.0,
+            1900.0,
+            1800.0,
+            1700.0,
+            1600.0,
+            1500.0,
+            1400.0,
+            1300.0,
+            1200.0,
+            1100.0,
+            1000.0,
+            900.0,
+        ]
+
         # Act
         trend = technical_analyzer._calculate_volume_trend(volumes, period=10)
-        
+
         # Assert
         assert trend is not None
         assert isinstance(trend, float)
@@ -641,10 +770,10 @@ class TestTechnicalAnalyzerPrivateMethods:
         """Test tendance volume avec données insuffisantes."""
         # Arrange
         volumes = [1000.0, 1100.0, 1200.0]  # Moins de period*2
-        
+
         # Act
         trend = technical_analyzer._calculate_volume_trend(volumes, period=10)
-        
+
         # Assert
         assert trend is None
 
@@ -654,10 +783,10 @@ class TestTechnicalAnalyzerPrivateMethods:
         """Test tendance volume avec moyenne ancienne nulle."""
         # Arrange - Volumes anciens à zéro
         volumes = [0.0] * 10 + [1000.0] * 10
-        
+
         # Act
         trend = technical_analyzer._calculate_volume_trend(volumes, period=10)
-        
+
         # Assert
         assert trend is not None
         assert abs(trend - 0.0) < 0.01
@@ -668,10 +797,10 @@ class TestTechnicalAnalyzerPrivateMethods:
         """Test tendance volume avec données invalides."""
         # Arrange
         volumes = [1000.0, "invalid", None] + [1100.0] * 17
-        
+
         # Act
         trend = technical_analyzer._calculate_volume_trend(volumes, period=10)
-        
+
         # Assert
         assert trend is None
 
@@ -681,7 +810,9 @@ class TestTechnicalAnalyzerCalculateTechnicalIndicators:
 
     @pytest.mark.unit
     @pytest.mark.fast
-    def test_calculate_technical_indicators_with_valid_market_data(self, technical_analyzer):
+    def test_calculate_technical_indicators_with_valid_market_data(
+        self, technical_analyzer
+    ):
         """Test de calcul des indicateurs avec données de marché valides."""
         # Arrange
         market_data = Mock()
@@ -692,10 +823,10 @@ class TestTechnicalAnalyzerCalculateTechnicalIndicators:
             price_point.volume = 1000000 + i * 10000
             price_points.append(price_point)
         market_data.price_data = price_points
-        
+
         # Act
         indicators = technical_analyzer._calculate_technical_indicators(market_data)
-        
+
         # Assert
         assert isinstance(indicators, dict)
         assert "rsi" in indicators
@@ -709,7 +840,9 @@ class TestTechnicalAnalyzerCalculateTechnicalIndicators:
 
     @pytest.mark.unit
     @pytest.mark.fast
-    def test_calculate_technical_indicators_with_insufficient_data(self, technical_analyzer):
+    def test_calculate_technical_indicators_with_insufficient_data(
+        self, technical_analyzer
+    ):
         """Test avec données insuffisantes (moins de 14 points)."""
         # Arrange
         market_data = Mock()
@@ -720,71 +853,77 @@ class TestTechnicalAnalyzerCalculateTechnicalIndicators:
             price_point.volume = 1000000
             price_points.append(price_point)
         market_data.price_data = price_points
-        
+
         # Act
         indicators = technical_analyzer._calculate_technical_indicators(market_data)
-        
+
         # Assert
         assert indicators == {}
 
     @pytest.mark.unit
     @pytest.mark.fast
-    def test_calculate_technical_indicators_with_no_price_data(self, technical_analyzer):
+    def test_calculate_technical_indicators_with_no_price_data(
+        self, technical_analyzer
+    ):
         """Test avec market_data sans price_data."""
         # Arrange
         market_data = Mock()
         market_data.price_data = None
-        
+
         # Act
         indicators = technical_analyzer._calculate_technical_indicators(market_data)
-        
+
         # Assert
         assert indicators == {}
 
     @pytest.mark.unit
     @pytest.mark.fast
-    def test_calculate_technical_indicators_with_invalid_price_entries(self, technical_analyzer):
+    def test_calculate_technical_indicators_with_invalid_price_entries(
+        self, technical_analyzer
+    ):
         """Test avec entrées de prix invalides."""
         # Arrange
         market_data = Mock()
         price_points = []
-        
+
         # Quelques points valides au début
         for i in range(3):
             price_point = Mock()
             price_point.close = 100.0
             price_point.volume = 1000000
             price_points.append(price_point)
-        
+
         # Points invalides
         invalid_point1 = Mock()
         invalid_point1.close = "invalid"
         invalid_point1.volume = 1000000
         price_points.append(invalid_point1)
-        
+
         invalid_point2 = Mock()
         invalid_point2.close = None
         invalid_point2.volume = 1000000
         price_points.append(invalid_point2)
-        
+
         # Plus de points valides pour avoir 15+ points au total
         for i in range(15):
             price_point = Mock()
             price_point.close = 100.0 + i
             price_point.volume = 1000000
             price_points.append(price_point)
-            
+
         market_data.price_data = price_points
-        
+
         # Act
         indicators = technical_analyzer._calculate_technical_indicators(market_data)
-        
+
         # Assert
         assert isinstance(indicators, dict)
 
     @pytest.mark.unit
     @pytest.mark.fast
-    def test_calculate_technical_indicators_with_missing_close_key(self, technical_analyzer):
+    def test_calculate_technical_indicators_with_missing_close_key(
+        self, technical_analyzer
+    ):
         """Test avec des entrées manquant l'attribut 'close'."""
         # Arrange
         market_data = Mock()
@@ -794,16 +933,18 @@ class TestTechnicalAnalyzerCalculateTechnicalIndicators:
             price_point.volume = 1000000  # Pas d'attribut close
             price_points.append(price_point)
         market_data.price_data = price_points
-        
+
         # Act
         indicators = technical_analyzer._calculate_technical_indicators(market_data)
-        
+
         # Assert
         assert indicators == {}
 
     @pytest.mark.unit
     @pytest.mark.fast
-    def test_calculate_technical_indicators_with_missing_volume_key(self, technical_analyzer):
+    def test_calculate_technical_indicators_with_missing_volume_key(
+        self, technical_analyzer
+    ):
         """Test avec des entrées manquant l'attribut 'volume'."""
         # Arrange
         market_data = Mock()
@@ -813,16 +954,18 @@ class TestTechnicalAnalyzerCalculateTechnicalIndicators:
             price_point.close = 100.0 + i  # Pas d'attribut volume
             price_points.append(price_point)
         market_data.price_data = price_points
-        
+
         # Act
         indicators = technical_analyzer._calculate_technical_indicators(market_data)
-        
+
         # Assert
         assert indicators == {}
 
     @pytest.mark.unit
     @pytest.mark.fast
-    def test_calculate_technical_indicators_with_support_resistance_levels(self, technical_analyzer):
+    def test_calculate_technical_indicators_with_support_resistance_levels(
+        self, technical_analyzer
+    ):
         """Test de calcul des niveaux de support et résistance."""
         # Arrange
         market_data = Mock()
@@ -833,10 +976,10 @@ class TestTechnicalAnalyzerCalculateTechnicalIndicators:
             price_point.volume = 1000000
             price_points.append(price_point)
         market_data.price_data = price_points
-        
+
         # Act
         indicators = technical_analyzer._calculate_technical_indicators(market_data)
-        
+
         # Assert
         assert indicators["support_level"] is not None
         assert indicators["resistance_level"] is not None
@@ -844,14 +987,16 @@ class TestTechnicalAnalyzerCalculateTechnicalIndicators:
 
     @pytest.mark.unit
     @pytest.mark.fast
-    def test_calculate_technical_indicators_with_exception_handling(self, technical_analyzer):
+    def test_calculate_technical_indicators_with_exception_handling(
+        self, technical_analyzer
+    ):
         """Test de gestion des exceptions."""
         # Arrange
         market_data = Mock()
         market_data.price_data = "not_a_list"
-        
+
         # Act
         indicators = technical_analyzer._calculate_technical_indicators(market_data)
-        
+
         # Assert
         assert indicators == {}

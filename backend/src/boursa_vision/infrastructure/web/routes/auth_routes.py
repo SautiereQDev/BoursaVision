@@ -5,9 +5,9 @@ Authentication Routes for FastAPI
 Routes for user authentication, registration, and token management.
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -15,21 +15,22 @@ from slowapi.util import get_remote_address
 from boursa_vision.application.dtos.auth_dtos import (
     LoginRequest,
     LoginResponse,
-    RegisterRequest,
-    RegisterResponse,
     RefreshTokenRequest,
     RefreshTokenResponse,
+    RegisterRequest,
+    RegisterResponse,
+    TokenResponse,
     UserProfileResponse,
     UserResponse,
-    TokenResponse,
 )
-from boursa_vision.application.services.authentication_service import AuthenticationService
+from boursa_vision.application.services.authentication_service import (
+    AuthenticationService,
+)
 from boursa_vision.domain.entities.user import User
 from boursa_vision.infrastructure.web.dependencies.auth_dependencies import (
-    get_current_active_user,
     get_auth_service,
+    get_current_active_user,
 )
-
 
 # Rate limiter setup
 limiter = Limiter(key_func=get_remote_address)
@@ -85,7 +86,7 @@ async def register(
 ) -> RegisterResponse:
     """
     Register a new user account.
-    
+
     Rate limited to 5 requests per minute per IP.
     """
     try:
@@ -96,7 +97,7 @@ async def register(
             first_name=register_data.first_name,
             last_name=register_data.last_name,
         )
-        
+
         return RegisterResponse(
             user_id=str(result.user.id),
             email=result.user.email,
@@ -110,14 +111,11 @@ async def register(
             expires_in=result.token_pair.access_token.expires_in,
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Registration failed"
+            detail="Registration failed",
         )
 
 
@@ -135,7 +133,7 @@ async def login(
 ) -> LoginResponse:
     """
     Authenticate user and return JWT tokens.
-    
+
     Rate limited to 10 requests per minute per IP.
     """
     try:
@@ -143,14 +141,14 @@ async def login(
             email=login_data.email,
             password=login_data.password,
         )
-        
+
         if not result:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
         return LoginResponse(
             user=UserResponse(
                 id=str(result.user.id),
@@ -176,7 +174,7 @@ async def login(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Authentication failed"
+            detail="Authentication failed",
         )
 
 
@@ -194,21 +192,21 @@ async def refresh_token(
 ) -> RefreshTokenResponse:
     """
     Refresh access token using refresh token.
-    
+
     Rate limited to 20 requests per minute per IP.
     """
     try:
         result = await auth_service.refresh_access_token(
             refresh_token=refresh_data.refresh_token
         )
-        
+
         if not result:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid or expired refresh token",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
         return RefreshTokenResponse(
             access_token=result.access_token.token,
             refresh_token=result.refresh_token.token,
@@ -219,8 +217,7 @@ async def refresh_token(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token refresh failed"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token refresh failed"
         )
 
 
@@ -242,7 +239,7 @@ async def logout(
         user = await auth_service.validate_access_token(credentials.credentials)
         if user:
             await auth_service.logout_user(user.id)
-        
+
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     except Exception:
         # Even if token is invalid, return success for security
@@ -274,7 +271,9 @@ async def get_current_user_profile(
             created_at=current_user.created_at,
             last_login=current_user.last_login,
         ),
-        permissions=["read", "write"] if current_user.role.value == "admin" else ["read"],
+        permissions=["read", "write"]
+        if current_user.role.value == "admin"
+        else ["read"],
     )
 
 

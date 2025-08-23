@@ -10,12 +10,13 @@ Comprehensive tests for main.py covering:
 - Health checks and root endpoints
 - Lifespan events
 """
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from boursa_vision.infrastructure.web.main import create_application, app, lifespan
+from boursa_vision.infrastructure.web.main import app, create_application, lifespan
 
 
 class TestApplicationCreation:
@@ -35,7 +36,7 @@ class TestApplicationCreation:
         """Test that application includes expected routes."""
         application = create_application()
         route_paths = [route.path for route in application.routes]
-        
+
         # Check for expected routes
         assert "/" in route_paths
         assert "/health" in route_paths
@@ -50,9 +51,9 @@ class TestApplicationCreation:
         mock_settings.cors_methods = ["GET", "POST"]
         mock_settings.cors_headers = ["*"]
         mock_settings.environment = "development"
-        
+
         application = create_application()
-        
+
         # Verify middleware stack is applied
         assert len(application.user_middleware) > 0
 
@@ -68,9 +69,9 @@ class TestApplicationCreation:
         mock_settings.cors_origins = []
         mock_settings.cors_methods = []
         mock_settings.cors_headers = []
-        
+
         application = create_application()
-        
+
         # In production, docs should be disabled
         assert application.openapi_url is None
         assert application.docs_url is None
@@ -90,9 +91,9 @@ class TestApplicationCreation:
         mock_settings.cors_origins = ["*"]
         mock_settings.cors_methods = ["GET", "POST"]
         mock_settings.cors_headers = ["*"]
-        
+
         application = create_application()
-        
+
         # In development, docs should be enabled
         assert application.openapi_url is not None
         assert application.docs_url is not None
@@ -139,12 +140,12 @@ class TestLifespanEvents:
     async def test_lifespan_startup_and_shutdown(self):
         """Test lifespan startup and shutdown events."""
         mock_app = Mock()
-        
+
         # Test lifespan context manager
         async with lifespan(mock_app) as context:
             # Startup completed successfully
             assert context is None  # lifespan yields None
-        
+
         # Shutdown completed successfully (no exceptions raised)
 
     @pytest.mark.asyncio
@@ -152,17 +153,19 @@ class TestLifespanEvents:
     async def test_lifespan_logging(self, mock_logger):
         """Test that lifespan events are logged."""
         mock_app = Mock()
-        
+
         async with lifespan(mock_app):
             pass
-        
+
         # Verify startup and shutdown logs were called
         mock_logger.info.assert_called()
         call_args = [call[0][0] for call in mock_logger.info.call_args_list]
-        
+
         startup_logged = any("Starting Boursa Vision API" in arg for arg in call_args)
-        shutdown_logged = any("Shutting down Boursa Vision API" in arg for arg in call_args)
-        
+        shutdown_logged = any(
+            "Shutting down Boursa Vision API" in arg for arg in call_args
+        )
+
         assert startup_logged
         assert shutdown_logged
 
@@ -176,10 +179,10 @@ class TestApplicationInstance:
 
     def test_app_has_expected_properties(self):
         """Test that the app instance has expected properties."""
-        assert hasattr(app, 'title')
-        assert hasattr(app, 'version')
-        assert hasattr(app, 'routes')
-        assert hasattr(app, 'middleware')
+        assert hasattr(app, "title")
+        assert hasattr(app, "version")
+        assert hasattr(app, "routes")
+        assert hasattr(app, "middleware")
 
 
 class TestExceptionHandlers:
@@ -194,6 +197,7 @@ class TestExceptionHandlers:
     def test_validation_exception_handler_registered(self):
         """Test that validation exception handler is registered."""
         from fastapi.exceptions import RequestValidationError
+
         application = create_application()
         # Verify RequestValidationError handler exists
         assert RequestValidationError in application.exception_handlers
@@ -211,10 +215,12 @@ class TestRouterInclusion:
     def test_routers_are_included(self):
         """Test that expected routers are included."""
         application = create_application()
-        
+
         # Get all router prefixes/tags from routes
-        route_paths = [route.path for route in application.routes if hasattr(route, 'path')]
-        
+        route_paths = [
+            route.path for route in application.routes if hasattr(route, "path")
+        ]
+
         # Check that routes from different routers exist
         # (This is a basic check - specific route testing should be in router tests)
         assert len(route_paths) > 2  # At least root, health, and router paths
@@ -222,9 +228,9 @@ class TestRouterInclusion:
     def test_openapi_tags_configuration(self):
         """Test OpenAPI tags configuration."""
         application = create_application()
-        
+
         expected_tags = ["portfolios", "investments", "market-data", "websocket"]
-        
+
         if application.openapi_tags:
             configured_tags = [tag["name"] for tag in application.openapi_tags]
             for tag in expected_tags:
@@ -234,12 +240,12 @@ class TestRouterInclusion:
 def test_main_module_executable():
     """Test that main module can be executed."""
     import boursa_vision.infrastructure.web.main as main_module
-    
+
     # Test that the module has the expected components
-    assert hasattr(main_module, 'app')
-    assert hasattr(main_module, 'create_application')
-    assert hasattr(main_module, 'lifespan')
-    
+    assert hasattr(main_module, "app")
+    assert hasattr(main_module, "create_application")
+    assert hasattr(main_module, "lifespan")
+
     # Test that app is properly configured
     assert main_module.app.title is not None
     assert main_module.app.version is not None

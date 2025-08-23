@@ -6,6 +6,7 @@ qui charge automatiquement les variables d'environnement depuis les fichiers
 .env de la racine du projet selon l'environnement spécifié.
 """
 
+import json
 import logging
 import os
 import re
@@ -15,7 +16,6 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import json
 
 
 def parse_list_env(value: str) -> List[str]:
@@ -108,7 +108,7 @@ class GlobalSettings(BaseSettings):
             return parse_list_env(self.allowed_hosts_env)
         return ["localhost", "127.0.0.1"]
 
-    @property  
+    @property
     def cors_origins(self) -> List[str]:
         """Liste des origines CORS autorisées."""
         if self.cors_origins_env:
@@ -275,20 +275,27 @@ class GlobalSettings(BaseSettings):
         return values.get("secret_key", "")
 
     @field_validator(
-        "archival_frequent_interval", "archival_daily_hour", "archival_weekly_day", 
-        "archival_weekly_hour", "archival_batch_size", "archival_concurrent_workers",
-        "archival_retention_days", "archival_max_retries", "archival_retry_delay", 
-        "archival_error_threshold", mode="before"
+        "archival_frequent_interval",
+        "archival_daily_hour",
+        "archival_weekly_day",
+        "archival_weekly_hour",
+        "archival_batch_size",
+        "archival_concurrent_workers",
+        "archival_retention_days",
+        "archival_max_retries",
+        "archival_retry_delay",
+        "archival_error_threshold",
+        mode="before",
     )
     @classmethod
     def clean_numeric_env_vars(cls, v: Any) -> Any:
         """Nettoie les commentaires des variables d'environnement numériques."""
         if isinstance(v, str):
             # Retire tout ce qui vient après un #
-            cleaned = v.split('#')[0].strip()
+            cleaned = v.split("#")[0].strip()
             try:
                 # Essaye de convertir en int si c'est possible
-                if '.' in cleaned:
+                if "." in cleaned:
                     return float(cleaned)
                 else:
                     return int(cleaned)
@@ -302,7 +309,7 @@ class GlobalSettings(BaseSettings):
         """Nettoie les commentaires des variables d'environnement flottantes."""
         if isinstance(v, str):
             # Retire tout ce qui vient après un #
-            cleaned = v.split('#')[0].strip()
+            cleaned = v.split("#")[0].strip()
             try:
                 return float(cleaned)
             except ValueError:

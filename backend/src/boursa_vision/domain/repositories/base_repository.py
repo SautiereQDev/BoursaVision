@@ -31,7 +31,7 @@ class IBaseRepository(ABC, Generic[T]):
     async def save(self, entity: T) -> T:
         """Save entity (create or update)"""
         raise NotImplementedError
-    
+
     @abstractmethod
     async def update(self, entity: T) -> T:
         """Update existing entity"""

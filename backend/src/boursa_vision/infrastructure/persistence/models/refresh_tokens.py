@@ -8,15 +8,7 @@ SQLAlchemy models for refresh token management.
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import (
-    TIMESTAMP,
-    Boolean,
-    Column,
-    ForeignKey,
-    Index,
-    String,
-    Text,
-)
+from sqlalchemy import TIMESTAMP, Boolean, Column, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 

@@ -20,7 +20,6 @@ from uuid import UUID, uuid4
 
 from ..events.portfolio_events import InvestmentCreatedEvent
 from ..value_objects.money import Currency, Money
-
 from .base import AggregateRoot
 
 
@@ -283,20 +282,24 @@ class Investment(AggregateRoot):  # pylint: disable=too-many-instance-attributes
         # Validations
         if not symbol or symbol.strip() == "":
             raise InvestmentValidationException("Symbol cannot be empty")
-        
+
         if not name or name.strip() == "":
             raise InvestmentValidationException("Name cannot be empty")
-            
+
         # Normaliser le symbole en majuscules
         symbol = symbol.strip().upper()
-        
+
         symbol_len = len(symbol)
         if symbol_len < 3 or symbol_len > 10:
-            raise InvestmentValidationException(f"Symbol length must be between 3 and 10 characters, got {symbol_len}")
-            
+            raise InvestmentValidationException(
+                f"Symbol length must be between 3 and 10 characters, got {symbol_len}"
+            )
+
         # Valider le format du symbole (lettres et chiffres uniquement)
         if not symbol.isalnum():
-            raise InvestmentValidationException(f"Symbol must contain only letters and numbers, got '{symbol}'")
+            raise InvestmentValidationException(
+                f"Symbol must contain only letters and numbers, got '{symbol}'"
+            )
 
         investment_id = uuid4()
         created_at = datetime.now(timezone.utc)

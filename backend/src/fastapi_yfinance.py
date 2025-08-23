@@ -811,9 +811,7 @@ if ADVANCED_ANALYSIS_AVAILABLE:
                                                 "Historical price stability",
                                                 "Archive data available",
                                             ],
-                                            "weaknesses": [
-                                                "Limited fundamental data"
-                                            ],
+                                            "weaknesses": ["Limited fundamental data"],
                                             "key_insights": [
                                                 f"MA trend: {'Bullish' if ma_5 > ma_10 else 'Bearish'}",
                                                 f"5d change: {price_change_5d:.1f}%",

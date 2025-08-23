@@ -1,5 +1,6 @@
 """Tests pour client factory"""
 import pytest
+
 from boursa_vision.infrastructure.external.client_factory import ClientProfile
 
 

@@ -8,7 +8,8 @@ SQLAlchemy implementation of the investment repository interface.
 from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import select, delete as sql_delete, func
+from sqlalchemy import delete as sql_delete
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....domain.entities.investment import Investment
@@ -22,9 +23,13 @@ class SimpleInvestmentMapper:
 
     def to_domain(self, model: InvestmentModel) -> Investment:
         """Convert SQLAlchemy InvestmentModel to domain Investment."""
-        from boursa_vision.domain.entities.investment import MarketCap, InvestmentSector, InvestmentType
+        from boursa_vision.domain.entities.investment import (
+            InvestmentSector,
+            InvestmentType,
+            MarketCap,
+        )
         from boursa_vision.domain.value_objects.money import Currency
-        
+
         # Mapper market_cap numérique vers enum MarketCap
         market_cap_enum = MarketCap.LARGE  # Valeur par défaut
         if model.market_cap is not None:
@@ -75,7 +80,7 @@ class SimpleInvestmentMapper:
             "LARGE": 50.0,
             "MEGA": 500.0,
         }
-        
+
         market_cap_numeric = market_cap_mapping.get(investment.market_cap.value, 50.0)
 
         return InvestmentModel(
@@ -150,7 +155,9 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
         if self._session:
             # Use injected session (testing mode)
             # Check if investment exists
-            stmt = select(InvestmentModel).where(InvestmentModel.symbol == investment.symbol)
+            stmt = select(InvestmentModel).where(
+                InvestmentModel.symbol == investment.symbol
+            )
             result = await self._session.execute(stmt)
             existing_model = result.scalar_one_or_none()
 
@@ -171,7 +178,9 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
             # Use get_db_session (production mode)
             async with get_db_session() as session:
                 # Check if investment exists
-                stmt = select(InvestmentModel).where(InvestmentModel.symbol == investment.symbol)
+                stmt = select(InvestmentModel).where(
+                    InvestmentModel.symbol == investment.symbol
+                )
                 result = await session.execute(stmt)
                 existing_model = result.scalar_one_or_none()
 
@@ -192,19 +201,19 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
     async def find_all(self) -> List[Investment]:
         """Find all investments (alias for find_all_active)."""
         return await self.find_all_active()
-    
+
     async def find_by_market_cap(self, market_cap: str) -> List[Investment]:
         """Find investments by market cap."""
         # Convert market cap enum to numeric value for filtering
         market_cap_mapping = {
-            'NANO': 0.05,
-            'MICRO': 0.25,
-            'SMALL': 2.0,
-            'MID': 10.0,
-            'LARGE': 50.0,
-            'MEGA': 500.0,
+            "NANO": 0.05,
+            "MICRO": 0.25,
+            "SMALL": 2.0,
+            "MID": 10.0,
+            "LARGE": 50.0,
+            "MEGA": 500.0,
         }
-        
+
         target_value = market_cap_mapping.get(market_cap, 50.0)
         # Search with tolerance range
         stmt = select(InvestmentModel).where(
@@ -213,7 +222,7 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
         result = await self._execute_with_session(stmt)
         models = result.scalars().all()
         return [self._mapper.to_domain(model) for model in models]
-    
+
     async def search_by_name(self, name_pattern: str) -> List[Investment]:
         """Search investments by name pattern."""
         stmt = select(InvestmentModel).where(
@@ -227,12 +236,16 @@ class SQLAlchemyInvestmentRepository(IInvestmentRepository):
         """Delete investment."""
         if self._session:
             # Use injected session (testing mode)
-            stmt = sql_delete(InvestmentModel).where(InvestmentModel.symbol == investment.symbol)
+            stmt = sql_delete(InvestmentModel).where(
+                InvestmentModel.symbol == investment.symbol
+            )
             await self._session.execute(stmt)
             await self._session.flush()
         else:
             # Use get_db_session (production mode)
             async with get_db_session() as session:
-                stmt = sql_delete(InvestmentModel).where(InvestmentModel.symbol == investment.symbol)
+                stmt = sql_delete(InvestmentModel).where(
+                    InvestmentModel.symbol == investment.symbol
+                )
                 await session.execute(stmt)
                 await session.flush()

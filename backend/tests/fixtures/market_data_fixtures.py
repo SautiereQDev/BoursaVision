@@ -7,12 +7,13 @@ Following architecture in TESTS.md:
 - HTTP client fixtures for FastAPI testing
 """
 
-import pytest
 from datetime import datetime, timezone
+from typing import Any, Dict
 from unittest.mock import Mock, patch
-from fastapi.testclient import TestClient
-from typing import Dict, Any
+
 import pandas as pd
+import pytest
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture
@@ -59,14 +60,17 @@ def mock_yfinance_ticker_info() -> Dict[str, Any]:
 @pytest.fixture
 def mock_yfinance_history_data():
     """Mock YFinance historical data response."""
-    dates = pd.date_range(start='2024-01-01', end='2024-01-31', freq='D')[:20]
-    return pd.DataFrame({
-        'Open': [148.0 + i * 0.5 for i in range(20)],
-        'High': [150.0 + i * 0.5 for i in range(20)],
-        'Low': [147.0 + i * 0.5 for i in range(20)],
-        'Close': [149.0 + i * 0.5 for i in range(20)],
-        'Volume': [75000000 + i * 1000000 for i in range(20)],
-    }, index=dates)
+    dates = pd.date_range(start="2024-01-01", end="2024-01-31", freq="D")[:20]
+    return pd.DataFrame(
+        {
+            "Open": [148.0 + i * 0.5 for i in range(20)],
+            "High": [150.0 + i * 0.5 for i in range(20)],
+            "Low": [147.0 + i * 0.5 for i in range(20)],
+            "Close": [149.0 + i * 0.5 for i in range(20)],
+            "Volume": [75000000 + i * 1000000 for i in range(20)],
+        },
+        index=dates,
+    )
 
 
 @pytest.fixture
@@ -112,22 +116,22 @@ def mock_recommendation_service():
             "score": 0.85,
             "recommendation": "BUY",
             "target_price": 160.0,
-            "risk_level": "LOW"
+            "risk_level": "LOW",
         },
         {
             "symbol": "MSFT",
             "score": 0.82,
             "recommendation": "BUY",
             "target_price": 380.0,
-            "risk_level": "LOW"
-        }
+            "risk_level": "LOW",
+        },
     ]
     mock_service.quick_analyze.return_value = {
         "symbol": "AAPL",
         "analysis": "Strong fundamentals with good growth prospects",
         "score": 0.85,
         "recommendation": "BUY",
-        "confidence": 0.78
+        "confidence": 0.78,
     }
     return mock_service
 
@@ -138,6 +142,7 @@ def api_client():
     # Import here to avoid circular imports during testing
     try:
         from src.boursa_vision.presentation.api.v1.market_api import app
+
         return TestClient(app)
     except ImportError:
         # Skip if module not available
@@ -169,7 +174,7 @@ def financial_indices():
 def mock_datetime_now():
     """Mock datetime.now for consistent timestamps in tests."""
     fixed_datetime = datetime(2024, 8, 21, 12, 0, 0, tzinfo=timezone.utc)
-    with patch('boursa_vision.presentation.api.v1.market_api.datetime') as mock_dt:
+    with patch("boursa_vision.presentation.api.v1.market_api.datetime") as mock_dt:
         mock_dt.now.return_value = fixed_datetime
         yield fixed_datetime
 

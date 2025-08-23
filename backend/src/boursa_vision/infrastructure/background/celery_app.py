@@ -11,14 +11,17 @@ from typing import Any, Dict
 
 try:
     from celery import Celery
-    from celery.schedules import crontab
+    from celery.schedules import crontab as celery_crontab
 
     CELERY_AVAILABLE = True
+    crontab = celery_crontab
 except ImportError:
     CELERY_AVAILABLE = False
+    crontab = None
 
 # Force mock mode during testing
 USE_MOCK_CELERY = os.getenv("USE_MOCK_CELERY", "false").lower() == "true"
+
 
 if not CELERY_AVAILABLE or USE_MOCK_CELERY:
     # Mock pour développement
@@ -38,7 +41,6 @@ if not CELERY_AVAILABLE or USE_MOCK_CELERY:
         def task(self, *args, **kwargs):
             def decorator(func):
                 return func
-
             return decorator
 
         @property
@@ -47,10 +49,15 @@ if not CELERY_AVAILABLE or USE_MOCK_CELERY:
 
         def update(self, *args, **kwargs):
             pass
+            
+        def start(self):
+            """Mock start method for compatibility"""
+            pass
 
     Celery = MockCelery
 
     def crontab(**kwargs):
+        """Mock crontab function for development"""
         return kwargs
 
 
@@ -176,24 +183,14 @@ def setup_celery_logging():
 setup_celery_logging()
 
 
-# Event handlers pour le monitoring
-@celery_app.task(bind=True)
-def monitor_task_failure(self, task_id: str, error: str, tb: str):
-    """Monitor les échecs de tâches."""
-    logger.error(f"Task {task_id} failed: {error}")
-    # Ici on pourrait ajouter des notifications (email, Slack, etc.)
-
-
-@celery_app.task(bind=True)
-def monitor_task_success(self, task_id: str, result: Dict[str, Any]):
-    """Monitor les succès de tâches."""
-    logger.info(f"Task {task_id} completed successfully: {result}")
+# Event handlers pour le monitoring - ces tâches sont définies séparément
+# pour éviter les conflits avec les gestionnaires de signaux
 
 
 if CELERY_AVAILABLE and not USE_MOCK_CELERY:
     try:
         # Vérifier que l'objet signals est disponible sur l'instance Celery
-        if hasattr(celery_app, 'signals'):
+        if hasattr(celery_app, "signals"):
             # Hooks pour le monitoring
             @celery_app.signals.task_failure.connect
             def task_failure_handler(
@@ -206,6 +203,7 @@ if CELERY_AVAILABLE and not USE_MOCK_CELERY:
             def task_success_handler(sender=None, task_id=None, result=None, **kwds):
                 """Handler pour les succès de tâches."""
                 logger.info(f"Task success: {task_id}")
+
     except (AttributeError, ImportError) as e:
         logger.warning(f"Could not set up Celery signal handlers: {e}")
         logger.info("Running in mock mode - signal handlers disabled")

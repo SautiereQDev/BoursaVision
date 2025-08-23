@@ -6,7 +6,7 @@ Implements domain repository interfaces with async SQLAlchemy.
 from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import and_, desc, select, func
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -19,7 +19,7 @@ from boursa_vision.infrastructure.persistence.sqlalchemy.database import get_db_
 
 class SQLAlchemyPortfolioRepository(IPortfolioRepository):
     """SQLAlchemy implementation of portfolio repository."""
-    
+
     # Class-level mapper for test mocking compatibility
     _mapper = PortfolioMapper()
 
@@ -80,7 +80,7 @@ class SQLAlchemyPortfolioRepository(IPortfolioRepository):
         if self._session:
             # Use injected session (test mode)
             session = self._session
-            
+
             # Check if portfolio exists
             existing = await session.get(Portfolio, portfolio.id)
 
@@ -89,7 +89,7 @@ class SQLAlchemyPortfolioRepository(IPortfolioRepository):
                 self._mapper.update_model(existing, portfolio)
                 portfolio_model = existing
             else:
-                # Create new portfolio 
+                # Create new portfolio
                 portfolio_model = self._mapper.to_model(portfolio)
                 session.add(portfolio_model)
 
@@ -108,7 +108,7 @@ class SQLAlchemyPortfolioRepository(IPortfolioRepository):
                     self._mapper.update_model(existing, portfolio)
                     portfolio_model = existing
                 else:
-                    # Create new portfolio 
+                    # Create new portfolio
                     portfolio_model = self._mapper.to_model(portfolio)
                     session.add(portfolio_model)
 
@@ -182,7 +182,9 @@ class SQLAlchemyPortfolioRepository(IPortfolioRepository):
             result = await session.execute(query)
             return result.scalar() or 0
 
-    async def find_all(self, offset: int = 0, limit: int = 100) -> List[DomainPortfolio]:
+    async def find_all(
+        self, offset: int = 0, limit: int = 100
+    ) -> List[DomainPortfolio]:
         """Find all portfolios with pagination."""
         async with get_db_session() as session:
             query = select(Portfolio).offset(offset).limit(limit)

@@ -19,7 +19,7 @@ from boursa_vision.infrastructure.persistence.sqlalchemy.database import get_db_
 
 class SQLAlchemyUserRepository(IUserRepository):
     """SQLAlchemy implementation of user repository."""
-    
+
     # Class-level mapper for test mocking compatibility
     _mapper = UserMapper()
 
@@ -40,7 +40,7 @@ class SQLAlchemyUserRepository(IUserRepository):
             query = select(User).where(User.id == user_id)
             result = await self._session.execute(query)
             user_model = result.scalar_one_or_none()
-            
+
             if user_model:
                 return self._mapper.to_domain(user_model)
             return None
@@ -50,7 +50,7 @@ class SQLAlchemyUserRepository(IUserRepository):
                 query = select(User).where(User.id == user_id)
                 result = await session.execute(query)
                 user_model = result.scalar_one_or_none()
-                
+
                 if user_model:
                     return self._mapper.to_domain(user_model)
                 return None
@@ -62,7 +62,7 @@ class SQLAlchemyUserRepository(IUserRepository):
             query = select(User).where(User.email == email)
             result = await self._session.execute(query)
             user_model = result.scalar_one_or_none()
-            
+
             if user_model:
                 return self._mapper.to_domain(user_model)
             return None
@@ -72,7 +72,7 @@ class SQLAlchemyUserRepository(IUserRepository):
                 query = select(User).where(User.email == email)
                 result = await session.execute(query)
                 user_model = result.scalar_one_or_none()
-                
+
                 if user_model:
                     return self._mapper.to_domain(user_model)
                 return None
@@ -107,10 +107,10 @@ class SQLAlchemyUserRepository(IUserRepository):
         """Find all users with pagination."""
         async with get_db_session() as session:
             query = select(User)
-            
+
             if not include_inactive:
                 query = query.where(User.is_active.is_(True))
-            
+
             query = query.offset(offset).limit(limit)
             result = await session.execute(query)
             user_models = result.scalars().all()
@@ -172,20 +172,20 @@ class SQLAlchemyUserRepository(IUserRepository):
         if self._session:
             # Use injected session (testing mode)
             existing = await self._session.get(User, entity.id)
-            
+
             if existing:
                 # Update existing user
                 user_model = self._mapper.to_persistence(entity)
                 # Copy updated fields to existing model
                 for column in User.__table__.columns:
-                    if hasattr(user_model, column.name) and column.name != 'id':
+                    if hasattr(user_model, column.name) and column.name != "id":
                         setattr(existing, column.name, getattr(user_model, column.name))
                 user_model = existing
             else:
                 # Create new user
                 user_model = self._mapper.to_persistence(entity)
                 self._session.add(user_model)
-            
+
             await self._session.flush()
             await self._session.refresh(user_model)
             return self._mapper.to_domain(user_model)
@@ -193,20 +193,22 @@ class SQLAlchemyUserRepository(IUserRepository):
             # Use get_db_session (production mode)
             async with get_db_session() as session:
                 existing = await session.get(User, entity.id)
-                
+
                 if existing:
                     # Update existing user
                     user_model = self._mapper.to_persistence(entity)
                     # Copy updated fields to existing model
                     for column in User.__table__.columns:
-                        if hasattr(user_model, column.name) and column.name != 'id':
-                            setattr(existing, column.name, getattr(user_model, column.name))
+                        if hasattr(user_model, column.name) and column.name != "id":
+                            setattr(
+                                existing, column.name, getattr(user_model, column.name)
+                            )
                     user_model = existing
                 else:
                     # Create new user
                     user_model = self._mapper.to_persistence(entity)
                     session.add(user_model)
-                
+
                 await session.flush()
                 await session.refresh(user_model)
                 return self._mapper.to_domain(user_model)
@@ -216,23 +218,23 @@ class SQLAlchemyUserRepository(IUserRepository):
         if self._session:
             # Use injected session (testing mode)
             from sqlalchemy import delete as sql_delete
-            
+
             # Use SQL DELETE to match test expectations
             query = sql_delete(User).where(User.id == entity_id)
             result = await self._session.execute(query)
-            
+
             # Return True if any rows were affected
             return (result.rowcount or 0) > 0
         else:
             # Use get_db_session (production mode)
             async with get_db_session() as session:
                 from sqlalchemy import delete as sql_delete
-                
+
                 # Use SQL DELETE to match test expectations
                 query = sql_delete(User).where(User.id == entity_id)
                 result = await session.execute(query)
                 await session.commit()
-                
+
                 # Return True if any rows were affected
                 return (result.rowcount or 0) > 0
 
@@ -264,7 +266,7 @@ class SQLAlchemyUserRepository(IUserRepository):
             # Update the existing entity with new data
             user_model = self._mapper.to_persistence(entity)
             for column in User.__table__.columns:
-                if hasattr(user_model, column.name) and column.name != 'id':
+                if hasattr(user_model, column.name) and column.name != "id":
                     setattr(existing, column.name, getattr(user_model, column.name))
 
             await session.flush()

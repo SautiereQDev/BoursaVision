@@ -16,17 +16,19 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Protocol
 
 try:
-    from sqlalchemy.ext.asyncio import AsyncSession
-    from sqlalchemy import select, and_, func, desc
+    from sqlalchemy import and_, desc, func, select
     from sqlalchemy.exc import IntegrityError
+    from sqlalchemy.ext.asyncio import AsyncSession
     from sqlalchemy.orm import selectinload
+
     from boursa_vision.infrastructure.persistence.models.market_data import MarketData
+
     SQLALCHEMY_AVAILABLE = True
 except ImportError:
     # Fallback quand SQLAlchemy n'est pas disponible - pour les tests unitaires purs
     SQLALCHEMY_AVAILABLE = False
     AsyncSession = object  # Type placeholder
-    MarketData = object    # Type placeholder
+    MarketData = object  # Type placeholder
     IntegrityError = Exception  # Fallback exception type
 
 from ..entities.market_data_timeline import (
@@ -89,7 +91,7 @@ class SqlAlchemyMarketDataTimelineRepository:
         """Récupère la timeline complète d'un symbole"""
         if not SQLALCHEMY_AVAILABLE:
             return None
-            
+
         # Requête optimisée avec index sur symbol + time
         query = (
             select(MarketData)

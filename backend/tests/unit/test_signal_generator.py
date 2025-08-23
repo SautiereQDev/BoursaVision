@@ -5,15 +5,15 @@ Tests the SignalGenerator application service following AAA (Arrange-Act-Assert)
 with comprehensive coverage of all methods and edge cases.
 """
 
-import pytest
 from datetime import datetime
-from typing import Dict, Any
-from unittest.mock import Mock, AsyncMock, patch
+from typing import Any, Dict
+from unittest.mock import AsyncMock, Mock, patch
 
-from boursa_vision.application.services.signal_generator import SignalGenerator
+import pytest
+
 from boursa_vision.application.dtos import SignalDTO, TechnicalAnalysisDTO
+from boursa_vision.application.services.signal_generator import SignalGenerator
 from boursa_vision.application.services.technical_analyzer import TechnicalAnalyzer
-
 
 # Test tolerances for floating point comparisons
 FLOAT_TOLERANCE = 0.001
@@ -46,7 +46,7 @@ def sample_technical_analysis():
         volume_trend=0.25,
         support_level=140.0,
         resistance_level=160.0,
-        analysis_date=datetime.now()
+        analysis_date=datetime.now(),
     )
 
 
@@ -58,13 +58,15 @@ class TestSignalGenerator:
         """Test SignalGenerator initialization with TechnicalAnalyzer."""
         # Arrange & Act
         generator = SignalGenerator(technical_analyzer=mock_technical_analyzer)
-        
+
         # Assert
         assert generator._technical_analyzer is mock_technical_analyzer
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_generate_signal_success_buy_signal(self, signal_generator, mock_technical_analyzer, sample_technical_analysis):
+    async def test_generate_signal_success_buy_signal(
+        self, signal_generator, mock_technical_analyzer, sample_technical_analysis
+    ):
         """Test successful signal generation with BUY signal."""
         # Arrange
         symbol = "AAPL"
@@ -79,13 +81,13 @@ class TestSignalGenerator:
             volume_trend=0.25,  # Strong volume
             support_level=140.0,
             resistance_level=160.0,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
         mock_technical_analyzer.analyze_investment.return_value = analysis
-        
+
         # Act
         result = await signal_generator.generate_signal(symbol)
-        
+
         # Assert
         mock_technical_analyzer.analyze_investment.assert_called_once_with(symbol)
         assert isinstance(result, SignalDTO)
@@ -101,7 +103,9 @@ class TestSignalGenerator:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_generate_signal_success_sell_signal(self, signal_generator, mock_technical_analyzer):
+    async def test_generate_signal_success_sell_signal(
+        self, signal_generator, mock_technical_analyzer
+    ):
         """Test successful signal generation with SELL signal."""
         # Arrange
         symbol = "TSLA"
@@ -116,13 +120,13 @@ class TestSignalGenerator:
             volume_trend=0.3,
             support_level=135.0,
             resistance_level=150.0,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
         mock_technical_analyzer.analyze_investment.return_value = analysis
-        
+
         # Act
         result = await signal_generator.generate_signal(symbol)
-        
+
         # Assert
         assert result.symbol == symbol
         assert result.action == "SELL"
@@ -133,7 +137,9 @@ class TestSignalGenerator:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_generate_signal_hold_signal(self, signal_generator, mock_technical_analyzer):
+    async def test_generate_signal_hold_signal(
+        self, signal_generator, mock_technical_analyzer
+    ):
         """Test signal generation with HOLD signal for neutral conditions."""
         # Arrange
         symbol = "MSFT"
@@ -148,13 +154,13 @@ class TestSignalGenerator:
             volume_trend=0.1,  # Low volume
             support_level=145.0,
             resistance_level=155.0,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
         mock_technical_analyzer.analyze_investment.return_value = analysis
-        
+
         # Act
         result = await signal_generator.generate_signal(symbol)
-        
+
         # Assert
         assert result.symbol == symbol
         assert result.action == "HOLD"
@@ -163,7 +169,9 @@ class TestSignalGenerator:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_generate_signal_insufficient_data(self, signal_generator, mock_technical_analyzer):
+    async def test_generate_signal_insufficient_data(
+        self, signal_generator, mock_technical_analyzer
+    ):
         """Test signal generation with insufficient data (all None values)."""
         # Arrange
         symbol = "GOOGL"
@@ -177,13 +185,13 @@ class TestSignalGenerator:
             volume_trend=None,
             support_level=None,
             resistance_level=None,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
         mock_technical_analyzer.analyze_investment.return_value = analysis
-        
+
         # Act
         result = await signal_generator.generate_signal(symbol)
-        
+
         # Assert
         assert result.symbol == symbol
         assert result.action == "HOLD"
@@ -192,15 +200,19 @@ class TestSignalGenerator:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_generate_signal_error_handling(self, signal_generator, mock_technical_analyzer):
+    async def test_generate_signal_error_handling(
+        self, signal_generator, mock_technical_analyzer
+    ):
         """Test error handling in signal generation."""
         # Arrange
         symbol = "NVDA"
-        mock_technical_analyzer.analyze_investment.side_effect = ValueError("Analysis failed")
-        
+        mock_technical_analyzer.analyze_investment.side_effect = ValueError(
+            "Analysis failed"
+        )
+
         # Act
         result = await signal_generator.generate_signal(symbol)
-        
+
         # Assert
         assert result.symbol == symbol
         assert result.action == "HOLD"
@@ -210,7 +222,9 @@ class TestSignalGenerator:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_generate_signals_for_portfolio_success(self, signal_generator, mock_technical_analyzer):
+    async def test_generate_signals_for_portfolio_success(
+        self, signal_generator, mock_technical_analyzer
+    ):
         """Test generating signals for multiple symbols in portfolio."""
         # Arrange
         symbols = ["AAPL", "TSLA", "MSFT"]
@@ -225,7 +239,7 @@ class TestSignalGenerator:
                 volume_trend=0.3,
                 support_level=140.0,
                 resistance_level=160.0,
-                analysis_date=datetime.now()
+                analysis_date=datetime.now(),
             ),
             TechnicalAnalysisDTO(
                 symbol="TSLA",
@@ -237,7 +251,7 @@ class TestSignalGenerator:
                 volume_trend=0.3,
                 support_level=135.0,
                 resistance_level=150.0,
-                analysis_date=datetime.now()
+                analysis_date=datetime.now(),
             ),
             TechnicalAnalysisDTO(
                 symbol="MSFT",
@@ -249,16 +263,16 @@ class TestSignalGenerator:
                 volume_trend=0.1,
                 support_level=145.0,
                 resistance_level=155.0,
-                analysis_date=datetime.now()
-            )
+                analysis_date=datetime.now(),
+            ),
         ]
-        
+
         # Mock analyze_investment to return different analysis for each symbol
         mock_technical_analyzer.analyze_investment.side_effect = analyses
-        
+
         # Act
         results = await signal_generator.generate_signals_for_portfolio(symbols)
-        
+
         # Assert
         assert len(results) == 3
         assert all(symbol in results for symbol in symbols)
@@ -273,20 +287,22 @@ class TestSignalGenerator:
         """Test generating signals for empty portfolio."""
         # Arrange
         symbols = []
-        
+
         # Act
         results = await signal_generator.generate_signals_for_portfolio(symbols)
-        
+
         # Assert
         assert results == {}
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_generate_signals_for_portfolio_with_errors(self, signal_generator, mock_technical_analyzer):
+    async def test_generate_signals_for_portfolio_with_errors(
+        self, signal_generator, mock_technical_analyzer
+    ):
         """Test portfolio signal generation with some symbols failing."""
         # Arrange
         symbols = ["AAPL", "ERROR", "MSFT"]
-        
+
         def mock_analyze_side_effect(symbol):
             if symbol == "ERROR":
                 raise ValueError("Analysis failed")
@@ -300,14 +316,16 @@ class TestSignalGenerator:
                 volume_trend=0.1,
                 support_level=145.0,
                 resistance_level=155.0,
-                analysis_date=datetime.now()
+                analysis_date=datetime.now(),
             )
-        
-        mock_technical_analyzer.analyze_investment.side_effect = mock_analyze_side_effect
-        
+
+        mock_technical_analyzer.analyze_investment.side_effect = (
+            mock_analyze_side_effect
+        )
+
         # Act
         results = await signal_generator.generate_signals_for_portfolio(symbols)
-        
+
         # Assert
         assert len(results) == 3  # All symbols should be included
         assert results["AAPL"].action == "HOLD"
@@ -329,12 +347,14 @@ class TestSignalGenerator:
             volume_trend=None,
             support_level=None,
             resistance_level=None,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
-        
+
         # Act
-        action, confidence, reasoning = signal_generator._determine_signal_action(analysis)
-        
+        action, confidence, reasoning = signal_generator._determine_signal_action(
+            analysis
+        )
+
         # Assert
         assert action == "BUY"
         assert abs(confidence - 0.7) < FLOAT_TOLERANCE
@@ -354,12 +374,14 @@ class TestSignalGenerator:
             volume_trend=None,
             support_level=None,
             resistance_level=None,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
-        
+
         # Act
-        action, confidence, reasoning = signal_generator._determine_signal_action(analysis)
-        
+        action, confidence, reasoning = signal_generator._determine_signal_action(
+            analysis
+        )
+
         # Assert
         assert action == "SELL"
         assert abs(confidence - 0.7) < FLOAT_TOLERANCE
@@ -379,12 +401,14 @@ class TestSignalGenerator:
             volume_trend=None,
             support_level=None,
             resistance_level=None,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
-        
+
         # Act
-        action, confidence, reasoning = signal_generator._determine_signal_action(analysis)
-        
+        action, confidence, reasoning = signal_generator._determine_signal_action(
+            analysis
+        )
+
         # Assert
         assert action == "BUY"
         assert abs(confidence - 0.6) < FLOAT_TOLERANCE
@@ -404,12 +428,14 @@ class TestSignalGenerator:
             volume_trend=None,
             support_level=None,
             resistance_level=None,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
-        
+
         # Act
-        action, confidence, reasoning = signal_generator._determine_signal_action(analysis)
-        
+        action, confidence, reasoning = signal_generator._determine_signal_action(
+            analysis
+        )
+
         # Assert
         assert action == "BUY"
         assert abs(confidence - 0.5) < FLOAT_TOLERANCE
@@ -429,12 +455,14 @@ class TestSignalGenerator:
             volume_trend=None,
             support_level=None,
             resistance_level=None,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
-        
+
         # Act
-        action, confidence, reasoning = signal_generator._determine_signal_action(analysis)
-        
+        action, confidence, reasoning = signal_generator._determine_signal_action(
+            analysis
+        )
+
         # Assert
         assert action == "BUY"
         assert abs(confidence - 0.6) < FLOAT_TOLERANCE
@@ -454,12 +482,14 @@ class TestSignalGenerator:
             volume_trend=0.3,  # Strong volume trend
             support_level=None,
             resistance_level=None,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
-        
+
         # Act
-        action, confidence, reasoning = signal_generator._determine_signal_action(analysis)
-        
+        action, confidence, reasoning = signal_generator._determine_signal_action(
+            analysis
+        )
+
         # Assert
         assert action == "BUY"
         assert abs(confidence - 0.8) < FLOAT_TOLERANCE  # 0.7 + 0.1 volume boost
@@ -480,12 +510,12 @@ class TestSignalGenerator:
             volume_trend=0.1,  # Weak volume
             support_level=None,
             resistance_level=None,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
-        
+
         # Act
         action, confidence, _ = signal_generator._determine_signal_action(analysis)
-        
+
         # Assert
         assert action == "BUY"  # 3 BUY vs 1 SELL
         # Confidence should be average of BUY signals
@@ -506,22 +536,24 @@ class TestSignalGenerator:
             volume_trend=None,
             support_level=None,
             resistance_level=None,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
-        
+
         # Act
         action, confidence, _ = signal_generator._determine_signal_action(analysis)
-        
+
         # Assert
         assert action == "HOLD"
         assert abs(confidence - 0.3) < FLOAT_TOLERANCE
 
     @pytest.mark.unit
-    def test_create_signal_metadata_complete_analysis(self, signal_generator, sample_technical_analysis):
+    def test_create_signal_metadata_complete_analysis(
+        self, signal_generator, sample_technical_analysis
+    ):
         """Test metadata creation with complete analysis data."""
         # Act
         metadata = signal_generator._create_signal_metadata(sample_technical_analysis)
-        
+
         # Assert
         assert abs(float(metadata["rsi"]) - 45.0) < FLOAT_TOLERANCE
         assert abs(float(metadata["macd"]) - 0.15) < FLOAT_TOLERANCE
@@ -544,12 +576,12 @@ class TestSignalGenerator:
             volume_trend=None,  # None value
             support_level=None,
             resistance_level=None,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
-        
+
         # Act
         metadata = signal_generator._create_signal_metadata(analysis)
-        
+
         # Assert
         assert abs(float(metadata["rsi"]) - 45.0) < FLOAT_TOLERANCE
         assert abs(float(metadata["bollinger_position"]) - 0.3) < FLOAT_TOLERANCE
@@ -571,12 +603,12 @@ class TestSignalGenerator:
             volume_trend=None,
             support_level=None,
             resistance_level=None,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
-        
+
         # Act
         metadata = signal_generator._create_signal_metadata(analysis)
-        
+
         # Assert
         assert len(metadata) == 1  # Only timestamp should be present
         assert "analysis_timestamp" in metadata
@@ -588,20 +620,30 @@ class TestSignalGenerator:
         analysis_30 = TechnicalAnalysisDTO(
             symbol="TEST",
             rsi=30.0,
-            macd=None, bollinger_position=None, sma_20=None, sma_50=None,
-            volume_trend=None, support_level=None, resistance_level=None,
-            analysis_date=datetime.now()
+            macd=None,
+            bollinger_position=None,
+            sma_20=None,
+            sma_50=None,
+            volume_trend=None,
+            support_level=None,
+            resistance_level=None,
+            analysis_date=datetime.now(),
         )
         action, _, _ = signal_generator._determine_signal_action(analysis_30)
         assert action == "BUY"
-        
+
         # Test RSI = 70 (should be SELL)
         analysis_70 = TechnicalAnalysisDTO(
             symbol="TEST",
             rsi=70.0,
-            macd=None, bollinger_position=None, sma_20=None, sma_50=None,
-            volume_trend=None, support_level=None, resistance_level=None,
-            analysis_date=datetime.now()
+            macd=None,
+            bollinger_position=None,
+            sma_20=None,
+            sma_50=None,
+            volume_trend=None,
+            support_level=None,
+            resistance_level=None,
+            analysis_date=datetime.now(),
         )
         action, _, _ = signal_generator._determine_signal_action(analysis_70)
         assert action == "SELL"
@@ -614,45 +656,61 @@ class TestSignalGenerator:
             symbol="TEST",
             rsi=None,
             macd=0.1,
-            bollinger_position=None, sma_20=None, sma_50=None,
-            volume_trend=None, support_level=None, resistance_level=None,
-            analysis_date=datetime.now()
+            bollinger_position=None,
+            sma_20=None,
+            sma_50=None,
+            volume_trend=None,
+            support_level=None,
+            resistance_level=None,
+            analysis_date=datetime.now(),
         )
         action, _, _ = signal_generator._determine_signal_action(analysis_pos)
         assert action == "HOLD"
-        
+
         # Test MACD = -0.1 (exact boundary should be HOLD since < -0.1 required)
         analysis_neg = TechnicalAnalysisDTO(
             symbol="TEST",
             rsi=None,
             macd=-0.1,
-            bollinger_position=None, sma_20=None, sma_50=None,
-            volume_trend=None, support_level=None, resistance_level=None,
-            analysis_date=datetime.now()
+            bollinger_position=None,
+            sma_20=None,
+            sma_50=None,
+            volume_trend=None,
+            support_level=None,
+            resistance_level=None,
+            analysis_date=datetime.now(),
         )
         action, _, _ = signal_generator._determine_signal_action(analysis_neg)
         assert action == "HOLD"
-        
+
         # Test MACD > 0.1 (should be BUY)
         analysis_buy = TechnicalAnalysisDTO(
             symbol="TEST",
             rsi=None,
             macd=0.15,
-            bollinger_position=None, sma_20=None, sma_50=None,
-            volume_trend=None, support_level=None, resistance_level=None,
-            analysis_date=datetime.now()
+            bollinger_position=None,
+            sma_20=None,
+            sma_50=None,
+            volume_trend=None,
+            support_level=None,
+            resistance_level=None,
+            analysis_date=datetime.now(),
         )
         action, _, _ = signal_generator._determine_signal_action(analysis_buy)
         assert action == "BUY"
-        
+
         # Test MACD < -0.1 (should be SELL)
         analysis_sell = TechnicalAnalysisDTO(
             symbol="TEST",
             rsi=None,
             macd=-0.15,
-            bollinger_position=None, sma_20=None, sma_50=None,
-            volume_trend=None, support_level=None, resistance_level=None,
-            analysis_date=datetime.now()
+            bollinger_position=None,
+            sma_20=None,
+            sma_50=None,
+            volume_trend=None,
+            support_level=None,
+            resistance_level=None,
+            analysis_date=datetime.now(),
         )
         action, _, _ = signal_generator._determine_signal_action(analysis_sell)
         assert action == "SELL"
@@ -664,19 +722,21 @@ class TestSignalGenerator:
         analysis = TechnicalAnalysisDTO(
             symbol="TEST",
             rsi=25.0,  # BUY with 0.7 confidence
-            macd=0.2,   # BUY with 0.6 confidence
+            macd=0.2,  # BUY with 0.6 confidence
             bollinger_position=0.1,  # BUY with 0.6 confidence
             sma_20=155.0,
             sma_50=150.0,  # BUY with 0.5 confidence
             volume_trend=0.5,  # Strong volume that would add 0.1
             support_level=None,
             resistance_level=None,
-            analysis_date=datetime.now()
+            analysis_date=datetime.now(),
         )
-        
+
         # Act
-        action, confidence, reasoning = signal_generator._determine_signal_action(analysis)
-        
+        action, confidence, reasoning = signal_generator._determine_signal_action(
+            analysis
+        )
+
         # Assert
         assert action == "BUY"
         assert confidence <= 1.0  # Should be capped at 1.0

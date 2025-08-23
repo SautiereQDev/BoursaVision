@@ -5,9 +5,10 @@ Simple Auth Router for E2E Tests
 Mock authentication endpoints for E2E testing.
 """
 
+from typing import Optional
+
 from fastapi import APIRouter, status
 from pydantic import BaseModel
-from typing import Optional
 
 # Router setup
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])

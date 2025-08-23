@@ -5,16 +5,17 @@ Example Protected Routes
 Examples of how to use authentication in FastAPI routes.
 """
 
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from boursa_vision.domain.entities.user import User
 from boursa_vision.infrastructure.web.dependencies.auth_dependencies import (
     get_current_active_user,
     require_admin,
-    require_premium,
     require_create_portfolio,
     require_execute_trades,
+    require_premium,
     require_view_analytics,
 )
 
@@ -57,7 +58,7 @@ async def admin_only_endpoint(
 
 
 @router.get(
-    "/premium-only", 
+    "/premium-only",
     summary="Premium only endpoint",
     description="Endpoint accessible only by premium users",
 )

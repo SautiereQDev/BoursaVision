@@ -13,7 +13,7 @@ def test_simple():
 @pytest.mark.unit
 class TestSimple:
     """Classe de test simple"""
-    
+
     def test_method(self):
         """Test de méthode"""
         assert 1 + 1 == 2

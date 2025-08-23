@@ -6,18 +6,18 @@ Comprehensive tests for scoring service with strategies and protocols following 
 Tests scoring calculations, strategy pattern implementation, and metric weightings.
 """
 
-import pytest
 from typing import Protocol
 from unittest.mock import Mock
 
+import pytest
+
+from boursa_vision.domain.entities.investment import Investment
 from boursa_vision.domain.services.scoring_service import (
+    FundamentalScoringStrategy,
+    Scorable,
     ScoringService,
     ScoringStrategy,
-    FundamentalScoringStrategy,
-    Scorable
 )
-from boursa_vision.domain.entities.investment import Investment
-
 
 """
 Tests for Scoring Service - Domain Layer
@@ -27,15 +27,16 @@ Comprehensive tests for scoring service with strategies and protocols following 
 Tests scoring calculations, strategy pattern implementation, and metric weightings.
 """
 
-import pytest
 from typing import Protocol
 from unittest.mock import Mock
 
+import pytest
+
 from boursa_vision.domain.services.scoring_service import (
+    FundamentalScoringStrategy,
+    Scorable,
     ScoringService,
     ScoringStrategy,
-    FundamentalScoringStrategy,
-    Scorable
 )
 
 
@@ -89,21 +90,20 @@ class TestScorable:
     def test_scorable_protocol_methods(self):
         """Test that Scorable protocol defines required methods"""
         # Verify protocol methods exist
-        assert hasattr(Scorable, '_score_pe_ratio')
-        assert hasattr(Scorable, '_score_roe') 
-        assert hasattr(Scorable, '_score_revenue_growth')
-        assert hasattr(Scorable, '_score_debt_to_equity')
+        assert hasattr(Scorable, "_score_pe_ratio")
+        assert hasattr(Scorable, "_score_roe")
+        assert hasattr(Scorable, "_score_revenue_growth")
+        assert hasattr(Scorable, "_score_debt_to_equity")
 
     def test_mock_scorable_implementation(self):
         """Test mock implementation implements Scorable correctly"""
         scorable = MockScorableInvestment(
-            pe_ratio_score=80.0, pe_ratio_weight=0.5,
-            roe_score=60.0, roe_weight=0.3
+            pe_ratio_score=80.0, pe_ratio_weight=0.5, roe_score=60.0, roe_weight=0.3
         )
 
         pe_result = scorable._score_pe_ratio()
         roe_result = scorable._score_roe()
-        
+
         assert abs(pe_result[0] - 80.0) < 0.001
         assert abs(pe_result[1] - 0.5) < 0.001
         assert abs(roe_result[0] - 60.0) < 0.001
@@ -149,10 +149,10 @@ class TestFundamentalScoringStrategy:
     def test_calculate_score_with_excellent_metrics(self):
         """Test scoring with excellent financial metrics"""
         scorable = MockScorableInvestment(
-            pe_ratio_score=90.0,      # Excellent P/E
-            roe_score=95.0,           # Excellent ROE
-            revenue_growth_score=88.0, # Excellent growth
-            debt_to_equity_score=85.0  # Low debt
+            pe_ratio_score=90.0,  # Excellent P/E
+            roe_score=95.0,  # Excellent ROE
+            revenue_growth_score=88.0,  # Excellent growth
+            debt_to_equity_score=85.0,  # Low debt
         )
 
         score = self.strategy.calculate_score(scorable)
@@ -165,10 +165,10 @@ class TestFundamentalScoringStrategy:
     def test_calculate_score_with_poor_metrics(self):
         """Test scoring with poor financial metrics"""
         scorable = MockScorableInvestment(
-            pe_ratio_score=20.0,      # Poor P/E
-            roe_score=15.0,           # Poor ROE
-            revenue_growth_score=25.0, # Poor growth
-            debt_to_equity_score=30.0  # High debt
+            pe_ratio_score=20.0,  # Poor P/E
+            roe_score=15.0,  # Poor ROE
+            revenue_growth_score=25.0,  # Poor growth
+            debt_to_equity_score=30.0,  # High debt
         )
 
         score = self.strategy.calculate_score(scorable)
@@ -181,10 +181,10 @@ class TestFundamentalScoringStrategy:
     def test_calculate_score_with_mixed_metrics(self):
         """Test scoring with mixed financial metrics"""
         scorable = MockScorableInvestment(
-            pe_ratio_score=70.0,      # Good P/E (weight 0.3)
-            roe_score=40.0,           # Average ROE (weight 0.3)
-            revenue_growth_score=80.0, # Good growth (weight 0.2)
-            debt_to_equity_score=60.0  # Decent debt (weight 0.2)
+            pe_ratio_score=70.0,  # Good P/E (weight 0.3)
+            roe_score=40.0,  # Average ROE (weight 0.3)
+            revenue_growth_score=80.0,  # Good growth (weight 0.2)
+            debt_to_equity_score=60.0,  # Decent debt (weight 0.2)
         )
 
         score = self.strategy.calculate_score(scorable)
@@ -197,10 +197,10 @@ class TestFundamentalScoringStrategy:
     def test_calculate_score_with_extreme_values_clamped(self):
         """Test that extreme values are clamped to 0-100 range"""
         scorable = MockScorableInvestment(
-            pe_ratio_score=-50.0,     # Below 0, should be clamped to 0
-            roe_score=150.0,          # Above 100, should be clamped to 100
+            pe_ratio_score=-50.0,  # Below 0, should be clamped to 0
+            roe_score=150.0,  # Above 100, should be clamped to 100
             revenue_growth_score=25.0,
-            debt_to_equity_score=75.0
+            debt_to_equity_score=75.0,
         )
 
         score = self.strategy.calculate_score(scorable)
@@ -213,10 +213,10 @@ class TestFundamentalScoringStrategy:
     def test_calculate_score_boundary_values(self):
         """Test scoring with boundary values (0.0 and 100.0)"""
         scorable = MockScorableInvestment(
-            pe_ratio_score=0.0,       # Minimum
-            roe_score=100.0,          # Maximum
+            pe_ratio_score=0.0,  # Minimum
+            roe_score=100.0,  # Maximum
             revenue_growth_score=0.0,  # Minimum
-            debt_to_equity_score=100.0 # Maximum
+            debt_to_equity_score=100.0,  # Maximum
         )
 
         score = self.strategy.calculate_score(scorable)
@@ -242,17 +242,19 @@ class TestFundamentalScoringStrategy:
                 pe_ratio_score=pe,
                 roe_score=roe,
                 revenue_growth_score=growth,
-                debt_to_equity_score=debt
+                debt_to_equity_score=debt,
             )
-            
+
             score = self.strategy.calculate_score(scorable)
-            assert abs(score - expected) < 0.001, f"Failed for scores ({pe}, {roe}, {growth}, {debt})"
+            assert (
+                abs(score - expected) < 0.001
+            ), f"Failed for scores ({pe}, {roe}, {growth}, {debt})"
 
     def test_calculate_score_zero_total_weight_fallback(self):
         """Test fallback when total weight is zero (defensive test)"""
         scorable = MockScorableInvestment()
         score = self.strategy.calculate_score(scorable)
-        
+
         # With normal implementation, this should never hit the fallback
         # But ensures score is valid
         assert isinstance(score, (int, float))
@@ -264,7 +266,7 @@ class TestFundamentalScoringStrategy:
             pe_ratio_score=100.0,
             roe_score=100.0,
             revenue_growth_score=100.0,
-            debt_to_equity_score=100.0
+            debt_to_equity_score=100.0,
         )
 
         score = self.strategy.calculate_score(scorable)
@@ -276,7 +278,7 @@ class TestFundamentalScoringStrategy:
             pe_ratio_score=0.0,
             roe_score=0.0,
             revenue_growth_score=0.0,
-            debt_to_equity_score=0.0
+            debt_to_equity_score=0.0,
         )
 
         score = self.strategy.calculate_score(scorable)
@@ -313,7 +315,7 @@ class TestScoringService:
             pe_ratio_score=80.0,
             roe_score=70.0,
             revenue_growth_score=60.0,
-            debt_to_equity_score=90.0
+            debt_to_equity_score=90.0,
         )
 
         score = service.calculate_score(scorable)
@@ -370,13 +372,13 @@ class TestScoringServiceIntegration:
         # Setup
         strategy = FundamentalScoringStrategy()
         service = ScoringService(strategy)
-        
+
         # Create test investment with varied metrics
         investment = MockScorableInvestment(
-            pe_ratio_score=85.0,      # Strong P/E
-            roe_score=75.0,           # Good ROE
-            revenue_growth_score=65.0, # Decent growth
-            debt_to_equity_score=80.0  # Good debt management
+            pe_ratio_score=85.0,  # Strong P/E
+            roe_score=75.0,  # Good ROE
+            revenue_growth_score=65.0,  # Decent growth
+            debt_to_equity_score=80.0,  # Good debt management
         )
 
         # Execute scoring
@@ -394,14 +396,14 @@ class TestScoringServiceIntegration:
             pe_ratio_score=70.0,
             roe_score=80.0,
             revenue_growth_score=60.0,
-            debt_to_equity_score=75.0
+            debt_to_equity_score=75.0,
         )
 
         # Test with FundamentalScoringStrategy
         fundamental_strategy = FundamentalScoringStrategy()
         service = ScoringService(fundamental_strategy)
         fundamental_score = service.calculate_score(scorable)
-        
+
         expected_fundamental = 70.0 * 0.3 + 80.0 * 0.3 + 60.0 * 0.2 + 75.0 * 0.2
         assert abs(fundamental_score - expected_fundamental) < 0.001
         assert abs(fundamental_score - 72.0) < 0.001
@@ -410,7 +412,7 @@ class TestScoringServiceIntegration:
         mock_strategy = MockScoringStrategy(score_to_return=95.0)
         service.strategy = mock_strategy
         mock_score = service.calculate_score(scorable)
-        
+
         assert abs(mock_score - 95.0) < 0.001
         assert len(mock_strategy.calculate_score_calls) == 1
 
@@ -422,16 +424,16 @@ class TestScoringServiceIntegration:
             pe_ratio_score=60.0,
             roe_score=70.0,
             revenue_growth_score=55.0,
-            debt_to_equity_score=65.0
+            debt_to_equity_score=65.0,
         )
 
         # Multiple calls should return same result
         scores = [service.calculate_score(scorable) for _ in range(5)]
-        
+
         first_score = scores[0]
         for score in scores[1:]:
             assert abs(score - first_score) < 0.001
-        
+
         # Calculate expected score: (60*0.3 + 70*0.3 + 55*0.2 + 65*0.2) = 64.0
         expected = 60.0 * 0.3 + 70.0 * 0.3 + 55.0 * 0.2 + 65.0 * 0.2
         assert abs(first_score - expected) < 0.001
@@ -446,7 +448,7 @@ class TestScoringServiceIntegration:
             pe_ratio_score=0.0,
             roe_score=0.0,
             revenue_growth_score=0.0,
-            debt_to_equity_score=0.0
+            debt_to_equity_score=0.0,
         )
         zero_score = service.calculate_score(zero_scorable)
         assert abs(zero_score - 0.0) < 0.001
@@ -456,17 +458,17 @@ class TestScoringServiceIntegration:
             pe_ratio_score=100.0,
             roe_score=100.0,
             revenue_growth_score=100.0,
-            debt_to_equity_score=100.0
+            debt_to_equity_score=100.0,
         )
         max_score = service.calculate_score(max_scorable)
         assert abs(max_score - 100.0) < 0.001
 
         # Test with extreme values that need clamping
         extreme_scorable = MockScorableInvestment(
-            pe_ratio_score=200.0,    # Should clamp to 100
-            roe_score=-50.0,         # Should clamp to 0
-            revenue_growth_score=120.0, # Should clamp to 100
-            debt_to_equity_score=-10.0  # Should clamp to 0
+            pe_ratio_score=200.0,  # Should clamp to 100
+            roe_score=-50.0,  # Should clamp to 0
+            revenue_growth_score=120.0,  # Should clamp to 100
+            debt_to_equity_score=-10.0,  # Should clamp to 0
         )
         extreme_score = service.calculate_score(extreme_scorable)
         # Expected: (100*0.3 + 0*0.3 + 100*0.2 + 0*0.2) = 50.0
@@ -509,14 +511,15 @@ class TestScoringServiceErrorHandling:
 
     def test_strategy_exception_propagation(self):
         """Test that strategy exceptions are properly propagated"""
+
         class FailingStrategy(ScoringStrategy):
             def calculate_score(self, investment):
                 raise ValueError("Strategy calculation failed")
-        
+
         strategy = FailingStrategy()
         service = ScoringService(strategy)
         scorable = MockScorableInvestment()
-        
+
         with pytest.raises(ValueError, match="Strategy calculation failed"):
             service.calculate_score(scorable)
 
@@ -532,13 +535,13 @@ class TestScoringServiceWithMockInvestment:
         mock_investment._score_roe.return_value = (85.0, 0.3)
         mock_investment._score_revenue_growth.return_value = (65.0, 0.2)
         mock_investment._score_debt_to_equity.return_value = (80.0, 0.2)
-        
+
         strategy = FundamentalScoringStrategy()
         service = ScoringService(strategy)
-        
+
         # Act
         score = service.calculate_score(mock_investment)
-        
+
         # Assert
         expected = 75.0 * 0.3 + 85.0 * 0.3 + 65.0 * 0.2 + 80.0 * 0.2
         assert abs(score - expected) < 0.001
@@ -555,22 +558,22 @@ class TestScoringServiceWithMockInvestment:
         low_performer._score_roe.return_value = (40.0, 0.3)
         low_performer._score_revenue_growth.return_value = (25.0, 0.2)
         low_performer._score_debt_to_equity.return_value = (35.0, 0.2)
-        
-        # High performer  
+
+        # High performer
         high_performer = Mock()
         high_performer._score_pe_ratio.return_value = (90.0, 0.3)
         high_performer._score_roe.return_value = (95.0, 0.3)
         high_performer._score_revenue_growth.return_value = (85.0, 0.2)
         high_performer._score_debt_to_equity.return_value = (80.0, 0.2)
-        
+
         # Act
         low_score = service.calculate_score(low_performer)
         high_score = service.calculate_score(high_performer)
-        
+
         # Assert
         expected_low = 30.0 * 0.3 + 40.0 * 0.3 + 25.0 * 0.2 + 35.0 * 0.2
         expected_high = 90.0 * 0.3 + 95.0 * 0.3 + 85.0 * 0.2 + 80.0 * 0.2
-        
+
         assert abs(low_score - expected_low) < 0.001
         assert abs(high_score - expected_high) < 0.001
         assert abs(low_score - 33.0) < 0.001

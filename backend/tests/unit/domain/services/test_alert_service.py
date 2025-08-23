@@ -5,22 +5,23 @@ Tests unitaires pour AlertProcessor
 Tests unitaires complets pour le service de gestion des alertes du domaine.
 """
 
-import pytest
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import Mock
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
-from boursa_vision.domain.services.alert_service import (
-    AlertProcessor,
-    AlertNotificationMethod,
-)
+import pytest
+
 from boursa_vision.domain.entities.market_data import MarketData
+from boursa_vision.domain.services.alert_service import (
+    AlertNotificationMethod,
+    AlertProcessor,
+)
 from boursa_vision.domain.value_objects.alert import (
     Alert,
     AlertCondition,
-    AlertType,
     AlertPriority,
+    AlertType,
 )
 
 
@@ -41,7 +42,7 @@ def sample_market_data():
         low_price=Decimal("148.00"),
         close_price=Decimal("152.50"),
         volume=1000000,
-        adjusted_close=Decimal("152.50")
+        adjusted_close=Decimal("152.50"),
     )
 
 
@@ -60,11 +61,11 @@ def sample_alert():
     alert.created_at = datetime.now(timezone.utc)
     alert.min_value = None
     alert.max_value = None
-    
+
     # Mock methods
     alert.should_trigger.return_value = True
     alert.trigger.return_value = alert
-    
+
     return alert
 
 
@@ -109,7 +110,7 @@ class TestAlertProcessorCreation:
         """Test la création du processeur d'alertes."""
         # Act
         processor = AlertProcessor()
-        
+
         # Assert
         assert isinstance(processor, AlertProcessor)
         assert AlertNotificationMethod.IN_APP in processor._notification_methods
@@ -125,12 +126,12 @@ class TestAlertProcessorMarketDataAlerts:
         """Test le traitement réussi des alertes de données de marché."""
         # Arrange
         active_alerts = [sample_alert]
-        
+
         # Act
         triggered_alerts = alert_processor.process_market_data_alerts(
             sample_market_data, active_alerts
         )
-        
+
         # Assert
         assert len(triggered_alerts) == 1
         assert triggered_alerts[0] == sample_alert
@@ -146,30 +147,28 @@ class TestAlertProcessorMarketDataAlerts:
         different_symbol_alert = Mock(spec=Alert)
         different_symbol_alert.symbol = "GOOGL"
         different_symbol_alert.is_active = True
-        
+
         active_alerts = [sample_alert, different_symbol_alert]
-        
+
         # Act
         triggered_alerts = alert_processor.process_market_data_alerts(
             sample_market_data, active_alerts
         )
-        
+
         # Assert
         assert len(triggered_alerts) == 1
         assert triggered_alerts[0] == sample_alert
 
-    def test_should_handle_empty_alerts_list(
-        self, alert_processor, sample_market_data
-    ):
+    def test_should_handle_empty_alerts_list(self, alert_processor, sample_market_data):
         """Test la gestion d'une liste d'alertes vide."""
         # Arrange
         active_alerts = []
-        
+
         # Act
         triggered_alerts = alert_processor.process_market_data_alerts(
             sample_market_data, active_alerts
         )
-        
+
         # Assert
         assert len(triggered_alerts) == 0
 
@@ -180,12 +179,12 @@ class TestAlertProcessorMarketDataAlerts:
         # Arrange
         sample_alert.is_active = False
         active_alerts = [sample_alert]
-        
+
         # Act
         triggered_alerts = alert_processor.process_market_data_alerts(
             sample_market_data, active_alerts
         )
-        
+
         # Assert
         assert len(triggered_alerts) == 0
 
@@ -196,12 +195,12 @@ class TestAlertProcessorMarketDataAlerts:
         # Arrange
         sample_alert.symbol = "aapl"  # Minuscule
         active_alerts = [sample_alert]
-        
+
         # Act
         triggered_alerts = alert_processor.process_market_data_alerts(
             sample_market_data, active_alerts
         )
-        
+
         # Assert
         assert len(triggered_alerts) == 1
 
@@ -216,12 +215,12 @@ class TestAlertProcessorVolumeAlerts:
         # Arrange
         active_alerts = [sample_volume_alert]
         average_volume = 500000  # Volume moyen
-        
+
         # Act
         triggered_alerts = alert_processor.process_volume_alerts(
             sample_market_data, active_alerts, average_volume
         )
-        
+
         # Assert
         assert len(triggered_alerts) == 1
         volume_multiplier = Decimal(sample_market_data.volume) / Decimal(average_volume)
@@ -236,13 +235,15 @@ class TestAlertProcessorVolumeAlerts:
         # Arrange
         active_alerts = [sample_volume_alert]
         average_volume = 0
-        sample_volume_alert.should_trigger.return_value = False  # Ne devrait pas déclencher
-        
+        sample_volume_alert.should_trigger.return_value = (
+            False  # Ne devrait pas déclencher
+        )
+
         # Act
         triggered_alerts = alert_processor.process_volume_alerts(
             sample_market_data, active_alerts, average_volume
         )
-        
+
         # Assert
         sample_volume_alert.should_trigger.assert_called_once_with(Decimal("0"))
         assert len(triggered_alerts) == 0
@@ -254,12 +255,12 @@ class TestAlertProcessorVolumeAlerts:
         # Arrange
         active_alerts = [sample_alert, sample_volume_alert]  # Mélange d'alertes
         average_volume = 500000
-        
+
         # Act
         triggered_alerts = alert_processor.process_volume_alerts(
             sample_market_data, active_alerts, average_volume
         )
-        
+
         # Assert
         assert len(triggered_alerts) == 1
         assert triggered_alerts[0] == sample_volume_alert
@@ -275,12 +276,12 @@ class TestAlertProcessorPercentageChangeAlerts:
         # Arrange
         active_alerts = [sample_percentage_alert]
         previous_close = Decimal("145.00")  # Prix de clôture précédent
-        
+
         # Act
         triggered_alerts = alert_processor.process_percentage_change_alerts(
             sample_market_data, active_alerts, previous_close
         )
-        
+
         # Assert
         assert len(triggered_alerts) == 1
         expected_percentage = (
@@ -297,12 +298,12 @@ class TestAlertProcessorPercentageChangeAlerts:
         # Arrange
         active_alerts = [sample_percentage_alert]
         previous_close = Decimal("0")
-        
+
         # Act
         triggered_alerts = alert_processor.process_percentage_change_alerts(
             sample_market_data, active_alerts, previous_close
         )
-        
+
         # Assert
         assert len(triggered_alerts) == 0
 
@@ -313,12 +314,12 @@ class TestAlertProcessorPercentageChangeAlerts:
         # Arrange
         active_alerts = [sample_percentage_alert]
         previous_close = Decimal("-10.00")
-        
+
         # Act
         triggered_alerts = alert_processor.process_percentage_change_alerts(
             sample_market_data, active_alerts, previous_close
         )
-        
+
         # Assert
         assert len(triggered_alerts) == 0
 
@@ -329,12 +330,12 @@ class TestAlertProcessorPercentageChangeAlerts:
         # Arrange
         active_alerts = [sample_percentage_alert]
         previous_close = Decimal("160.00")  # Prix plus élevé pour changement négatif
-        
+
         # Act
         triggered_alerts = alert_processor.process_percentage_change_alerts(
             sample_market_data, active_alerts, previous_close
         )
-        
+
         # Assert
         assert len(triggered_alerts) == 1
         expected_percentage = (
@@ -348,11 +349,13 @@ class TestAlertProcessorPercentageChangeAlerts:
 class TestAlertProcessorValidation:
     """Tests pour la validation des alertes."""
 
-    def test_should_validate_alert_creation_successfully(self, alert_processor, sample_alert):
+    def test_should_validate_alert_creation_successfully(
+        self, alert_processor, sample_alert
+    ):
         """Test la validation réussie de création d'alerte."""
         # Act
         errors = alert_processor.validate_alert_creation(sample_alert)
-        
+
         # Assert
         assert errors == []
 
@@ -360,10 +363,10 @@ class TestAlertProcessorValidation:
         """Test la détection d'un symbole manquant."""
         # Arrange
         sample_alert.symbol = ""
-        
+
         # Act
         errors = alert_processor.validate_alert_creation(sample_alert)
-        
+
         # Assert
         assert "Symbol is required" in errors
 
@@ -371,10 +374,10 @@ class TestAlertProcessorValidation:
         """Test la détection d'une valeur cible invalide."""
         # Arrange
         sample_alert.target_value = Decimal("-10.00")
-        
+
         # Act
         errors = alert_processor.validate_alert_creation(sample_alert)
-        
+
         # Assert
         assert "Target value must be positive" in errors
 
@@ -384,10 +387,10 @@ class TestAlertProcessorValidation:
         sample_alert.condition = AlertCondition.BETWEEN
         sample_alert.min_value = None
         sample_alert.max_value = Decimal("200.00")
-        
+
         # Act
         errors = alert_processor.validate_alert_creation(sample_alert)
-        
+
         # Assert
         assert any("requires both min_value and max_value" in error for error in errors)
 
@@ -397,22 +400,24 @@ class TestAlertProcessorValidation:
         sample_alert.condition = AlertCondition.BETWEEN
         sample_alert.min_value = Decimal("200.00")
         sample_alert.max_value = Decimal("100.00")  # Max < Min
-        
+
         # Act
         errors = alert_processor.validate_alert_creation(sample_alert)
-        
+
         # Assert
         assert "min_value must be less than max_value" in errors
 
-    def test_should_validate_percentage_change_limit(self, alert_processor, sample_alert):
+    def test_should_validate_percentage_change_limit(
+        self, alert_processor, sample_alert
+    ):
         """Test la validation de la limite de changement de pourcentage."""
         # Arrange
         sample_alert.alert_type = AlertType.PRICE_CHANGE_PERCENT
         sample_alert.target_value = Decimal("150.00")  # > 100%
-        
+
         # Act
         errors = alert_processor.validate_alert_creation(sample_alert)
-        
+
         # Assert
         assert "Percentage change cannot exceed 100%" in errors
 
@@ -421,10 +426,10 @@ class TestAlertProcessorValidation:
         # Arrange
         sample_alert.alert_type = AlertType.VOLUME_SPIKE
         sample_alert.target_value = Decimal("0.5")  # < 1.0
-        
+
         # Act
         errors = alert_processor.validate_alert_creation(sample_alert)
-        
+
         # Assert
         assert "Volume spike multiplier must be at least 1.0" in errors
 
@@ -438,12 +443,12 @@ class TestAlertProcessorPriorityScore:
         """Test le calcul du score de priorité avec valeurs par défaut."""
         # Arrange
         current_value = Decimal("152.00")
-        
+
         # Act
         score = alert_processor.calculate_alert_priority_score(
             sample_alert, current_value
         )
-        
+
         # Assert
         assert isinstance(score, Decimal)
         assert score > 0
@@ -455,12 +460,12 @@ class TestAlertProcessorPriorityScore:
         # Arrange
         current_value = Decimal("152.00")
         market_volatility = Decimal("10.0")  # 10% volatilité
-        
+
         # Act
         score = alert_processor.calculate_alert_priority_score(
             sample_alert, current_value, market_volatility
         )
-        
+
         # Assert
         assert isinstance(score, Decimal)
         assert score > 0
@@ -470,12 +475,12 @@ class TestAlertProcessorPriorityScore:
         # Arrange
         current_value = Decimal("152.00")
         market_volatility = Decimal("50.0")  # 50% volatilité (très élevée)
-        
+
         # Act
         score = alert_processor.calculate_alert_priority_score(
             sample_alert, current_value, market_volatility
         )
-        
+
         # Assert
         assert isinstance(score, Decimal)
         assert score > 0
@@ -484,12 +489,12 @@ class TestAlertProcessorPriorityScore:
         """Test le calcul du facteur de distance."""
         # Arrange
         current_value = sample_alert.target_value  # Exactement sur la cible
-        
+
         # Act
         score = alert_processor.calculate_alert_priority_score(
             sample_alert, current_value
         )
-        
+
         # Assert
         assert isinstance(score, Decimal)
         # Le score devrait inclure le bonus de distance (distance = 0)
@@ -506,12 +511,12 @@ class TestAlertProcessorGrouping:
         alert2.symbol = "GOOGL"
         alert3 = Mock(spec=Alert)
         alert3.symbol = "AAPL"
-        
+
         alerts = [alert1, alert2, alert3]
-        
+
         # Act
         grouped = alert_processor.group_alerts_by_symbol(alerts)
-        
+
         # Assert
         assert "AAPL" in grouped
         assert "GOOGL" in grouped
@@ -522,10 +527,10 @@ class TestAlertProcessorGrouping:
         """Test la gestion d'une liste vide pour le regroupement."""
         # Arrange
         alerts = []
-        
+
         # Act
         grouped = alert_processor.group_alerts_by_symbol(alerts)
-        
+
         # Assert
         assert grouped == {}
 
@@ -537,12 +542,12 @@ class TestAlertProcessorGrouping:
         alert1 = sample_alert  # AAPL
         alert2 = Mock(spec=Alert)
         alert2.symbol = "aapl"  # Minuscule
-        
+
         alerts = [alert1, alert2]
-        
+
         # Act
         grouped = alert_processor.group_alerts_by_symbol(alerts)
-        
+
         # Assert
         assert "AAPL" in grouped
         assert len(grouped["AAPL"]) == 2
@@ -560,14 +565,14 @@ class TestAlertProcessorDuplicateFiltering:
         new_alert.alert_type = sample_alert.alert_type
         new_alert.condition = sample_alert.condition
         new_alert.target_value = sample_alert.target_value
-        
+
         existing_alerts = [sample_alert]
-        
+
         # Act
         is_duplicate = alert_processor.filter_duplicate_alerts(
             user_id, new_alert, existing_alerts
         )
-        
+
         # Assert
         assert is_duplicate is True
 
@@ -582,14 +587,14 @@ class TestAlertProcessorDuplicateFiltering:
         new_alert.alert_type = sample_alert.alert_type
         new_alert.condition = sample_alert.condition
         new_alert.target_value = sample_alert.target_value
-        
+
         existing_alerts = [sample_alert]
-        
+
         # Act
         is_duplicate = alert_processor.filter_duplicate_alerts(
             different_user_id, new_alert, existing_alerts
         )
-        
+
         # Assert
         assert is_duplicate is False
 
@@ -604,14 +609,14 @@ class TestAlertProcessorDuplicateFiltering:
         new_alert.alert_type = sample_alert.alert_type
         new_alert.condition = sample_alert.condition
         new_alert.target_value = sample_alert.target_value
-        
+
         existing_alerts = [sample_alert]
-        
+
         # Act
         is_duplicate = alert_processor.filter_duplicate_alerts(
             user_id, new_alert, existing_alerts
         )
-        
+
         # Assert
         assert is_duplicate is False
 
@@ -622,20 +627,20 @@ class TestAlertProcessorDuplicateFiltering:
         # Arrange
         user_id = sample_alert.user_id
         sample_alert.is_active = False  # Inactive
-        
+
         new_alert = Mock(spec=Alert)
         new_alert.symbol = sample_alert.symbol
         new_alert.alert_type = sample_alert.alert_type
         new_alert.condition = sample_alert.condition
         new_alert.target_value = sample_alert.target_value
-        
+
         existing_alerts = [sample_alert]
-        
+
         # Act
         is_duplicate = alert_processor.filter_duplicate_alerts(
             user_id, new_alert, existing_alerts
         )
-        
+
         # Assert
         assert is_duplicate is False
 
@@ -649,15 +654,17 @@ class TestAlertProcessorDuplicateFiltering:
         new_alert.symbol = sample_alert.symbol
         new_alert.alert_type = sample_alert.alert_type
         new_alert.condition = sample_alert.condition
-        new_alert.target_value = sample_alert.target_value + Decimal("10.00")  # Différent
-        
+        new_alert.target_value = sample_alert.target_value + Decimal(
+            "10.00"
+        )  # Différent
+
         existing_alerts = [sample_alert]
-        
+
         # Act
         is_duplicate = alert_processor.filter_duplicate_alerts(
             user_id, new_alert, existing_alerts
         )
-        
+
         # Assert
         assert is_duplicate is False
 
@@ -672,12 +679,12 @@ class TestAlertProcessorPrivateMethods:
         # Arrange
         sample_alert.alert_type = AlertType.PRICE_ABOVE
         sample_alert.is_active = True
-        
+
         # Act
         should_trigger = alert_processor._should_trigger_alert(
             sample_alert, sample_market_data
         )
-        
+
         # Assert
         assert should_trigger is True
         sample_alert.should_trigger.assert_called_once_with(
@@ -690,12 +697,12 @@ class TestAlertProcessorPrivateMethods:
         """Test le non-déclenchement d'alerte inactive."""
         # Arrange
         sample_alert.is_active = False
-        
+
         # Act
         should_trigger = alert_processor._should_trigger_alert(
             sample_alert, sample_market_data
         )
-        
+
         # Assert
         assert should_trigger is False
 
@@ -704,12 +711,12 @@ class TestAlertProcessorPrivateMethods:
     ):
         """Test le non-déclenchement d'alerte de volume dans la méthode privée."""
         # Arrange - Les alertes de volume nécessitent un contexte supplémentaire
-        
+
         # Act
         should_trigger = alert_processor._should_trigger_alert(
             sample_volume_alert, sample_market_data
         )
-        
+
         # Assert
         assert should_trigger is False
 
@@ -718,12 +725,12 @@ class TestAlertProcessorPrivateMethods:
     ):
         """Test le non-déclenchement d'alerte de pourcentage dans la méthode privée."""
         # Arrange - Les alertes de pourcentage nécessitent un prix de clôture précédent
-        
+
         # Act
         should_trigger = alert_processor._should_trigger_alert(
             sample_percentage_alert, sample_market_data
         )
-        
+
         # Assert
         assert should_trigger is False
 
@@ -735,12 +742,12 @@ class TestAlertProcessorPrivateMethods:
         alert = Mock(spec=Alert)
         alert.is_active = True
         alert.alert_type = "UNKNOWN_TYPE"  # Type non reconnu
-        
+
         # Act
         should_trigger = alert_processor._should_trigger_alert(
             alert, sample_market_data
         )
-        
+
         # Assert
         assert should_trigger is False
 
@@ -762,7 +769,7 @@ class TestAlertProcessorEdgeCases:
         alert = Mock(spec=Alert)
         alert.symbol = None
         alert.is_active = True
-        
+
         # Act & Assert - Cela devrait être géré gracieusement
         with pytest.raises(AttributeError):
             alert_processor.process_market_data_alerts(sample_market_data, [alert])
@@ -772,12 +779,12 @@ class TestAlertProcessorEdgeCases:
         # Arrange
         sample_alert.created_at = datetime.now(timezone.utc) - timedelta(days=100)
         current_value = Decimal("152.00")
-        
+
         # Act
         score = alert_processor.calculate_alert_priority_score(
             sample_alert, current_value
         )
-        
+
         # Assert
         assert isinstance(score, Decimal)
         assert score >= 0  # Le score ne devrait pas être négatif
@@ -789,12 +796,12 @@ class TestAlertProcessorEdgeCases:
         # Arrange
         sample_alert.created_at = None
         current_value = Decimal("152.00")
-        
+
         # Act
         score = alert_processor.calculate_alert_priority_score(
             sample_alert, current_value
         )
-        
+
         # Assert
         assert isinstance(score, Decimal)
         assert score > 0
@@ -816,4 +823,4 @@ class TestAlertNotificationMethod:
         """Test l'héritage de str et Enum."""
         # Assert
         assert isinstance(AlertNotificationMethod.EMAIL, str)
-        assert hasattr(AlertNotificationMethod, '__members__')
+        assert hasattr(AlertNotificationMethod, "__members__")

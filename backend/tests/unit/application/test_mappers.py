@@ -14,7 +14,7 @@ may have mismatches with current DTO definitions.
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -43,12 +43,12 @@ class TestInvestmentMapper:
         investment.exchange = "NASDAQ"
         investment.created_at = datetime.now()
         investment.updated_at = datetime.now()
-        
+
         # Mock current_price
         investment.current_price = MagicMock()
         investment.current_price.amount = 150.50
         investment.current_price.currency = "USD"
-        
+
         return investment
 
     @pytest.fixture
@@ -76,9 +76,9 @@ class TestInvestmentMapper:
         dto = InvestmentMapper.to_dto(mock_investment)
 
         # Assert - Test basic mapping functionality
-        assert hasattr(dto, 'id')
-        assert hasattr(dto, 'symbol')
-        assert hasattr(dto, 'name')
+        assert hasattr(dto, "id")
+        assert hasattr(dto, "symbol")
+        assert hasattr(dto, "name")
         assert dto.symbol == mock_investment.symbol
         assert dto.name == mock_investment.name
         assert dto.investment_type == mock_investment.investment_type
@@ -137,8 +137,8 @@ class TestMoneyMapper:
 
         # Assert
         assert dto is not None
-        assert hasattr(dto, 'amount')
-        assert hasattr(dto, 'currency')
+        assert hasattr(dto, "amount")
+        assert hasattr(dto, "currency")
         assert dto.amount == mock_money.amount
         assert dto.currency == mock_money.currency
 
@@ -176,6 +176,7 @@ class TestMoneyMapper:
         """Test conversion DTO vers domain object"""
         # Arrange
         from boursa_vision.application.dtos import MoneyDTO
+
         dto = MoneyDTO(amount=Decimal("100.50"), currency="USD")
 
         # Act
@@ -201,7 +202,7 @@ class TestPortfolioMapper:
         portfolio.currency = "USD"
         portfolio.created_at = datetime.now()
         portfolio.updated_at = datetime.now()
-        
+
         # Mock positions with proper PositionDTO-compatible structure
         mock_position = MagicMock()
         mock_position.id = uuid4()
@@ -209,28 +210,28 @@ class TestPortfolioMapper:
         mock_position.quantity = 10
         mock_position.created_at = datetime.now()
         mock_position.updated_at = datetime.now()
-        
+
         # Mock investment
         mock_investment = MagicMock()
         mock_investment.id = uuid4()
         mock_investment.symbol = "AAPL"
         mock_investment.name = "Apple Inc."
         mock_position.investment = mock_investment
-        
+
         # Mock money values
         mock_average_price = MagicMock()
         mock_average_price.amount = 150.00
         mock_average_price.currency = "USD"
         mock_position.average_price = mock_average_price
-        
+
         portfolio.positions = [mock_position]
-        
+
         # Mock calculate_total_value method
         total_value = MagicMock()
         total_value.amount = 10000.00
         total_value.currency = "USD"
         portfolio.calculate_total_value.return_value = total_value
-        
+
         return portfolio
 
     def test_to_dto_with_positions(self):
@@ -244,8 +245,10 @@ class TestPortfolioMapper:
         portfolio.currency = "USD"
         portfolio.created_at = datetime.now()
         portfolio.updated_at = datetime.now()
-        portfolio.positions = []  # Empty positions to avoid PositionDTO validation errors
-        
+        portfolio.positions = (
+            []
+        )  # Empty positions to avoid PositionDTO validation errors
+
         # Mock calculate_total_value method
         total_value = MagicMock()
         total_value.amount = 10000.00
@@ -256,9 +259,9 @@ class TestPortfolioMapper:
         dto = PortfolioMapper.to_dto(portfolio, include_positions=True)
 
         # Assert basic mapping
-        assert hasattr(dto, 'id')
-        assert hasattr(dto, 'name')
-        assert hasattr(dto, 'currency')
+        assert hasattr(dto, "id")
+        assert hasattr(dto, "name")
+        assert hasattr(dto, "currency")
         assert dto.id == portfolio.id
         assert dto.user_id == portfolio.user_id
         assert dto.name == portfolio.name
@@ -299,7 +302,9 @@ class TestPortfolioMapper:
         portfolio.positions = []  # Empty positions to avoid PositionDTO validation
         portfolio.created_at = datetime.now()
         portfolio.updated_at = datetime.now()
-        portfolio.calculate_total_value.side_effect = AttributeError("Error calculating")
+        portfolio.calculate_total_value.side_effect = AttributeError(
+            "Error calculating"
+        )
 
         # Act
         dto = PortfolioMapper.to_dto(portfolio)
@@ -331,9 +336,9 @@ class TestPerformanceMapper:
         dto = PerformanceMapper.to_dto(mock_performance)
 
         # Assert
-        assert hasattr(dto, 'total_return')
-        assert hasattr(dto, 'volatility')
-        assert hasattr(dto, 'sharpe_ratio')
+        assert hasattr(dto, "total_return")
+        assert hasattr(dto, "volatility")
+        assert hasattr(dto, "sharpe_ratio")
         assert dto.total_return == mock_performance.total_return
         assert dto.volatility == mock_performance.volatility
         assert dto.sharpe_ratio == mock_performance.sharpe_ratio
@@ -361,8 +366,16 @@ class TestPerformanceMapper:
         # Arrange
         empty_performance = MagicMock()
         # Delete all attributes to test defaults
-        for attr in ["total_return", "annualized_return", "volatility", "sharpe_ratio", 
-                    "max_drawdown", "beta", "alpha", "var_95"]:
+        for attr in [
+            "total_return",
+            "annualized_return",
+            "volatility",
+            "sharpe_ratio",
+            "max_drawdown",
+            "beta",
+            "alpha",
+            "var_95",
+        ]:
             if hasattr(empty_performance, attr):
                 delattr(empty_performance, attr)
 

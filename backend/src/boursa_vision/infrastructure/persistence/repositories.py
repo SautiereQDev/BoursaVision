@@ -8,7 +8,7 @@ using SQLAlchemy for PostgreSQL + TimescaleDB persistence.
 from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import and_, delete, desc, select, func
+from sqlalchemy import and_, delete, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -362,11 +362,13 @@ class SqlAlchemyInvestmentRepository(IInvestmentRepository):
         """Find investment by ID."""
         if not self._session:
             raise ValueError("Session is not initialized")
-        
+
         stmt = (
             select(Instrument)
             .options(selectinload(Instrument.fundamental_data))
-            .where(Instrument.symbol == investment_id)  # Assuming ID is the symbol for now
+            .where(
+                Instrument.symbol == investment_id
+            )  # Assuming ID is the symbol for now
         )
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
@@ -382,11 +384,8 @@ class SqlAlchemyInvestmentRepository(IInvestmentRepository):
         """Find all investments."""
         if not self._session:
             raise ValueError("Session is not initialized")
-        
-        stmt = (
-            select(Instrument)
-            .options(selectinload(Instrument.fundamental_data))
-        )
+
+        stmt = select(Instrument).options(selectinload(Instrument.fundamental_data))
         result = await self._session.execute(stmt)
         models = result.scalars().all()
 
@@ -402,7 +401,7 @@ class SqlAlchemyInvestmentRepository(IInvestmentRepository):
         """Delete investment."""
         if not self._session:
             raise ValueError("Session is not initialized")
-        
+
         stmt = delete(Instrument).where(Instrument.symbol == investment.symbol)
         await self._session.execute(stmt)
         await self._session.flush()
@@ -411,7 +410,7 @@ class SqlAlchemyInvestmentRepository(IInvestmentRepository):
         """Find investments by market cap."""
         if not self._session:
             raise ValueError("Session is not initialized")
-        
+
         stmt = (
             select(Instrument)
             .options(selectinload(Instrument.fundamental_data))
@@ -439,14 +438,14 @@ class SqlAlchemyInvestmentRepository(IInvestmentRepository):
         """Search investments by name pattern."""
         if not self._session:
             raise ValueError("Session is not initialized")
-        
+
         stmt = (
             select(Instrument)
             .options(selectinload(Instrument.fundamental_data))
             .where(
                 and_(
                     Instrument.name.ilike(f"%{name_pattern}%"),
-                    Instrument.is_active.is_(True)
+                    Instrument.is_active.is_(True),
                 )
             )
         )

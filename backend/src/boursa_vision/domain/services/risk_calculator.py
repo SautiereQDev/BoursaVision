@@ -526,7 +526,7 @@ class RiskCalculatorService:
         portfolio_value: Optional[Money] = None,
     ) -> Dict[str, float]:
         """Calculate sector concentration percentages
-        
+
         Args:
             positions: List of positions to analyze
             investments: Investment data
@@ -551,8 +551,10 @@ class RiskCalculatorService:
                 position_total_value += value
 
         # Use portfolio_value if provided, otherwise fall back to sum of positions
-        total_for_percentage = portfolio_value.amount if portfolio_value else position_total_value
-        
+        total_for_percentage = (
+            portfolio_value.amount if portfolio_value else position_total_value
+        )
+
         if total_for_percentage == 0:
             return {}
 

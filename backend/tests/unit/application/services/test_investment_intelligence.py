@@ -4,26 +4,27 @@ Couverture exhaustive des fonctionnalités critiques : stratégies d'investissem
 scoring, recommandations, analyses de portefeuille et optimisation.
 """
 
-import pytest
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 
 from boursa_vision.application.services.investment_intelligence import (
+    AnalysisConfig,
+    GrowthInvestingStrategy,
+    InvestmentHorizon,
     InvestmentIntelligenceService,
     InvestmentRecommendation,
-    ValueInvestingStrategy,
-    GrowthInvestingStrategy,
     RecommendationType,
     RiskLevel,
-    InvestmentHorizon,
-    AnalysisConfig,
+    ValueInvestingStrategy,
 )
 from boursa_vision.application.services.market_scanner import (
     MarketScannerService,
-    ScanResult,
     ScanConfig,
+    ScanResult,
     ScanStrategy,
 )
 
@@ -59,14 +60,14 @@ class TestInvestmentRecommendation:
             rsi=58.0,
             macd_signal="BUY",
             reasons=["Strong fundamentals", "Good technical outlook"],
-            warnings=["High P/E ratio"]
+            warnings=["High P/E ratio"],
         )
 
     def test_should_create_recommendation_with_all_attributes(self):
         """Test de création d'une recommandation complète."""
         # Given & When - Créé dans setup_method
         rec = self.test_recommendation
-        
+
         # Then
         assert rec.symbol == "AAPL"
         assert abs(rec.confidence_score - 85.5) < 0.01
@@ -79,10 +80,10 @@ class TestInvestmentRecommendation:
         """Test de conversion en dictionnaire."""
         # Given
         rec = self.test_recommendation
-        
+
         # When
         result = rec.to_dict()
-        
+
         # Then
         assert result["symbol"] == "AAPL"
         assert abs(result["confidence_score"] - 85.5) < 0.01
@@ -118,12 +119,12 @@ class TestInvestmentRecommendation:
             roe=None,
             debt_to_equity=None,
             rsi=None,
-            macd_signal=None
+            macd_signal=None,
         )
-        
+
         # When
         result = rec.to_dict()
-        
+
         # Then
         assert result["target_price"] is None
         assert result["sector"] is None
@@ -155,9 +156,9 @@ class TestInvestmentRecommendation:
             roe=8.5,
             debt_to_equity=0.8,
             rsi=72.0,
-            macd_signal="SELL"
+            macd_signal="SELL",
         )
-        
+
         # Then
         assert rec.last_updated is not None
         assert isinstance(rec.last_updated, datetime)
@@ -195,18 +196,22 @@ class TestValueInvestingStrategy:
         """Test d'analyse d'une bonne opportunité value."""
         # Given - mock_scan_result configuré avec de meilleures valeurs value
         self.mock_scan_result.pe_ratio = 10.0  # Excellent P/E
-        self.mock_scan_result.pb_ratio = 1.0   # Excellent P/B
-        self.mock_scan_result.roe = 22.0       # Excellent ROE
+        self.mock_scan_result.pb_ratio = 1.0  # Excellent P/B
+        self.mock_scan_result.roe = 22.0  # Excellent ROE
         self.mock_scan_result.debt_to_equity = 0.2  # Faible dette
         self.mock_scan_result.dividend_yield = 3.5  # Bon dividende
-        
+
         # When
         result = self.strategy.analyze_opportunity(self.mock_scan_result)
-        
+
         # Then
         assert result is not None
         assert result.symbol == "VTI"
-        assert result.recommendation in [RecommendationType.BUY, RecommendationType.STRONG_BUY, RecommendationType.HOLD]
+        assert result.recommendation in [
+            RecommendationType.BUY,
+            RecommendationType.STRONG_BUY,
+            RecommendationType.HOLD,
+        ]
         assert result.confidence_score >= 60
         assert result.investment_horizon == InvestmentHorizon.LONG_TERM
         assert result.risk_level == RiskLevel.MODERATE
@@ -216,41 +221,41 @@ class TestValueInvestingStrategy:
         """Test de rejet d'une mauvaise opportunité value."""
         # Given
         self.mock_scan_result.pe_ratio = 35.0  # P/E trop élevé
-        self.mock_scan_result.pb_ratio = 4.0   # P/B trop élevé
-        self.mock_scan_result.roe = 5.0        # ROE trop faible
+        self.mock_scan_result.pb_ratio = 4.0  # P/B trop élevé
+        self.mock_scan_result.roe = 5.0  # ROE trop faible
         self.mock_scan_result.debt_to_equity = 2.0  # Dette trop élevée
-        
+
         # When
         result = self.strategy.analyze_opportunity(self.mock_scan_result)
-        
+
         # Then
         assert result is None
 
     def test_should_score_pe_ratio_correctly(self):
         """Test du scoring du P/E ratio."""
         # Given & When & Then
-        assert self.strategy._score_pe_ratio(8.0) == 25    # Excellent
-        assert self.strategy._score_pe_ratio(12.0) == 15   # Bon
-        assert self.strategy._score_pe_ratio(18.0) == 5    # Acceptable
+        assert self.strategy._score_pe_ratio(8.0) == 25  # Excellent
+        assert self.strategy._score_pe_ratio(12.0) == 15  # Bon
+        assert self.strategy._score_pe_ratio(18.0) == 5  # Acceptable
         assert self.strategy._score_pe_ratio(25.0) == -10  # Élevé
-        assert self.strategy._score_pe_ratio(None) == 0    # Pas de données
-        assert self.strategy._score_pe_ratio(-5.0) == 0    # Valeur négative
+        assert self.strategy._score_pe_ratio(None) == 0  # Pas de données
+        assert self.strategy._score_pe_ratio(-5.0) == 0  # Valeur négative
 
     def test_should_score_pb_ratio_correctly(self):
         """Test du scoring du P/B ratio."""
         # Given & When & Then
-        assert self.strategy._score_pb_ratio(0.8) == 20    # Excellent
-        assert self.strategy._score_pb_ratio(1.2) == 10    # Bon
-        assert self.strategy._score_pb_ratio(1.8) == 0     # Neutre
-        assert self.strategy._score_pb_ratio(2.5) == -10   # Élevé
-        assert self.strategy._score_pb_ratio(None) == 0    # Pas de données
+        assert self.strategy._score_pb_ratio(0.8) == 20  # Excellent
+        assert self.strategy._score_pb_ratio(1.2) == 10  # Bon
+        assert self.strategy._score_pb_ratio(1.8) == 0  # Neutre
+        assert self.strategy._score_pb_ratio(2.5) == -10  # Élevé
+        assert self.strategy._score_pb_ratio(None) == 0  # Pas de données
 
     def test_should_score_dividend_yield_correctly(self):
         """Test du scoring du dividend yield."""
         # Given & When & Then
         assert self.strategy._score_dividend_yield(4.0) == 15  # Bon dividende
-        assert self.strategy._score_dividend_yield(2.0) == 5   # Dividende modeste
-        assert self.strategy._score_dividend_yield(0.5) == 0   # Faible dividende
+        assert self.strategy._score_dividend_yield(2.0) == 5  # Dividende modeste
+        assert self.strategy._score_dividend_yield(0.5) == 0  # Faible dividende
         assert self.strategy._score_dividend_yield(None) == 0  # Pas de dividende
 
     def test_should_calculate_value_score_within_bounds(self):
@@ -259,10 +264,10 @@ class TestValueInvestingStrategy:
         self.mock_scan_result.pe_ratio = 5.0  # Excellent
         self.mock_scan_result.pb_ratio = 0.5  # Excellent
         self.mock_scan_result.dividend_yield = 5.0  # Excellent
-        
+
         # When
         score = self.strategy._calculate_value_score(self.mock_scan_result)
-        
+
         # Then
         assert 0 <= score <= 100
 
@@ -271,10 +276,10 @@ class TestValueInvestingStrategy:
         # Given - Bonnes métriques de qualité
         self.mock_scan_result.roe = 25.0
         self.mock_scan_result.debt_to_equity = 0.2
-        
+
         # When
         score = self.strategy._calculate_quality_score(self.mock_scan_result)
-        
+
         # Then
         assert score > 50  # Score supérieur à la base
         assert 0 <= score <= 100
@@ -282,7 +287,10 @@ class TestValueInvestingStrategy:
     def test_should_determine_recommendation_levels(self):
         """Test de détermination des niveaux de recommandation."""
         # Given & When & Then
-        assert self.strategy._determine_recommendation(90.0) == RecommendationType.STRONG_BUY
+        assert (
+            self.strategy._determine_recommendation(90.0)
+            == RecommendationType.STRONG_BUY
+        )
         assert self.strategy._determine_recommendation(78.0) == RecommendationType.BUY
         assert self.strategy._determine_recommendation(65.0) == RecommendationType.HOLD
         assert self.strategy._determine_recommendation(45.0) == RecommendationType.SELL
@@ -292,10 +300,10 @@ class TestValueInvestingStrategy:
         # Given
         self.mock_scan_result.price = 100.0
         self.mock_scan_result.pe_ratio = 20.0
-        
+
         # When
         target_price = self.strategy._calculate_target_price(self.mock_scan_result)
-        
+
         # Then
         assert target_price is not None
         # Le prix cible devrait être raisonnable (utilise P/E cible de 15 max)
@@ -307,10 +315,10 @@ class TestValueInvestingStrategy:
         """Test de gestion P/E invalide pour calcul prix cible."""
         # Given
         self.mock_scan_result.pe_ratio = None
-        
+
         # When
         target_price = self.strategy._calculate_target_price(self.mock_scan_result)
-        
+
         # Then
         assert target_price is None
 
@@ -348,14 +356,17 @@ class TestGrowthInvestingStrategy:
     def test_should_analyze_good_growth_opportunity(self):
         """Test d'analyse d'une bonne opportunité growth."""
         # Given - mock configuré avec de bonnes métriques growth
-        
+
         # When
         result = self.strategy.analyze_opportunity(self.mock_scan_result)
-        
+
         # Then
         assert result is not None
         assert result.symbol == "TECH"
-        assert result.recommendation in [RecommendationType.BUY, RecommendationType.STRONG_BUY]
+        assert result.recommendation in [
+            RecommendationType.BUY,
+            RecommendationType.STRONG_BUY,
+        ]
         assert result.risk_level == RiskLevel.HIGH
         assert result.investment_horizon == InvestmentHorizon.MEDIUM_TERM
         assert result.momentum_score >= 60
@@ -364,26 +375,26 @@ class TestGrowthInvestingStrategy:
         """Test de rejet d'une mauvaise opportunité growth."""
         # Given
         self.mock_scan_result.change_percent = -10.0  # Performance négative
-        self.mock_scan_result.rsi = 25.0              # RSI très bas
-        self.mock_scan_result.macd_signal = "SELL"    # Signal baissier
-        self.mock_scan_result.roe = 5.0               # ROE faible
-        
+        self.mock_scan_result.rsi = 25.0  # RSI très bas
+        self.mock_scan_result.macd_signal = "SELL"  # Signal baissier
+        self.mock_scan_result.roe = 5.0  # ROE faible
+
         # When
         result = self.strategy.analyze_opportunity(self.mock_scan_result)
-        
+
         # Then
         assert result is None
 
     def test_should_calculate_momentum_score_correctly(self):
         """Test de calcul du score de momentum."""
         # Given - Bonnes métriques de momentum
-        self.mock_scan_result.change_percent = 7.0   # Bonne performance
-        self.mock_scan_result.rsi = 65.0             # RSI dans bonne zone
-        self.mock_scan_result.macd_signal = "BUY"    # Signal haussier
-        
+        self.mock_scan_result.change_percent = 7.0  # Bonne performance
+        self.mock_scan_result.rsi = 65.0  # RSI dans bonne zone
+        self.mock_scan_result.macd_signal = "BUY"  # Signal haussier
+
         # When
         score = self.strategy._calculate_momentum_score(self.mock_scan_result)
-        
+
         # Then
         assert score > 50  # Score supérieur à la base
         assert 0 <= score <= 100
@@ -394,10 +405,10 @@ class TestGrowthInvestingStrategy:
         self.mock_scan_result.sector = "Technology"
         self.mock_scan_result.roe = 20.0
         self.mock_scan_result.market_cap = 25000000000  # 25B (mid-cap)
-        
+
         # When
         score = self.strategy._calculate_growth_potential(self.mock_scan_result)
-        
+
         # Then
         assert score > 50  # Bonus tech + bon ROE + bonne cap
         assert 0 <= score <= 100
@@ -406,10 +417,10 @@ class TestGrowthInvestingStrategy:
         """Test de calcul d'un prix cible agressif."""
         # Given
         self.mock_scan_result.price = 100.0
-        
+
         # When
         target_price = self.strategy._calculate_target_price(self.mock_scan_result)
-        
+
         # Then
         assert abs(target_price - 125.0) < 0.01  # 25% upside
 
@@ -428,24 +439,31 @@ class TestInvestmentIntelligenceService:
         """Configuration avant chaque test."""
         self.mock_scanner = Mock(spec=MarketScannerService)
         self.service = InvestmentIntelligenceService(self.mock_scanner)
-        
+
         # Mock scan results
         self.mock_scan_results = [
-            self._create_mock_scan_result("AAPL", "Apple", 180.0, "Technology", pe_ratio=25.0),
-            self._create_mock_scan_result("MSFT", "Microsoft", 350.0, "Technology", pe_ratio=30.0),
-            self._create_mock_scan_result("JNJ", "Johnson & Johnson", 170.0, "Healthcare", pe_ratio=15.0),
+            self._create_mock_scan_result(
+                "AAPL", "Apple", 180.0, "Technology", pe_ratio=25.0
+            ),
+            self._create_mock_scan_result(
+                "MSFT", "Microsoft", 350.0, "Technology", pe_ratio=30.0
+            ),
+            self._create_mock_scan_result(
+                "JNJ", "Johnson & Johnson", 170.0, "Healthcare", pe_ratio=15.0
+            ),
         ]
-        
+
         # Configuration de test
         self.test_config = AnalysisConfig(
             min_confidence_score=70.0,
             max_recommendations=10,
             min_market_cap=1e9,
-            max_risk_level=RiskLevel.HIGH
+            max_risk_level=RiskLevel.HIGH,
         )
 
-    def _create_mock_scan_result(self, symbol: str, name: str, price: float, 
-                                sector: str, pe_ratio: float = 20.0) -> Mock:
+    def _create_mock_scan_result(
+        self, symbol: str, name: str, price: float, sector: str, pe_ratio: float = 20.0
+    ) -> Mock:
         """Crée un mock ScanResult."""
         mock = Mock(spec=ScanResult)
         mock.symbol = symbol
@@ -470,15 +488,17 @@ class TestInvestmentIntelligenceService:
         """Test de génération de recommandations d'investissement."""
         # Given
         self.mock_scanner.scan_market = AsyncMock(return_value=self.mock_scan_results)
-        
+
         # When
-        recommendations = await self.service.generate_investment_recommendations(self.test_config)
-        
+        recommendations = await self.service.generate_investment_recommendations(
+            self.test_config
+        )
+
         # Then
         assert isinstance(recommendations, list)
         assert len(recommendations) <= self.test_config.max_recommendations
         self.mock_scanner.scan_market.assert_called_once()
-        
+
         # Vérifier que les recommandations ont les bonnes propriétés
         for rec in recommendations:
             assert isinstance(rec, InvestmentRecommendation)
@@ -488,8 +508,10 @@ class TestInvestmentIntelligenceService:
     async def test_should_handle_scanner_exceptions_gracefully(self):
         """Test de gestion des exceptions du scanner."""
         # Given
-        self.mock_scanner.scan_market = AsyncMock(side_effect=Exception("Scanner error"))
-        
+        self.mock_scanner.scan_market = AsyncMock(
+            side_effect=Exception("Scanner error")
+        )
+
         # When & Then
         with pytest.raises(Exception):
             await self.service.generate_investment_recommendations(self.test_config)
@@ -499,15 +521,19 @@ class TestInvestmentIntelligenceService:
         """Test de déduplication des recommandations."""
         # Given
         self.mock_scanner.scan_market = AsyncMock(return_value=self.mock_scan_results)
-        
+
         # Ajouter un doublon avec meilleur score
-        duplicate_scan = self._create_mock_scan_result("AAPL", "Apple", 180.0, "Technology", pe_ratio=12.0)
+        duplicate_scan = self._create_mock_scan_result(
+            "AAPL", "Apple", 180.0, "Technology", pe_ratio=12.0
+        )
         duplicate_scan.roe = 25.0  # Meilleur ROE pour score plus élevé
         self.mock_scan_results.append(duplicate_scan)
-        
+
         # When
-        recommendations = await self.service.generate_investment_recommendations(self.test_config)
-        
+        recommendations = await self.service.generate_investment_recommendations(
+            self.test_config
+        )
+
         # Then
         symbols = [rec.symbol for rec in recommendations]
         assert len(symbols) == len(set(symbols))  # Pas de doublons
@@ -516,14 +542,16 @@ class TestInvestmentIntelligenceService:
         """Test de récupération des meilleures opportunités."""
         # Given
         self.service.cached_recommendations = [
-            self._create_test_recommendation("AAPL", RecommendationType.STRONG_BUY, 95.0),
+            self._create_test_recommendation(
+                "AAPL", RecommendationType.STRONG_BUY, 95.0
+            ),
             self._create_test_recommendation("MSFT", RecommendationType.BUY, 85.0),
             self._create_test_recommendation("GOOGL", RecommendationType.HOLD, 65.0),
         ]
-        
+
         # When
         opportunities = self.service.get_top_opportunities(5)
-        
+
         # Then
         assert len(opportunities) == 2  # Seuls STRONG_BUY et BUY
         assert opportunities[0].symbol == "AAPL"
@@ -533,15 +561,23 @@ class TestInvestmentIntelligenceService:
         """Test de récupération des recommandations par secteur."""
         # Given
         self.service.cached_recommendations = [
-            self._create_test_recommendation("AAPL", RecommendationType.STRONG_BUY, 95.0, "Technology"),
-            self._create_test_recommendation("MSFT", RecommendationType.BUY, 85.0, "Technology"),
-            self._create_test_recommendation("JNJ", RecommendationType.BUY, 80.0, "Healthcare"),
-            self._create_test_recommendation("PG", RecommendationType.HOLD, 70.0, "Consumer Goods"),
+            self._create_test_recommendation(
+                "AAPL", RecommendationType.STRONG_BUY, 95.0, "Technology"
+            ),
+            self._create_test_recommendation(
+                "MSFT", RecommendationType.BUY, 85.0, "Technology"
+            ),
+            self._create_test_recommendation(
+                "JNJ", RecommendationType.BUY, 80.0, "Healthcare"
+            ),
+            self._create_test_recommendation(
+                "PG", RecommendationType.HOLD, 70.0, "Consumer Goods"
+            ),
         ]
-        
+
         # When
         sector_recs = self.service.get_sector_recommendations()
-        
+
         # Then
         assert "Technology" in sector_recs
         assert "Healthcare" in sector_recs
@@ -553,20 +589,26 @@ class TestInvestmentIntelligenceService:
         """Test de génération de suggestions de portefeuille."""
         # Given
         self.service.cached_recommendations = [
-            self._create_test_recommendation("AAPL", RecommendationType.STRONG_BUY, 95.0, "Technology"),
-            self._create_test_recommendation("JNJ", RecommendationType.BUY, 85.0, "Healthcare"),
-            self._create_test_recommendation("JPM", RecommendationType.BUY, 80.0, "Finance"),
+            self._create_test_recommendation(
+                "AAPL", RecommendationType.STRONG_BUY, 95.0, "Technology"
+            ),
+            self._create_test_recommendation(
+                "JNJ", RecommendationType.BUY, 85.0, "Healthcare"
+            ),
+            self._create_test_recommendation(
+                "JPM", RecommendationType.BUY, 80.0, "Finance"
+            ),
         ]
-        
+
         # When
         portfolio = self.service.get_portfolio_suggestions(100000.0)
-        
+
         # Then
         assert "portfolio_suggestions" in portfolio
         assert "diversification_score" in portfolio
         assert "expected_return" in portfolio
         assert len(portfolio["portfolio_suggestions"]) == 3
-        
+
         # Vérifier la diversification
         sectors = {s["sector"] for s in portfolio["portfolio_suggestions"]}
         assert len(sectors) == 3
@@ -575,11 +617,11 @@ class TestInvestmentIntelligenceService:
         """Test de détermination du besoin de mise à jour."""
         # Given - Pas d'analyse précédente
         assert self.service.should_update_analysis(self.test_config) is True
-        
+
         # Given - Analyse récente
         self.service.last_analysis = datetime.now(timezone.utc) - timedelta(hours=2)
         assert self.service.should_update_analysis(self.test_config) is False
-        
+
         # Given - Analyse ancienne
         self.service.last_analysis = datetime.now(timezone.utc) - timedelta(hours=8)
         assert self.service.should_update_analysis(self.test_config) is True
@@ -588,15 +630,19 @@ class TestInvestmentIntelligenceService:
         """Test de génération du résumé d'analyse."""
         # Given
         self.service.cached_recommendations = [
-            self._create_test_recommendation("A", RecommendationType.STRONG_BUY, 95.0, "Tech"),
+            self._create_test_recommendation(
+                "A", RecommendationType.STRONG_BUY, 95.0, "Tech"
+            ),
             self._create_test_recommendation("B", RecommendationType.BUY, 85.0, "Tech"),
-            self._create_test_recommendation("C", RecommendationType.HOLD, 70.0, "Health"),
+            self._create_test_recommendation(
+                "C", RecommendationType.HOLD, 70.0, "Health"
+            ),
         ]
         self.service.last_analysis = datetime.now(timezone.utc)
-        
+
         # When
         summary = self.service.get_analysis_summary()
-        
+
         # Then
         assert summary["total_recommendations"] == 3
         assert summary["strong_buys"] == 1
@@ -610,16 +656,21 @@ class TestInvestmentIntelligenceService:
         """Test de gestion des recommandations vides dans le résumé."""
         # Given - Pas de recommandations
         self.service.cached_recommendations = []
-        
+
         # When
         summary = self.service.get_analysis_summary()
-        
+
         # Then
         assert "error" in summary
         assert summary["error"] == "Aucune analyse disponible"
 
-    def _create_test_recommendation(self, symbol: str, recommendation: RecommendationType,
-                                   confidence: float, sector: str = "Technology") -> InvestmentRecommendation:
+    def _create_test_recommendation(
+        self,
+        symbol: str,
+        recommendation: RecommendationType,
+        confidence: float,
+        sector: str = "Technology",
+    ) -> InvestmentRecommendation:
         """Crée une recommandation de test."""
         return InvestmentRecommendation(
             symbol=symbol,
@@ -643,12 +694,12 @@ class TestInvestmentIntelligenceService:
             roe=15.0,
             debt_to_equity=0.5,
             rsi=55.0,
-            macd_signal="BUY"
+            macd_signal="BUY",
         )
 
 
 @pytest.mark.unit
-@pytest.mark.intelligence  
+@pytest.mark.intelligence
 class TestAnalysisConfig:
     """Tests pour AnalysisConfig."""
 
@@ -656,7 +707,7 @@ class TestAnalysisConfig:
         """Test de création de config avec valeurs par défaut."""
         # Given & When
         config = AnalysisConfig()
-        
+
         # Then
         assert abs(config.min_confidence_score - 70.0) < 0.01
         assert config.max_recommendations == 50
@@ -673,9 +724,9 @@ class TestAnalysisConfig:
             include_sectors={"Technology", "Healthcare"},
             exclude_sectors={"Energy"},
             min_market_cap=5e9,
-            max_risk_level=RiskLevel.MODERATE
+            max_risk_level=RiskLevel.MODERATE,
         )
-        
+
         # Then
         assert abs(config.min_confidence_score - 80.0) < 0.01
         assert config.max_recommendations == 25
@@ -699,17 +750,15 @@ class TestPerformanceIntelligence:
     async def test_should_complete_analysis_under_performance_threshold(self):
         """Test que l'analyse se complete sous le seuil de performance."""
         # Given
-        mock_results = [
-            self._create_fast_scan_result(f"SYM{i}") for i in range(100)
-        ]
+        mock_results = [self._create_fast_scan_result(f"SYM{i}") for i in range(100)]
         self.mock_scanner.scan_market = AsyncMock(return_value=mock_results)
         config = AnalysisConfig(max_recommendations=50)
-        
+
         # When
         start_time = datetime.now(timezone.utc)
         await self.service.generate_investment_recommendations(config)
         end_time = datetime.now(timezone.utc)
-        
+
         # Then
         analysis_time = (end_time - start_time).total_seconds()
         assert analysis_time < 5.0  # Moins de 5 secondes pour 100 symboles

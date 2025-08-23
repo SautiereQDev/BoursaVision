@@ -5,9 +5,10 @@ Tests unitaires pour PasswordService
 Tests unitaires complets pour le service de gestion des mots de passe.
 """
 
-import pytest
 import re
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
+import pytest
 
 from boursa_vision.application.services.password_service import PasswordService
 
@@ -50,7 +51,7 @@ class TestPasswordServiceHashing:
         assert hashed is not None
         assert hashed != password
         assert len(hashed) > 20  # Hashes bcrypt sont longs
-        assert hashed.startswith('$2b$')  # Format bcrypt
+        assert hashed.startswith("$2b$")  # Format bcrypt
 
     @pytest.mark.unit
     @pytest.mark.fast
@@ -73,7 +74,9 @@ class TestPasswordServiceHashing:
     def test_should_raise_error_for_short_password(self, password_service):
         """Test d'erreur pour mot de passe trop court."""
         # Act & Assert
-        with pytest.raises(ValueError, match="Password must be at least 8 characters long"):
+        with pytest.raises(
+            ValueError, match="Password must be at least 8 characters long"
+        ):
             password_service.hash_password("short")
 
     @pytest.mark.unit
@@ -125,7 +128,9 @@ class TestPasswordServiceVerification:
 
     @pytest.mark.unit
     @pytest.mark.fast
-    def test_should_return_false_for_empty_password_verification(self, password_service):
+    def test_should_return_false_for_empty_password_verification(
+        self, password_service
+    ):
         """Test de retour False pour mot de passe vide lors de la vérification."""
         # Arrange
         hashed = "$2b$12$valid.hash.here"
@@ -226,7 +231,9 @@ class TestPasswordServiceStrengthValidation:
         try:
             result = password_service.validate_password_strength(strong_password)
             # Si aucune exception n'est levée, la validation a réussi
-            assert result is True or result is None  # La méthode peut ne pas retourner explicitement True
+            assert (
+                result is True or result is None
+            )  # La méthode peut ne pas retourner explicitement True
         except ValueError:
             pytest.fail("Strong password should not raise ValueError")
 
@@ -243,7 +250,9 @@ class TestPasswordServiceStrengthValidation:
     def test_should_raise_error_for_short_password_validation(self, password_service):
         """Test d'erreur pour mot de passe trop court lors de la validation."""
         # Act & Assert
-        with pytest.raises(ValueError, match="Password must be at least 8 characters long"):
+        with pytest.raises(
+            ValueError, match="Password must be at least 8 characters long"
+        ):
             password_service.validate_password_strength("Short1!")
 
     @pytest.mark.unit
@@ -251,7 +260,9 @@ class TestPasswordServiceStrengthValidation:
     def test_should_raise_error_for_no_uppercase(self, password_service):
         """Test d'erreur pour mot de passe sans majuscule."""
         # Act & Assert
-        with pytest.raises(ValueError, match="Password must contain at least one uppercase letter"):
+        with pytest.raises(
+            ValueError, match="Password must contain at least one uppercase letter"
+        ):
             password_service.validate_password_strength("lowercase123!")
 
     @pytest.mark.unit
@@ -259,7 +270,9 @@ class TestPasswordServiceStrengthValidation:
     def test_should_raise_error_for_no_lowercase(self, password_service):
         """Test d'erreur pour mot de passe sans minuscule."""
         # Act & Assert
-        with pytest.raises(ValueError, match="Password must contain at least one lowercase letter"):
+        with pytest.raises(
+            ValueError, match="Password must contain at least one lowercase letter"
+        ):
             password_service.validate_password_strength("UPPERCASE123!")
 
     @pytest.mark.unit
@@ -267,7 +280,9 @@ class TestPasswordServiceStrengthValidation:
     def test_should_raise_error_for_no_digit(self, password_service):
         """Test d'erreur pour mot de passe sans chiffre."""
         # Act & Assert
-        with pytest.raises(ValueError, match="Password must contain at least one number"):
+        with pytest.raises(
+            ValueError, match="Password must contain at least one number"
+        ):
             password_service.validate_password_strength("NoDigitsHere!")
 
     @pytest.mark.unit
@@ -275,7 +290,9 @@ class TestPasswordServiceStrengthValidation:
     def test_should_raise_error_for_no_special_character(self, password_service):
         """Test d'erreur pour mot de passe sans caractère spécial."""
         # Act & Assert
-        with pytest.raises(ValueError, match="Password must contain at least one special character"):
+        with pytest.raises(
+            ValueError, match="Password must contain at least one special character"
+        ):
             password_service.validate_password_strength("NoSpecialChar123")
 
 
@@ -336,10 +353,12 @@ class TestPasswordServiceGeneration:
         password = password_service.generate_random_password()
 
         # Assert
-        assert re.search(r'[A-Z]', password) is not None  # Majuscule
-        assert re.search(r'[a-z]', password) is not None  # Minuscule
-        assert re.search(r'\d', password) is not None     # Chiffre
-        assert re.search(r'[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]', password) is not None  # Spécial
+        assert re.search(r"[A-Z]", password) is not None  # Majuscule
+        assert re.search(r"[a-z]", password) is not None  # Minuscule
+        assert re.search(r"\d", password) is not None  # Chiffre
+        assert (
+            re.search(r"[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]", password) is not None
+        )  # Spécial
 
     @pytest.mark.unit
     @pytest.mark.fast

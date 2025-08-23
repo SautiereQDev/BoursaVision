@@ -24,6 +24,7 @@ try:
     from boursa_vision.infrastructure.persistence.repositories.portfolio_repository import (
         SQLAlchemyPortfolioRepository,
     )
+
     REPOSITORY_AVAILABLE = True
 except ImportError as e:
     print(f"Import warning: {e}")
@@ -33,19 +34,23 @@ except ImportError as e:
 # Mock du repository pour les tests car certaines méthodes manquent dans l'implémentation
 class MockPortfolioRepository(SQLAlchemyPortfolioRepository):
     """Mock repository qui implémente toutes les méthodes abstraites."""
-    
+
     def __init__(self):
         self._mapper = MagicMock()
 
     # Méthodes abstraites manquantes implémentées comme des stubs
     async def find_by_name(self, user_id, name: str):
         return None
+
     async def exists(self, portfolio_id) -> bool:
         return False
+
     async def exists_by_name(self, user_id, name: str) -> bool:
         return False
+
     async def count_by_user(self, user_id) -> int:
         return 0
+
     async def find_all(self, offset: int = 0, limit: int = 100):
         return []
 
@@ -92,7 +97,7 @@ class TestFindById:
             portfolio_model = MagicMock()
             portfolio_model.id = uuid4()
             portfolio_model.name = "Test Portfolio"
-            
+
             result = MagicMock()
             result.scalar_one_or_none.return_value = portfolio_model
             session.execute.return_value = result
@@ -134,7 +139,7 @@ class TestFindById:
         ) as mock_get_session:
             session = AsyncMock(spec=AsyncSession)
             mock_get_session.return_value.__aenter__.return_value = session
-            
+
             session.execute.side_effect = SQLAlchemyError("DB Error")
 
             portfolio_id = uuid4()
@@ -160,7 +165,7 @@ class TestFindByUserId:
             portfolio1.name = "Portfolio 1"
             portfolio2 = MagicMock()
             portfolio2.name = "Portfolio 2"
-            
+
             result = MagicMock()
             result.scalars.return_value.all.return_value = [portfolio1, portfolio2]
             session.execute.return_value = result
@@ -205,12 +210,12 @@ class TestSave:
     async def test_save_new_portfolio(self, portfolio_repo):
         """Test de sauvegarde d'un nouveau portfolio."""
         # Mock complet de la méthode save pour éviter la complexité de l'implémentation
-        with patch.object(portfolio_repo, 'save') as mock_save:
+        with patch.object(portfolio_repo, "save") as mock_save:
             domain_portfolio = MagicMock()
             mock_save.return_value = domain_portfolio
-            
+
             response = await portfolio_repo.save(domain_portfolio)
-            
+
             mock_save.assert_called_once_with(domain_portfolio)
             assert response == domain_portfolio
 
@@ -219,13 +224,13 @@ class TestSave:
     async def test_save_existing_portfolio(self, portfolio_repo):
         """Test de mise à jour d'un portfolio existant."""
         # Mock complet pour tester la mise à jour
-        with patch.object(portfolio_repo, 'save') as mock_save:
+        with patch.object(portfolio_repo, "save") as mock_save:
             domain_portfolio = MagicMock()
             domain_portfolio.id = uuid4()
             mock_save.return_value = domain_portfolio
-            
+
             response = await portfolio_repo.save(domain_portfolio)
-            
+
             mock_save.assert_called_once_with(domain_portfolio)
             assert response == domain_portfolio
 
@@ -283,7 +288,7 @@ class TestPortfolioRepositoryIntegration:
     def test_repository_methods_are_async(self, portfolio_repo):
         """Test que les méthodes sont async."""
         import inspect
-        
+
         assert inspect.iscoroutinefunction(portfolio_repo.find_by_id)
         assert inspect.iscoroutinefunction(portfolio_repo.find_by_user_id)
         assert inspect.iscoroutinefunction(portfolio_repo.save)
@@ -297,28 +302,28 @@ class TestPortfolioRepositoryIntegration:
             "boursa_vision.infrastructure.persistence.repositories.portfolio_repository.get_db_session"
         ) as mock_get_session:
             call_count = 0
-            
+
             def session_factory():
                 nonlocal call_count
                 call_count += 1
                 session = AsyncMock(spec=AsyncSession)
                 session.__aenter__.return_value = session
-                
+
                 result = MagicMock()
                 result.scalar_one_or_none.return_value = None
                 result.scalars.return_value.all.return_value = []
                 session.execute.return_value = result
-                
+
                 return session
-            
+
             mock_get_session.side_effect = session_factory
 
             user_id = uuid4()
             portfolio_id = uuid4()
-            
+
             await portfolio_repo.find_by_id(portfolio_id)
             await portfolio_repo.find_by_user_id(user_id)
-            
+
             assert call_count == 2
 
 
@@ -369,50 +374,49 @@ class TestPortfolioRepositoryCRUDOperations:
     async def test_full_crud_workflow(self, portfolio_repo):
         """Test du workflow complet CRUD."""
         # Mock pour simuler un workflow complet
-        with patch.object(portfolio_repo, 'save') as mock_save, \
-             patch.object(portfolio_repo, 'find_by_id') as mock_find, \
-             patch.object(portfolio_repo, 'delete') as mock_delete:
-            
+        with patch.object(portfolio_repo, "save") as mock_save, patch.object(
+            portfolio_repo, "find_by_id"
+        ) as mock_find, patch.object(portfolio_repo, "delete") as mock_delete:
             # 1. Créer un portfolio
             portfolio = MagicMock()
             portfolio.id = uuid4()
             mock_save.return_value = portfolio
-            
+
             saved_portfolio = await portfolio_repo.save(portfolio)
             assert saved_portfolio == portfolio
-            
+
             # 2. Récupérer le portfolio
             mock_find.return_value = portfolio
             found_portfolio = await portfolio_repo.find_by_id(portfolio.id)
             assert found_portfolio == portfolio
-            
+
             # 3. Supprimer le portfolio
             mock_delete.return_value = True
             deleted = await portfolio_repo.delete(portfolio.id)
             assert deleted is True
-            
+
             # 4. Vérifier que le portfolio n'existe plus
             mock_find.return_value = None
             not_found = await portfolio_repo.find_by_id(portfolio.id)
             assert not_found is None
 
     @pytest.mark.skipif(not REPOSITORY_AVAILABLE, reason="Repository not available")
-    @pytest.mark.asyncio  
+    @pytest.mark.asyncio
     async def test_user_portfolio_management(self, portfolio_repo):
         """Test de la gestion des portfolios par utilisateur."""
-        with patch.object(portfolio_repo, 'find_by_user_id') as mock_find_by_user:
+        with patch.object(portfolio_repo, "find_by_user_id") as mock_find_by_user:
             user_id = uuid4()
-            
+
             # Test utilisateur sans portfolios
             mock_find_by_user.return_value = []
             portfolios = await portfolio_repo.find_by_user_id(user_id)
             assert portfolios == []
-            
+
             # Test utilisateur avec portfolios
             portfolio1 = MagicMock()
             portfolio2 = MagicMock()
             mock_find_by_user.return_value = [portfolio1, portfolio2]
-            
+
             portfolios = await portfolio_repo.find_by_user_id(user_id)
             assert len(portfolios) == 2
             assert portfolio1 in portfolios

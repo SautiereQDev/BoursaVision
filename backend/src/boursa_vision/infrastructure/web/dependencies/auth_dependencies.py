@@ -8,9 +8,11 @@ FastAPI dependencies for authentication and authorization.
 from typing import Optional
 
 from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from boursa_vision.application.services.authentication_service import AuthenticationService
+from boursa_vision.application.services.authentication_service import (
+    AuthenticationService,
+)
 from boursa_vision.domain.entities.user import User
 
 # TODO: Fix circular import issue with get_container
@@ -35,12 +37,12 @@ async def get_current_user_optional(
 ) -> Optional[User]:
     """
     Get current user from JWT token (optional).
-    
+
     Returns None if no token or invalid token.
     """
     if not credentials:
         return None
-    
+
     try:
         user = await auth_service.validate_access_token(credentials.credentials)
         return user
@@ -54,7 +56,7 @@ async def get_current_user(
 ) -> User:
     """
     Get current user from JWT token (required).
-    
+
     Raises HTTPException if no token or invalid token.
     """
     try:
@@ -81,13 +83,12 @@ async def get_current_active_user(
 ) -> User:
     """
     Get current active user.
-    
+
     Raises HTTPException if user is inactive.
     """
     if not current_user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user"
         )
     return current_user
 
@@ -95,46 +96,48 @@ async def get_current_active_user(
 def require_role(required_role: str):
     """
     Create a dependency that requires a specific role.
-    
+
     Args:
         required_role: Required user role
-        
+
     Returns:
         Dependency function
     """
+
     async def role_dependency(
         current_user: User = Depends(get_current_active_user),
     ) -> User:
         if current_user.role.value != required_role:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Role '{required_role}' required"
+                detail=f"Role '{required_role}' required",
             )
         return current_user
-    
+
     return role_dependency
 
 
 def require_permission(required_permission: str):
     """
     Create a dependency that requires a specific permission.
-    
+
     Args:
         required_permission: Required permission
-        
+
     Returns:
         Dependency function
     """
+
     async def permission_dependency(
         current_user: User = Depends(get_current_active_user),
     ) -> User:
         if not current_user.has_permission(required_permission):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Permission '{required_permission}' required"
+                detail=f"Permission '{required_permission}' required",
             )
         return current_user
-    
+
     return permission_dependency
 
 

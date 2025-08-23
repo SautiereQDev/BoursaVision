@@ -6,28 +6,29 @@ Tests complets pour le repository d'investissements avec SQLAlchemy,
 incluant CRUD, mapper, recherches complexes et gestion d'erreurs.
 """
 
-import pytest
 from typing import List, Optional
-from unittest.mock import Mock, AsyncMock, MagicMock, patch
-from sqlalchemy.ext.asyncio import AsyncSession
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Constant for floating point comparisons
 FLOAT_TOLERANCE = 1e-6
 
-from boursa_vision.infrastructure.persistence.repositories.investment_repository import (
-    SQLAlchemyInvestmentRepository,
-    SimpleInvestmentMapper
-)
-from boursa_vision.infrastructure.persistence.models.investment import InvestmentModel
 from boursa_vision.domain.entities.investment import (
     Investment,
-    InvestmentType,
     InvestmentSector,
-    MarketCap
+    InvestmentType,
+    MarketCap,
 )
 from boursa_vision.domain.value_objects.money import Currency
+from boursa_vision.infrastructure.persistence.models.investment import InvestmentModel
+from boursa_vision.infrastructure.persistence.repositories.investment_repository import (
+    SimpleInvestmentMapper,
+    SQLAlchemyInvestmentRepository,
+)
 
 
 class TestSimpleInvestmentMapper:
@@ -49,7 +50,7 @@ class TestSimpleInvestmentMapper:
             sector="Technology",
             industry="Consumer Electronics",
             market_cap=2500.0,  # 2.5T - MEGA cap
-            description="Apple Inc. designs and manufactures consumer electronics"
+            description="Apple Inc. designs and manufactures consumer electronics",
         )
 
         # When
@@ -68,14 +69,14 @@ class TestSimpleInvestmentMapper:
     def test_to_domain_market_cap_mapping(self):
         """Test du mapping des différents market caps"""
         test_cases = [
-            (0.02, MarketCap.NANO),     # $20M < $50M
-            (0.15, MarketCap.MICRO),    # $150M ($50M - $300M)
-            (1.5, MarketCap.SMALL),     # $1.5B ($300M - $2B)
-            (5.0, MarketCap.MID),       # $5B ($2B - $10B)
-            (100.0, MarketCap.LARGE),   # $100B ($10B - $200B)
-            (500.0, MarketCap.MEGA),    # $500B > $200B
+            (0.02, MarketCap.NANO),  # $20M < $50M
+            (0.15, MarketCap.MICRO),  # $150M ($50M - $300M)
+            (1.5, MarketCap.SMALL),  # $1.5B ($300M - $2B)
+            (5.0, MarketCap.MID),  # $5B ($2B - $10B)
+            (100.0, MarketCap.LARGE),  # $100B ($10B - $200B)
+            (500.0, MarketCap.MEGA),  # $500B > $200B
         ]
-        
+
         for market_cap_value, expected_enum in test_cases:
             # Given
             model = InvestmentModel(
@@ -83,14 +84,16 @@ class TestSimpleInvestmentMapper:
                 name="Test Company",
                 exchange="TEST",
                 sector="Technology",
-                market_cap=market_cap_value
+                market_cap=market_cap_value,
             )
 
             # When
             investment = self.mapper.to_domain(model)
 
             # Then
-            assert investment.market_cap == expected_enum, f"Pour {market_cap_value}B attendu {expected_enum}"
+            assert (
+                investment.market_cap == expected_enum
+            ), f"Pour {market_cap_value}B attendu {expected_enum}"
 
     @pytest.mark.unit
     def test_to_domain_invalid_sector_fallback(self):
@@ -101,7 +104,7 @@ class TestSimpleInvestmentMapper:
             name="Test Company",
             exchange="TEST",
             sector="InvalidSector",  # Secteur non reconnu
-            market_cap=50.0
+            market_cap=50.0,
         )
 
         # When
@@ -119,7 +122,7 @@ class TestSimpleInvestmentMapper:
             name="Test Company",
             exchange="TEST",
             sector=None,  # Secteur None
-            market_cap=None  # Market cap None
+            market_cap=None,  # Market cap None
         )
 
         # When
@@ -142,7 +145,7 @@ class TestSimpleInvestmentMapper:
             market_cap=MarketCap.LARGE,
             currency=Currency.USD,
             exchange="NASDAQ",
-            isin="US5949181045"
+            isin="US5949181045",
         )
 
         # When
@@ -154,20 +157,22 @@ class TestSimpleInvestmentMapper:
         assert model.exchange == "NASDAQ"
         assert model.sector == "TECHNOLOGY"
         assert model.industry == "Software"
-        assert abs(model.market_cap - 100.0) < FLOAT_TOLERANCE  # Updated to match new LARGE value
+        assert (
+            abs(model.market_cap - 100.0) < FLOAT_TOLERANCE
+        )  # Updated to match new LARGE value
 
     @pytest.mark.unit
     def test_to_persistence_market_cap_mapping(self):
         """Test du mapping market cap enum vers valeur numérique"""
         test_cases = [
-            (MarketCap.NANO, 0.025),    # ~$25M
-            (MarketCap.MICRO, 0.175),   # ~$175M
-            (MarketCap.SMALL, 1.15),    # ~$1.15B
-            (MarketCap.MID, 6.0),       # ~$6B
-            (MarketCap.LARGE, 100.0),   # ~$100B
-            (MarketCap.MEGA, 500.0),    # ~$500B
+            (MarketCap.NANO, 0.025),  # ~$25M
+            (MarketCap.MICRO, 0.175),  # ~$175M
+            (MarketCap.SMALL, 1.15),  # ~$1.15B
+            (MarketCap.MID, 6.0),  # ~$6B
+            (MarketCap.LARGE, 100.0),  # ~$100B
+            (MarketCap.MEGA, 500.0),  # ~$500B
         ]
-        
+
         for market_cap_enum, expected_value in test_cases:
             # Given
             investment = Investment.create(
@@ -177,7 +182,7 @@ class TestSimpleInvestmentMapper:
                 sector=InvestmentSector.TECHNOLOGY,
                 market_cap=market_cap_enum,
                 currency=Currency.USD,
-                exchange="TEST"
+                exchange="TEST",
             )
 
             # When
@@ -197,7 +202,7 @@ class TestSimpleInvestmentMapper:
             sector=InvestmentSector.TECHNOLOGY,
             market_cap=MarketCap.MEGA,
             currency=Currency.USD,
-            exchange="NASDAQ"
+            exchange="NASDAQ",
         )
 
         # When - Conversion Investment → Model → Investment
@@ -257,7 +262,7 @@ def sample_investment():
         sector=InvestmentSector.TECHNOLOGY,
         market_cap=MarketCap.MEGA,
         currency=Currency.USD,
-        exchange="NASDAQ"
+        exchange="NASDAQ",
     )
 
 
@@ -267,12 +272,12 @@ def sample_investment_model():
     return InvestmentModel(
         id=123,  # Integer ID, not string
         symbol="AAPL",
-        name="Apple Inc.", 
+        name="Apple Inc.",
         exchange="NASDAQ",
         sector="Technology",
         industry="Consumer Electronics",
         market_cap=2500.0,
-        description="Apple Inc."
+        description="Apple Inc.",
     )
 
 
@@ -290,7 +295,9 @@ class TestSQLAlchemyInvestmentRepository:
         assert isinstance(repo._mapper, SimpleInvestmentMapper)
 
     @pytest.mark.unit
-    async def test_find_by_symbol_found(self, investment_repository, mock_session, sample_investment_model):
+    async def test_find_by_symbol_found(
+        self, investment_repository, mock_session, sample_investment_model
+    ):
         """Test find_by_symbol avec résultat trouvé"""
         # Given
         mock_result = create_mock_result_single(sample_investment_model)
@@ -304,7 +311,7 @@ class TestSQLAlchemyInvestmentRepository:
         assert investment.symbol == "AAPL"
         assert investment.name == "Apple Inc."
         mock_session.execute.assert_called_once()
-        
+
         # Vérifier que la requête SQL est correcte
         call_args = mock_session.execute.call_args[0][0]
         assert str(call_args).lower().count("where") == 1
@@ -324,7 +331,9 @@ class TestSQLAlchemyInvestmentRepository:
         mock_session.execute.assert_called_once()
 
     @pytest.mark.unit
-    async def test_find_by_id_found(self, investment_repository, mock_session, sample_investment_model):
+    async def test_find_by_id_found(
+        self, investment_repository, mock_session, sample_investment_model
+    ):
         """Test find_by_id avec résultat trouvé"""
         # Given
         mock_result = create_mock_result_single(sample_investment_model)
@@ -344,17 +353,25 @@ class TestSQLAlchemyInvestmentRepository:
         # Given
         nasdaq_models = [
             InvestmentModel(
-                id=1, symbol="AAPL", name="Apple Inc.",
-                exchange="NASDAQ", sector="Technology", industry="Software",
-                market_cap=2500.0
+                id=1,
+                symbol="AAPL",
+                name="Apple Inc.",
+                exchange="NASDAQ",
+                sector="Technology",
+                industry="Software",
+                market_cap=2500.0,
             ),
             InvestmentModel(
-                id=2, symbol="MSFT", name="Microsoft Corp.",
-                exchange="NASDAQ", sector="Technology", industry="Software",
-                market_cap=2300.0
-            )
+                id=2,
+                symbol="MSFT",
+                name="Microsoft Corp.",
+                exchange="NASDAQ",
+                sector="Technology",
+                industry="Software",
+                market_cap=2300.0,
+            ),
         ]
-        
+
         mock_result = create_mock_result_multiple(nasdaq_models)
         mock_session.execute.return_value = mock_result
 
@@ -364,17 +381,25 @@ class TestSQLAlchemyInvestmentRepository:
         # Given
         tech_models = [
             InvestmentModel(
-                id=1, symbol="AAPL", name="Apple Inc.",
-                exchange="NASDAQ", sector="Technology", industry="Software",
-                market_cap=2500.0
+                id=1,
+                symbol="AAPL",
+                name="Apple Inc.",
+                exchange="NASDAQ",
+                sector="Technology",
+                industry="Software",
+                market_cap=2500.0,
             ),
             InvestmentModel(
-                id=2, symbol="GOOGL", name="Alphabet Inc.",
-                exchange="NASDAQ", sector="Technology", industry="Software",  
-                market_cap=1800.0
-            )
+                id=2,
+                symbol="GOOGL",
+                name="Alphabet Inc.",
+                exchange="NASDAQ",
+                sector="Technology",
+                industry="Software",
+                market_cap=1800.0,
+            ),
         ]
-        
+
         mock_result = create_mock_result_multiple(tech_models)
         mock_session.execute.return_value = mock_result
 
@@ -383,11 +408,29 @@ class TestSQLAlchemyInvestmentRepository:
         """Test find_all_active"""
         # Given
         all_models = [
-            InvestmentModel(symbol="AAPL", name="Apple", exchange="NASDAQ", sector="Technology", market_cap=2500.0),
-            InvestmentModel(symbol="JPM", name="JPMorgan", exchange="NYSE", sector="Financial Services", market_cap=400.0),
-            InvestmentModel(symbol="JNJ", name="Johnson & Johnson", exchange="NYSE", sector="Healthcare", market_cap=450.0)
+            InvestmentModel(
+                symbol="AAPL",
+                name="Apple",
+                exchange="NASDAQ",
+                sector="Technology",
+                market_cap=2500.0,
+            ),
+            InvestmentModel(
+                symbol="JPM",
+                name="JPMorgan",
+                exchange="NYSE",
+                sector="Financial Services",
+                market_cap=400.0,
+            ),
+            InvestmentModel(
+                symbol="JNJ",
+                name="Johnson & Johnson",
+                exchange="NYSE",
+                sector="Healthcare",
+                market_cap=450.0,
+            ),
         ]
-        
+
         mock_result = Mock()
         mock_result.scalars.return_value.all.return_value = all_models
         mock_session.execute.return_value = mock_result
@@ -403,7 +446,9 @@ class TestSQLAlchemyInvestmentRepository:
         assert "JNJ" in symbols
 
     @pytest.mark.unit
-    async def test_save_new_investment(self, investment_repository, mock_session, sample_investment):
+    async def test_save_new_investment(
+        self, investment_repository, mock_session, sample_investment
+    ):
         """Test save avec nouvel investment"""
         # Given
         mock_result = Mock()
@@ -419,7 +464,9 @@ class TestSQLAlchemyInvestmentRepository:
         mock_session.flush.assert_called_once()
 
     @pytest.mark.unit
-    async def test_save_update_existing_investment(self, investment_repository, mock_session, sample_investment):
+    async def test_save_update_existing_investment(
+        self, investment_repository, mock_session, sample_investment
+    ):
         """Test save avec investment existant (update)"""
         # Given
         existing_model = InvestmentModel(
@@ -427,9 +474,9 @@ class TestSQLAlchemyInvestmentRepository:
             name="Old Apple Name",
             exchange="NASDAQ",
             sector="Technology",
-            market_cap=1000.0
+            market_cap=1000.0,
         )
-        
+
         mock_result = Mock()
         mock_result.scalar_one_or_none.return_value = existing_model
         mock_session.execute.return_value = mock_result
@@ -440,12 +487,14 @@ class TestSQLAlchemyInvestmentRepository:
         # Then
         assert saved_investment.symbol == "AAPL"
         # La nouvelle implémentation utilise execute() pour SELECT et DELETE, puis add() pour INSERT
-        assert mock_session.execute.call_count == 2  # SELECT, DELETE  
+        assert mock_session.execute.call_count == 2  # SELECT, DELETE
         mock_session.add.assert_called_once()  # INSERT via add()
         mock_session.flush.assert_called()  # Au moins un appel à flush
 
     @pytest.mark.unit
-    async def test_delete_existing_investment(self, investment_repository, mock_session, sample_investment):
+    async def test_delete_existing_investment(
+        self, investment_repository, mock_session, sample_investment
+    ):
         """Test delete avec investment existant"""
         # Given
         existing_model = InvestmentModel(
@@ -453,9 +502,9 @@ class TestSQLAlchemyInvestmentRepository:
             name="Apple Inc.",
             exchange="NASDAQ",
             sector="Technology",
-            market_cap=2500.0
+            market_cap=2500.0,
         )
-        
+
         mock_result = Mock()
         mock_result.scalar_one_or_none.return_value = existing_model
         mock_result.rowcount = 1  # Mock du rowcount pour la suppression
@@ -470,7 +519,9 @@ class TestSQLAlchemyInvestmentRepository:
         mock_session.flush.assert_called_once()
 
     @pytest.mark.unit
-    async def test_delete_non_existing_investment(self, investment_repository, mock_session, sample_investment):
+    async def test_delete_non_existing_investment(
+        self, investment_repository, mock_session, sample_investment
+    ):
         """Test delete avec investment non existant"""
         # Given
         mock_result = Mock()
@@ -491,7 +542,15 @@ class TestSQLAlchemyInvestmentRepository:
     async def test_find_all_alias(self, investment_repository, mock_session):
         """Test que find_all est un alias pour find_all_active"""
         # Given
-        models = [InvestmentModel(symbol="TEST", name="Test", exchange="TEST", sector="Tech", market_cap=100.0)]
+        models = [
+            InvestmentModel(
+                symbol="TEST",
+                name="Test",
+                exchange="TEST",
+                sector="Tech",
+                market_cap=100.0,
+            )
+        ]
         mock_result = Mock()
         mock_result.scalars.return_value.all.return_value = models
         mock_session.execute.return_value = mock_result
@@ -508,10 +567,22 @@ class TestSQLAlchemyInvestmentRepository:
         """Test find_by_market_cap avec différentes tailles"""
         # Given
         large_cap_models = [
-            InvestmentModel(symbol="AAPL", name="Apple", exchange="NASDAQ", sector="Technology", market_cap=45.0),
-            InvestmentModel(symbol="MSFT", name="Microsoft", exchange="NASDAQ", sector="Technology", market_cap=55.0)
+            InvestmentModel(
+                symbol="AAPL",
+                name="Apple",
+                exchange="NASDAQ",
+                sector="Technology",
+                market_cap=45.0,
+            ),
+            InvestmentModel(
+                symbol="MSFT",
+                name="Microsoft",
+                exchange="NASDAQ",
+                sector="Technology",
+                market_cap=55.0,
+            ),
         ]
-        
+
         mock_result = Mock()
         mock_result.scalars.return_value.all.return_value = large_cap_models
         mock_session.execute.return_value = mock_result
@@ -529,10 +600,22 @@ class TestSQLAlchemyInvestmentRepository:
         """Test search_by_name avec pattern de recherche"""
         # Given
         matching_models = [
-            InvestmentModel(symbol="AAPL", name="Apple Inc.", exchange="NASDAQ", sector="Technology", market_cap=2500.0),
-            InvestmentModel(symbol="AMAT", name="Applied Materials", exchange="NASDAQ", sector="Technology", market_cap=100.0)
+            InvestmentModel(
+                symbol="AAPL",
+                name="Apple Inc.",
+                exchange="NASDAQ",
+                sector="Technology",
+                market_cap=2500.0,
+            ),
+            InvestmentModel(
+                symbol="AMAT",
+                name="Applied Materials",
+                exchange="NASDAQ",
+                sector="Technology",
+                market_cap=100.0,
+            ),
         ]
-        
+
         mock_result = Mock()
         mock_result.scalars.return_value.all.return_value = matching_models
         mock_session.execute.return_value = mock_result
@@ -550,7 +633,9 @@ class TestInvestmentRepositoryErrorHandling:
     """Tests de gestion d'erreurs pour InvestmentRepository"""
 
     @pytest.mark.unit
-    async def test_find_by_symbol_database_error(self, investment_repository, mock_session):
+    async def test_find_by_symbol_database_error(
+        self, investment_repository, mock_session
+    ):
         """Test de gestion d'erreur de base de données"""
         # Given
         mock_session.execute.side_effect = SQLAlchemyError("Database connection error")
@@ -560,20 +645,26 @@ class TestInvestmentRepositoryErrorHandling:
             await investment_repository.find_by_symbol("AAPL")
 
     @pytest.mark.unit
-    async def test_save_integrity_error(self, investment_repository, mock_session, sample_investment):
+    async def test_save_integrity_error(
+        self, investment_repository, mock_session, sample_investment
+    ):
         """Test de gestion d'erreur d'intégrité lors du save"""
         # Given
         mock_result = Mock()
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute.return_value = mock_result
-        mock_session.flush.side_effect = IntegrityError("Duplicate key", orig=Exception("Original"), params=None)
+        mock_session.flush.side_effect = IntegrityError(
+            "Duplicate key", orig=Exception("Original"), params=None
+        )
 
         # When/Then
         with pytest.raises(IntegrityError):
             await investment_repository.save(sample_investment)
 
     @pytest.mark.unit
-    async def test_delete_database_error(self, investment_repository, mock_session, sample_investment):
+    async def test_delete_database_error(
+        self, investment_repository, mock_session, sample_investment
+    ):
         """Test de gestion d'erreur lors du delete"""
         # Given
         # Configurer l'erreur pour la requête DELETE (seul appel à execute dans delete)
@@ -588,7 +679,9 @@ class TestInvestmentRepositoryEdgeCases:
     """Tests des cas limites pour InvestmentRepository"""
 
     @pytest.mark.unit
-    async def test_find_by_exchange_empty_results(self, investment_repository, mock_session):
+    async def test_find_by_exchange_empty_results(
+        self, investment_repository, mock_session
+    ):
         """Test find_by_exchange avec résultats vides"""
         # Given
         mock_result = Mock()
@@ -602,7 +695,9 @@ class TestInvestmentRepositoryEdgeCases:
         assert investments == []
 
     @pytest.mark.unit
-    async def test_search_by_name_special_characters(self, investment_repository, mock_session):
+    async def test_search_by_name_special_characters(
+        self, investment_repository, mock_session
+    ):
         """Test search_by_name avec caractères spéciaux"""
         # Given
         mock_result = Mock()
@@ -617,7 +712,9 @@ class TestInvestmentRepositoryEdgeCases:
         mock_session.execute.assert_called_once()
 
     @pytest.mark.unit
-    async def test_find_by_market_cap_invalid_value(self, investment_repository, mock_session):
+    async def test_find_by_market_cap_invalid_value(
+        self, investment_repository, mock_session
+    ):
         """Test find_by_market_cap avec valeur invalide"""
         # Given
         mock_result = Mock()
@@ -635,13 +732,13 @@ class TestInvestmentRepositoryEdgeCases:
     async def test_mapper_with_extreme_market_cap_values(self):
         """Test du mapper avec des valeurs extrêmes de market cap"""
         mapper = SimpleInvestmentMapper()
-        
+
         extreme_cases = [
-            (0.0, MarketCap.NANO),      # Valeur zéro
-            (0.001, MarketCap.NANO),    # Très petit
+            (0.0, MarketCap.NANO),  # Valeur zéro
+            (0.001, MarketCap.NANO),  # Très petit
             (10000.0, MarketCap.MEGA),  # Très grand
         ]
-        
+
         for market_cap_value, expected_enum in extreme_cases:
             # Given
             model = InvestmentModel(
@@ -649,7 +746,7 @@ class TestInvestmentRepositoryEdgeCases:
                 name="Test Company",
                 exchange="TEST",
                 sector="Technology",
-                market_cap=market_cap_value
+                market_cap=market_cap_value,
             )
 
             # When
@@ -662,14 +759,14 @@ class TestInvestmentRepositoryEdgeCases:
     def test_mapper_sector_case_sensitivity(self):
         """Test de la sensibilité à la casse du secteur"""
         mapper = SimpleInvestmentMapper()
-        
+
         # Given - secteur avec différentes casses
         model = InvestmentModel(
             symbol="TEST",
             name="Test Company",
             exchange="TEST",
             sector="technology",  # Minuscule
-            market_cap=50.0
+            market_cap=50.0,
         )
 
         # When
@@ -693,12 +790,12 @@ class TestInvestmentRepositoryIntegration:
             sector=InvestmentSector.TECHNOLOGY,
             market_cap=MarketCap.MID,
             currency=Currency.USD,
-            exchange="NASDAQ"
+            exchange="NASDAQ",
         )
 
         # Mock pour save (create)
         mock_result_none = create_mock_result_single(None)
-        
+
         # Mock pour find (read)
         test_model = InvestmentModel(
             id=1,
@@ -707,7 +804,7 @@ class TestInvestmentRepositoryIntegration:
             exchange="NASDAQ",
             sector="Technology",
             industry="Software",
-            market_cap=6.0
+            market_cap=6.0,
         )
         mock_result_found = create_mock_result_single(test_model)
 
@@ -717,9 +814,9 @@ class TestInvestmentRepositoryIntegration:
 
         # Configure la séquence d'appels
         mock_session.execute.side_effect = [
-            mock_result_none,    # Save - pas existant
-            mock_result_found,   # Find - trouvé
-            mock_result_delete   # Delete - trouvé
+            mock_result_none,  # Save - pas existant
+            mock_result_found,  # Find - trouvé
+            mock_result_delete,  # Delete - trouvé
         ]
 
         # When - CRUD workflow
@@ -736,7 +833,9 @@ class TestInvestmentRepositoryIntegration:
         await investment_repository.delete(found)
 
         # Then
-        assert mock_session.execute.call_count >= 3  # Au moins 3 appels: save, find, delete
+        assert (
+            mock_session.execute.call_count >= 3
+        )  # Au moins 3 appels: save, find, delete
         # La nouvelle implémentation n'utilise plus add() ni delete() directement
         mock_session.flush.assert_called()  # Au moins un appel à flush
 
@@ -745,12 +844,36 @@ class TestInvestmentRepositoryIntegration:
         """Test de l'utilisation de plusieurs méthodes de recherche"""
         # Given - Différents modèles pour différentes recherches
         tech_models = [
-            InvestmentModel(id=1, symbol="AAPL", name="Apple Inc.", exchange="NASDAQ", sector="Technology", industry="Software", market_cap=2500.0),
-            InvestmentModel(id=2, symbol="MSFT", name="Microsoft Corp", exchange="NASDAQ", sector="Technology", industry="Software", market_cap=2000.0)
+            InvestmentModel(
+                id=1,
+                symbol="AAPL",
+                name="Apple Inc.",
+                exchange="NASDAQ",
+                sector="Technology",
+                industry="Software",
+                market_cap=2500.0,
+            ),
+            InvestmentModel(
+                id=2,
+                symbol="MSFT",
+                name="Microsoft Corp",
+                exchange="NASDAQ",
+                sector="Technology",
+                industry="Software",
+                market_cap=2000.0,
+            ),
         ]
-        
+
         nasdaq_models = tech_models + [
-            InvestmentModel(id=3, symbol="AMZN", name="Amazon Inc.", exchange="NASDAQ", sector="Consumer Discretionary", industry="E-commerce", market_cap=1500.0)
+            InvestmentModel(
+                id=3,
+                symbol="AMZN",
+                name="Amazon Inc.",
+                exchange="NASDAQ",
+                sector="Consumer Discretionary",
+                industry="E-commerce",
+                market_cap=1500.0,
+            )
         ]
 
         apple_models = [tech_models[0]]  # Seulement Apple pour la recherche par nom
@@ -762,8 +885,8 @@ class TestInvestmentRepositoryIntegration:
 
         mock_session.execute.side_effect = [
             mock_result_tech,
-            mock_result_nasdaq,  
-            mock_result_apple
+            mock_result_nasdaq,
+            mock_result_apple,
         ]
 
         # When - Différentes recherches

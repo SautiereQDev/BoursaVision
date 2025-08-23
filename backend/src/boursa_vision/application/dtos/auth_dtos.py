@@ -8,12 +8,14 @@ from pydantic import BaseModel, EmailStr
 
 class LoginRequest(BaseModel):
     """Request DTO for user login."""
+
     email: EmailStr
     password: str
 
 
 class LoginResponse(BaseModel):
     """Response DTO for successful login."""
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
@@ -23,6 +25,7 @@ class LoginResponse(BaseModel):
 
 class RegisterRequest(BaseModel):
     """Request DTO for user registration."""
+
     email: EmailStr
     password: str
     first_name: str
@@ -31,6 +34,7 @@ class RegisterRequest(BaseModel):
 
 class RegisterResponse(BaseModel):
     """Response DTO for successful registration."""
+
     user_id: str
     email: str
     message: str = "User registered successfully"
@@ -38,11 +42,13 @@ class RegisterResponse(BaseModel):
 
 class RefreshTokenRequest(BaseModel):
     """Request DTO for token refresh."""
+
     refresh_token: str
 
 
 class RefreshTokenResponse(BaseModel):
     """Response DTO for token refresh."""
+
     access_token: str
     expires_at: datetime
     token_type: str = "bearer"
@@ -50,23 +56,27 @@ class RefreshTokenResponse(BaseModel):
 
 class PasswordResetRequest(BaseModel):
     """Request DTO for password reset initiation."""
+
     email: EmailStr
 
 
 class PasswordResetConfirmRequest(BaseModel):
     """Request DTO for password reset confirmation."""
+
     token: str
     new_password: str
 
 
 class ChangePasswordRequest(BaseModel):
     """Request DTO for password change."""
+
     current_password: str
     new_password: str
 
 
 class UserResponse(BaseModel):
     """Response DTO for user data."""
+
     user_id: str
     email: str
     first_name: str
@@ -77,6 +87,7 @@ class UserResponse(BaseModel):
 
 class TokenResponse(BaseModel):
     """Response DTO for token operations."""
+
     access_token: str
     token_type: str = "bearer"
     expires_at: datetime
@@ -84,6 +95,7 @@ class TokenResponse(BaseModel):
 
 class UserProfileResponse(BaseModel):
     """Response DTO for user profile."""
+
     user_id: str
     email: str
     first_name: str

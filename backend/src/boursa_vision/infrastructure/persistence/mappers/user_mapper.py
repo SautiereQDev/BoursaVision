@@ -7,7 +7,8 @@ Maps between Domain User entities and SQLAlchemy User models.
 
 from typing import Optional
 
-from boursa_vision.domain.entities.user import User as DomainUser, UserRole
+from boursa_vision.domain.entities.user import User as DomainUser
+from boursa_vision.domain.entities.user import UserRole
 from boursa_vision.domain.value_objects.money import Currency
 from boursa_vision.infrastructure.persistence.models.users import User as UserModel
 
@@ -28,14 +29,16 @@ class SimpleUserMapper:
             password_hash=model.password_hash,  # Model uses password_hash
             first_name=model.first_name or "",
             last_name=model.last_name or "",
-            role=UserRole(model.role.lower()) if model.role else UserRole.BASIC,
-            preferred_currency=Currency(model.preferred_currency) if hasattr(model, 'preferred_currency') and model.preferred_currency else Currency.USD,
-            is_active=getattr(model, 'is_active', True),
-            email_verified=getattr(model, 'email_verified', False),
-            two_factor_enabled=getattr(model, 'two_factor_enabled', False),
+            role=UserRole(model.role.lower()) if model.role else UserRole.VIEWER,
+            preferred_currency=Currency(model.preferred_currency)
+            if hasattr(model, "preferred_currency") and model.preferred_currency
+            else Currency.USD,
+            is_active=getattr(model, "is_active", True),
+            email_verified=getattr(model, "email_verified", False),
+            two_factor_enabled=getattr(model, "two_factor_enabled", False),
             created_at=model.created_at,
             updated_at=model.updated_at,
-            last_login=getattr(model, 'last_login', None),
+            last_login=getattr(model, "last_login", None),
         )
 
     @staticmethod

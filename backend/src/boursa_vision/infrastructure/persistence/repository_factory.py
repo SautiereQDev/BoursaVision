@@ -65,6 +65,7 @@ class MockRepositoryFactory(IRepositoryFactory):
         from boursa_vision.infrastructure.persistence.mock_repositories import (
             MockUserRepository,
         )
+
         return MockUserRepository()
 
     def create_portfolio_repository(self) -> IPortfolioRepository:
@@ -72,6 +73,7 @@ class MockRepositoryFactory(IRepositoryFactory):
         from boursa_vision.infrastructure.persistence.mock_repositories import (
             MockPortfolioRepository,
         )
+
         return MockPortfolioRepository()
 
     def create_market_data_repository(self) -> IMarketDataRepository:
@@ -79,6 +81,7 @@ class MockRepositoryFactory(IRepositoryFactory):
         from boursa_vision.infrastructure.persistence.mock_repositories import (
             MockMarketDataRepository,
         )
+
         return MockMarketDataRepository()
 
 

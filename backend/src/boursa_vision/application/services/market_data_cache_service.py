@@ -21,8 +21,9 @@ from uuid import uuid4
 
 # Mock YFinance pour l'instant
 try:
-    import yfinance as yf
     import pandas as pd
+    import yfinance as yf
+
     YF_AVAILABLE = True
 except ImportError:
     yf = None
@@ -106,7 +107,9 @@ class YFinanceDataFetcher:
                         amount=Decimal(str(row.get("Adj Close", row["Close"]))),
                         currency=currency,
                     ),
-                    volume=int(row["Volume"]) if (pd and not pd.isna(row["Volume"])) else 0,
+                    volume=int(row["Volume"])
+                    if (pd and not pd.isna(row["Volume"]))
+                    else 0,
                     interval_type=interval_type,
                     source=DataSource.YFINANCE,
                     precision_level=precision_level,

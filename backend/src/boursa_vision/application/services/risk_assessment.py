@@ -15,7 +15,12 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 
-from ..dtos import FundamentalRiskDTO, GeopoliticalRiskDTO, RiskAssessmentDTO, RiskFactorDTO
+from ..dtos import (
+    FundamentalRiskDTO,
+    GeopoliticalRiskDTO,
+    RiskAssessmentDTO,
+    RiskFactorDTO,
+)
 
 
 class RiskLevel(Enum):
@@ -178,12 +183,12 @@ class MarketRiskAnalyzer(IRiskAnalyzer):
         # Pour beta = 0.2, abs(0.2 - 1) = 0.8 > 0.8 est False, donc c'est MODERATE
         # Correction de la logique
         beta_deviation = abs(beta - 1)
-        
+
         if beta_deviation > 1.5:
             level = RiskLevel.HIGH
             score = 80.0
         elif beta_deviation > 0.8:
-            level = RiskLevel.MODERATE  
+            level = RiskLevel.MODERATE
             score = 60.0
         elif beta_deviation > 0.3:
             level = RiskLevel.LOW
@@ -530,14 +535,14 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
             # Analyse simplifiée basée sur les informations disponibles
             # Simulation d'une analyse de qualité des revenus
             revenue_growth = info.get("revenueGrowth", 0)
-            
+
             if revenue_growth is None:
                 return None
-                
+
             # Convert to percentage if needed
             if abs(revenue_growth) < 1:
                 revenue_growth = revenue_growth * 100
-                
+
             # Simple volatility assessment based on revenue growth
             if abs(revenue_growth) > 30:
                 level = RiskLevel.HIGH
@@ -1003,7 +1008,9 @@ class RiskAssessmentService:
 
         # Grouper les risques par catégorie et convertir en DTOs
         risks_by_category = self._group_risks_by_category_as_dto(all_risks)
-        all_risk_factor_dtos = [self._convert_risk_factor_to_dto(risk) for risk in all_risks]
+        all_risk_factor_dtos = [
+            self._convert_risk_factor_to_dto(risk) for risk in all_risks
+        ]
 
         # Identifier les risques critiques
         critical_risks = [
@@ -1086,7 +1093,7 @@ class RiskAssessmentService:
             probability=risk_factor.probability,
             timeframe=risk_factor.timeframe,
             source=risk_factor.source,
-            last_updated=risk_factor.last_updated
+            last_updated=risk_factor.last_updated,
         )
 
     def _group_risks_by_category_as_dto(

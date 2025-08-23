@@ -28,7 +28,7 @@ from .middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
 )
-from .routers import investments, market_data, portfolio, websocket, auth
+from .routers import auth, investments, market_data, portfolio, websocket
 
 # Configure structured logging
 structlog.configure(

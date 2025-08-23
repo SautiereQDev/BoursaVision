@@ -1,11 +1,10 @@
 """
 Market data endpoints
 """
-from typing import Optional
+from typing import Any, Optional
 
 import structlog
 from fastapi import APIRouter, HTTPException, Query, status
-from typing import Any
 
 # TODO: Fix circular import issue
 # from ..dependencies import Any, Any

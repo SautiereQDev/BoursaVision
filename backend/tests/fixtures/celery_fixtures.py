@@ -5,8 +5,9 @@ Fournit des mocks et configurations pour tester l'infrastructure Celery
 de manière isolée et reproductible.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 @pytest.fixture

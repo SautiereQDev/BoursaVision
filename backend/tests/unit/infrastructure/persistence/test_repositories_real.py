@@ -5,28 +5,37 @@ Ce module teste toutes les implémentations concrètes des repositories
 du domaine avec SQLAlchemy et TimescaleDB.
 """
 
-import pytest
 import asyncio
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import Mock, patch, AsyncMock
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from boursa_vision.domain.entities.investment import Investment as DomainInvestment
+from boursa_vision.domain.entities.market_data import MarketData as DomainMarketData
+from boursa_vision.domain.entities.portfolio import Portfolio as DomainPortfolio
+from boursa_vision.domain.entities.user import User as DomainUser
+from boursa_vision.infrastructure.persistence.models import (
+    Instrument,
+    InvestmentModel,
+    MarketData,
+    Portfolio,
+    Position,
+    User,
+)
 
 # Import direct pour avoir le vrai coverage
 from boursa_vision.infrastructure.persistence.repositories import (
-    SQLAlchemyUserRepository,
-    SQLAlchemyPortfolioRepository, 
+    SQLAlchemyInvestmentRepository,
     SQLAlchemyMarketDataRepository,
-    SQLAlchemyInvestmentRepository
+    SQLAlchemyPortfolioRepository,
+    SQLAlchemyUserRepository,
 )
-from boursa_vision.infrastructure.persistence.models import User, Portfolio, Position, MarketData, Instrument, InvestmentModel
-from boursa_vision.domain.entities.user import User as DomainUser
-from boursa_vision.domain.entities.portfolio import Portfolio as DomainPortfolio
-from boursa_vision.domain.entities.market_data import MarketData as DomainMarketData
-from boursa_vision.domain.entities.investment import Investment as DomainInvestment
 
 
 class TestSQLAlchemyUserRepository:
@@ -56,10 +65,8 @@ class TestSQLAlchemyUserRepository:
             email="test@example.com",
             first_name="Test",
             last_name="User",
-            password_hash="hashed_pass",  # Corrected field name
             is_active=True,
             created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc)
         )
 
     @pytest.fixture
@@ -72,7 +79,7 @@ class TestSQLAlchemyUserRepository:
             password_hash="hashed_pass",  # Corrected field name
             is_active=True,
             created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc)
+            updated_at=datetime.now(timezone.utc),
         )
 
     @pytest.mark.asyncio
@@ -82,7 +89,9 @@ class TestSQLAlchemyUserRepository:
         assert repo._session is mock_session
 
     @pytest.mark.asyncio
-    async def test_find_by_id_success(self, repository, mock_session, sample_user_id, sample_user_model):
+    async def test_find_by_id_success(
+        self, repository, mock_session, sample_user_id, sample_user_model
+    ):
         """Test find_by_id avec succès."""
         # Mock du résultat
         mock_result = Mock()
@@ -115,7 +124,9 @@ class TestSQLAlchemyUserRepository:
         mock_session.execute.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_find_by_email_success(self, repository, mock_session, sample_user_model):
+    async def test_find_by_email_success(
+        self, repository, mock_session, sample_user_model
+    ):
         """Test find_by_email avec succès."""
         # Mock du résultat
         mock_result = Mock()
@@ -134,7 +145,9 @@ class TestSQLAlchemyUserRepository:
         repository._mapper.to_domain.assert_called_once_with(sample_user_model)
 
     @pytest.mark.asyncio
-    async def test_find_by_username_success(self, repository, mock_session, sample_user_model):
+    async def test_find_by_username_success(
+        self, repository, mock_session, sample_user_model
+    ):
         """Test find_by_username avec succès."""
         # Mock du résultat
         mock_result = Mock()
@@ -153,7 +166,9 @@ class TestSQLAlchemyUserRepository:
         repository._mapper.to_domain.assert_called_once_with(sample_user_model)
 
     @pytest.mark.asyncio
-    async def test_save_new_user(self, repository, mock_session, sample_domain_user, sample_user_model):
+    async def test_save_new_user(
+        self, repository, mock_session, sample_domain_user, sample_user_model
+    ):
         """Test sauvegarde d'un nouvel utilisateur."""
         # Mock du résultat de recherche d'utilisateur existant (vide)
         mock_session.get = AsyncMock(return_value=None)  # Pas d'utilisateur existant
@@ -175,10 +190,14 @@ class TestSQLAlchemyUserRepository:
         mock_session.refresh.assert_called_once_with(sample_user_model)
 
     @pytest.mark.asyncio
-    async def test_save_existing_user(self, repository, mock_session, sample_domain_user, sample_user_model):
+    async def test_save_existing_user(
+        self, repository, mock_session, sample_domain_user, sample_user_model
+    ):
         """Test mise à jour d'un utilisateur existant."""
         # Mock du résultat de recherche d'utilisateur existant
-        mock_session.get = AsyncMock(return_value=sample_user_model)  # Utilisateur existant trouvé
+        mock_session.get = AsyncMock(
+            return_value=sample_user_model
+        )  # Utilisateur existant trouvé
         mock_session.flush = AsyncMock()
         mock_session.refresh = AsyncMock()
 
@@ -274,7 +293,9 @@ class TestSQLAlchemyPortfolioRepository:
         assert repo._session is mock_session
 
     @pytest.mark.asyncio
-    async def test_find_by_id_success(self, repository, mock_session, sample_portfolio_id):
+    async def test_find_by_id_success(
+        self, repository, mock_session, sample_portfolio_id
+    ):
         """Test find_by_id avec succès."""
         # Mock du modèle portfolio
         mock_portfolio = Mock()
@@ -306,7 +327,9 @@ class TestSQLAlchemyPortfolioRepository:
         # Mock du mapper de l'instance
         domain_portfolio1 = Mock()
         domain_portfolio2 = Mock()
-        repository._mapper.to_domain = Mock(side_effect=[domain_portfolio1, domain_portfolio2])
+        repository._mapper.to_domain = Mock(
+            side_effect=[domain_portfolio1, domain_portfolio2]
+        )
 
         result = await repository.find_by_user_id(sample_user_id)
 
@@ -344,7 +367,9 @@ class TestSQLAlchemyPortfolioRepository:
         mock_session.refresh.assert_called_once_with(mock_model)
 
     @pytest.mark.asyncio
-    async def test_delete_portfolio(self, repository, mock_session, sample_portfolio_id):
+    async def test_delete_portfolio(
+        self, repository, mock_session, sample_portfolio_id
+    ):
         """Test suppression de portfolio."""
         # Mock du portfolio existant
         mock_portfolio = Mock()
@@ -388,7 +413,7 @@ class TestSQLAlchemyMarketDataRepository:
             high_price=Decimal("155.00"),
             low_price=Decimal("149.00"),
             close_price=Decimal("154.00"),
-            volume=1000000
+            volume=1000000,
         )
 
     @pytest.mark.asyncio
@@ -404,7 +429,7 @@ class TestSQLAlchemyMarketDataRepository:
         """Test sauvegarde des données de marché."""
         # Mock the save method to return the input data
         repository.save = AsyncMock(return_value=sample_market_data)
-        
+
         result = await repository.save(sample_market_data)
 
         # Vérifications
@@ -435,7 +460,7 @@ class TestSQLAlchemyInvestmentRepository:
     async def test_find_by_portfolio_id(self, repository, mock_session):
         """Test find_by_portfolio_id."""
         portfolio_id = uuid.uuid4()
-        
+
         # Mock des investissements
         investment1 = Mock()
         investment2 = Mock()
@@ -446,7 +471,9 @@ class TestSQLAlchemyInvestmentRepository:
         # Mock du mapper - instance mocking pattern
         domain_investment1 = Mock()
         domain_investment2 = Mock()
-        repository._mapper.to_domain = Mock(side_effect=[domain_investment1, domain_investment2])
+        repository._mapper.to_domain = Mock(
+            side_effect=[domain_investment1, domain_investment2]
+        )
 
         result = await repository.find_by_portfolio_id(portfolio_id)
 
@@ -464,7 +491,9 @@ class TestSQLAlchemyInvestmentRepository:
 
         # Mock de la recherche d'investissement existant (pas trouvé)
         mock_result = Mock()
-        mock_result.scalar_one_or_none.return_value = None  # Pas d'investissement existant
+        mock_result.scalar_one_or_none.return_value = (
+            None  # Pas d'investissement existant
+        )
         mock_session.execute = AsyncMock(return_value=mock_result)
         mock_session.add = Mock()
         mock_session.flush = AsyncMock()
@@ -497,9 +526,13 @@ class TestRepositoryErrorHandling:
     async def test_user_repository_database_error(self, mock_session):
         """Test gestion d'erreur base de données dans UserRepository."""
         repository = SQLAlchemyUserRepository(mock_session)
-        
+
         # Mock d'une erreur de base de données
-        mock_session.execute = AsyncMock(side_effect=IntegrityError("test error", "params", Exception("original error")))
+        mock_session.execute = AsyncMock(
+            side_effect=IntegrityError(
+                "test error", "params", Exception("original error")
+            )
+        )
 
         user_id = uuid.uuid4()
 
@@ -511,9 +544,13 @@ class TestRepositoryErrorHandling:
     async def test_portfolio_repository_database_error(self, mock_session):
         """Test gestion d'erreur base de données dans PortfolioRepository."""
         repository = SQLAlchemyPortfolioRepository(mock_session)
-        
+
         # Mock d'une erreur de base de données
-        mock_session.execute = AsyncMock(side_effect=IntegrityError("test error", "params", Exception("original error")))
+        mock_session.execute = AsyncMock(
+            side_effect=IntegrityError(
+                "test error", "params", Exception("original error")
+            )
+        )
 
         portfolio_id = uuid.uuid4()
 
@@ -522,5 +559,5 @@ class TestRepositoryErrorHandling:
             await repository.find_by_id(portfolio_id)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main([__file__])

@@ -17,6 +17,7 @@ class TestCLIImport:
         # Act & Assert
         try:
             from boursa_vision.infrastructure.background import cli
+
             assert cli is not None
         except ImportError as e:
             pytest.fail(f"Failed to import CLI module: {e}")
@@ -26,6 +27,7 @@ class TestCLIImport:
         # Act & Assert
         try:
             from boursa_vision.infrastructure.background.cli import cli
+
             assert cli is not None
             assert callable(cli)
         except ImportError as e:
@@ -41,11 +43,25 @@ class TestCLICommands:
         # Act & Assert
         try:
             from boursa_vision.infrastructure.background.cli import (
-                cli, archive, archive_symbols, status, worker, beat, test_connection
+                archive,
+                archive_symbols,
+                beat,
+                cli,
+                status,
+                test_connection,
+                worker,
             )
-            
+
             # Vérifier que toutes les commandes sont des fonctions
-            commands = [cli, archive, archive_symbols, status, worker, beat, test_connection]
+            commands = [
+                cli,
+                archive,
+                archive_symbols,
+                status,
+                worker,
+                beat,
+                test_connection,
+            ]
             for command in commands:
                 assert callable(command)
         except ImportError as e:
@@ -55,14 +71,16 @@ class TestCLICommands:
         """Les commandes CLI ont des décorateurs Click."""
         # Act & Assert
         try:
-            from boursa_vision.infrastructure.background.cli import cli, archive, status
-            
+            from boursa_vision.infrastructure.background.cli import archive, cli, status
+
             # Vérifier que cli est un groupe Click
-            assert hasattr(cli, 'commands')
-            
+            assert hasattr(cli, "commands")
+
             # Vérifier que les commandes ont des attributs Click
             for command in [archive, status]:
-                assert hasattr(command, '__click_params__') or hasattr(command, 'callback')
+                assert hasattr(command, "__click_params__") or hasattr(
+                    command, "callback"
+                )
         except ImportError as e:
             pytest.fail(f"Failed to import CLI commands: {e}")
 
@@ -75,7 +93,7 @@ class TestCLIStructure:
         """Le CliRunner peut être créé."""
         # Arrange & Act
         runner = CliRunner()
-        
+
         # Assert
         assert runner is not None
 
@@ -84,10 +102,10 @@ class TestCLIStructure:
         # Act & Assert
         try:
             from boursa_vision.infrastructure.background.cli import cli
-            
+
             # Vérifier que c'est un groupe Click
-            assert hasattr(cli, 'commands')
-            assert hasattr(cli, 'name') or hasattr(cli, '__name__')
+            assert hasattr(cli, "commands")
+            assert hasattr(cli, "name") or hasattr(cli, "__name__")
         except ImportError as e:
             pytest.fail(f"Failed to import CLI main group: {e}")
 
@@ -96,15 +114,24 @@ class TestCLIStructure:
         # Act & Assert
         try:
             from boursa_vision.infrastructure.background.cli import cli
-            
+
             # Les commandes devraient être enregistrées dans le groupe
-            if hasattr(cli, 'commands'):
+            if hasattr(cli, "commands"):
                 command_names = list(cli.commands.keys())
-                expected_commands = ['archive', 'archive-symbols', 'status', 'worker', 'beat', 'test-connection']
-                
+                expected_commands = [
+                    "archive",
+                    "archive-symbols",
+                    "status",
+                    "worker",
+                    "beat",
+                    "test-connection",
+                ]
+
                 # Au moins quelques commandes devraient être présentes
-                for expected_cmd in ['archive', 'status']:
-                    assert expected_cmd in command_names, f"Missing command: {expected_cmd}"
+                for expected_cmd in ["archive", "status"]:
+                    assert (
+                        expected_cmd in command_names
+                    ), f"Missing command: {expected_cmd}"
         except ImportError as e:
             pytest.fail(f"Failed to test CLI commands: {e}")
 
@@ -120,15 +147,15 @@ class TestCLIBasicExecution:
             from boursa_vision.infrastructure.background.cli import cli
         except ImportError:
             pytest.skip("CLI not available")
-            
+
         runner = CliRunner()
-        
+
         # Act
-        result = runner.invoke(cli, ['--help'])
-        
+        result = runner.invoke(cli, ["--help"])
+
         # Assert
         assert result.exit_code == 0
-        assert 'Usage:' in result.output or 'help' in result.output.lower()
+        assert "Usage:" in result.output or "help" in result.output.lower()
 
     def test_archive_command_help_works(self):
         """La commande archive --help fonctionne."""
@@ -137,15 +164,15 @@ class TestCLIBasicExecution:
             from boursa_vision.infrastructure.background.cli import cli
         except ImportError:
             pytest.skip("CLI not available")
-            
+
         runner = CliRunner()
-        
+
         # Act
-        result = runner.invoke(cli, ['archive', '--help'])
-        
+        result = runner.invoke(cli, ["archive", "--help"])
+
         # Assert
         assert result.exit_code == 0
-        assert 'Usage:' in result.output or 'help' in result.output.lower()
+        assert "Usage:" in result.output or "help" in result.output.lower()
 
     def test_status_command_help_works(self):
         """La commande status --help fonctionne."""
@@ -154,12 +181,12 @@ class TestCLIBasicExecution:
             from boursa_vision.infrastructure.background.cli import cli
         except ImportError:
             pytest.skip("CLI not available")
-            
+
         runner = CliRunner()
-        
+
         # Act
-        result = runner.invoke(cli, ['status', '--help'])
-        
+        result = runner.invoke(cli, ["status", "--help"])
+
         # Assert
         assert result.exit_code == 0
-        assert 'Usage:' in result.output or 'help' in result.output.lower()
+        assert "Usage:" in result.output or "help" in result.output.lower()

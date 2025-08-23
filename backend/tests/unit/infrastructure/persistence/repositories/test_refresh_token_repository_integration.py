@@ -5,18 +5,21 @@ Tests avec exécution réelle du code pour améliorer la couverture,
 conformes aux principes de l'Architecture Clean.
 """
 
-import pytest
-from datetime import datetime, timezone, timedelta
-from uuid import uuid4, UUID
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, Mock
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.engine.result import Result, ScalarResult
+from uuid import UUID, uuid4
 
-from boursa_vision.infrastructure.persistence.repositories.refresh_token_repository import (
-    SQLAlchemyRefreshTokenRepository
+import pytest
+from sqlalchemy.engine.result import Result, ScalarResult
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from boursa_vision.domain.entities.refresh_token import (
+    RefreshToken as DomainRefreshToken,
 )
-from boursa_vision.domain.entities.refresh_token import RefreshToken as DomainRefreshToken
 from boursa_vision.infrastructure.persistence.models.refresh_tokens import RefreshToken
+from boursa_vision.infrastructure.persistence.repositories.refresh_token_repository import (
+    SQLAlchemyRefreshTokenRepository,
+)
 
 
 @pytest.mark.unit
@@ -28,11 +31,11 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         """Configuration pour chaque test."""
         self.mock_session = AsyncMock()
         self.repository = SQLAlchemyRefreshTokenRepository(self.mock_session)
-        
+
         self.test_user_id = uuid4()
         self.test_token_id = uuid4()
         self.test_token_string = "test_refresh_token_12345"
-        
+
         # Dates de test
         self.now = datetime.now(timezone.utc)
         self.expires_at = self.now + timedelta(days=30)
@@ -50,7 +53,7 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
             "is_revoked": False,
             "revoke_reason": "",
             "ip_address": "127.0.0.1",
-            "user_agent": "test-agent"
+            "user_agent": "test-agent",
         }
         default_data.update(overrides)
         return DomainRefreshToken(**default_data)
@@ -67,7 +70,7 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
             "is_revoked": False,
             "revoke_reason": None,
             "ip_address": "127.0.0.1",
-            "user_agent": "test-agent"
+            "user_agent": "test-agent",
         }
         default_data.update(overrides)
         return RefreshToken(**default_data)
@@ -76,14 +79,14 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         """Test find_by_id avec token trouvé."""
         # Arrange
         model = self._create_model_token()
-        
+
         mock_result = Mock(spec=Result)
         mock_result.scalar_one_or_none.return_value = model
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
         result = await self.repository.find_by_id(self.test_token_id)
-        
+
         # Assert
         assert result is not None
         assert isinstance(result, DomainRefreshToken)
@@ -99,10 +102,10 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         mock_result = Mock(spec=Result)
         mock_result.scalar_one_or_none.return_value = None
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
         result = await self.repository.find_by_id(self.test_token_id)
-        
+
         # Assert
         assert result is None
         self.mock_session.execute.assert_called_once()
@@ -111,15 +114,15 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         """Test save pour créer un nouveau token."""
         # Arrange
         domain_token = self._create_domain_token()
-        
+
         # Mock find_by_id pour retourner None (token inexistant)
         mock_find_result = Mock(spec=Result)
         mock_find_result.scalar_one_or_none.return_value = None
         self.mock_session.execute.return_value = mock_find_result
-        
+
         # Act
         result = await self.repository.save(domain_token)
-        
+
         # Assert
         assert result is not None
         assert isinstance(result, DomainRefreshToken)
@@ -132,17 +135,17 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         # Arrange
         domain_token = self._create_domain_token(is_revoked=True, revoke_reason="test")
         existing_model = self._create_model_token()
-        
+
         # Mock find_by_id pour retourner un token existant
         mock_find_result = Mock(spec=Result)
         mock_find_result.scalar_one_or_none.return_value = existing_model
-        
+
         # Mock update - première execution pour find_by_id, deuxième pour update
         self.mock_session.execute.side_effect = [mock_find_result, mock_find_result]
-        
+
         # Act
         result = await self.repository.save(domain_token)
-        
+
         # Assert
         assert result is not None
         assert isinstance(result, DomainRefreshToken)
@@ -156,14 +159,14 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         # Arrange
         domain_token = self._create_domain_token(last_used_at=self.now)
         model = self._create_model_token()
-        
+
         mock_result = Mock(spec=Result)
         mock_result.scalar_one_or_none.return_value = model
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
         result = await self.repository.update(domain_token)
-        
+
         # Assert
         assert result is not None
         assert isinstance(result, DomainRefreshToken)
@@ -174,27 +177,29 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         """Test update avec token inexistant lève une erreur."""
         # Arrange
         domain_token = self._create_domain_token()
-        
+
         mock_result = Mock(spec=Result)
         mock_result.scalar_one_or_none.return_value = None
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act & Assert
-        with pytest.raises(ValueError, match=f"RefreshToken with ID {self.test_token_id} not found"):
+        with pytest.raises(
+            ValueError, match=f"RefreshToken with ID {self.test_token_id} not found"
+        ):
             await self.repository.update(domain_token)
 
     async def test_delete_existing_token(self):
         """Test delete avec token existant."""
         # Arrange
         model = self._create_model_token()
-        
+
         mock_result = Mock(spec=Result)
         mock_result.scalar_one_or_none.return_value = model
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
         result = await self.repository.delete(self.test_token_id)
-        
+
         # Assert
         assert result is True
         self.mock_session.delete.assert_called_once_with(model)
@@ -205,10 +210,10 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         mock_result = Mock(spec=Result)
         mock_result.scalar_one_or_none.return_value = None
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
         result = await self.repository.delete(self.test_token_id)
-        
+
         # Assert
         assert result is False
         self.mock_session.delete.assert_not_called()
@@ -217,14 +222,14 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         """Test find_by_token avec token trouvé."""
         # Arrange
         model = self._create_model_token()
-        
+
         mock_result = Mock(spec=Result)
         mock_result.scalar_one_or_none.return_value = model
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
         result = await self.repository.find_by_token(self.test_token_string)
-        
+
         # Assert
         assert result is not None
         assert isinstance(result, DomainRefreshToken)
@@ -237,10 +242,10 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         mock_result = Mock(spec=Result)
         mock_result.scalar_one_or_none.return_value = None
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
         result = await self.repository.find_by_token("unknown_token")
-        
+
         # Assert
         assert result is None
         self.mock_session.execute.assert_called_once()
@@ -250,18 +255,18 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         # Arrange
         models = [
             self._create_model_token(id=uuid4(), token="token1"),
-            self._create_model_token(id=uuid4(), token="token2")
+            self._create_model_token(id=uuid4(), token="token2"),
         ]
-        
+
         mock_result = Mock(spec=Result)
         mock_scalars = Mock(spec=ScalarResult)
         mock_scalars.all.return_value = models
         mock_result.scalars.return_value = mock_scalars
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
         result = await self.repository.find_by_user_id(self.test_user_id)
-        
+
         # Assert
         assert len(result) == 2
         assert all(isinstance(token, DomainRefreshToken) for token in result)
@@ -272,26 +277,23 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         """Test find_active_by_user_id retourne seulement les tokens actifs."""
         # Arrange - un token actif, les autres ne sont pas inclus dans le mock
         future_date = self.now + timedelta(days=30)
-        
+
         active_model = self._create_model_token(
-            id=uuid4(), 
-            token="active_token",
-            expires_at=future_date,
-            is_revoked=False
+            id=uuid4(), token="active_token", expires_at=future_date, is_revoked=False
         )
-        
+
         # Seulement le token actif devrait être retourné
         models = [active_model]
-        
+
         mock_result = Mock(spec=Result)
         mock_scalars = Mock(spec=ScalarResult)
         mock_scalars.all.return_value = models
         mock_result.scalars.return_value = mock_scalars
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
         result = await self.repository.find_active_by_user_id(self.test_user_id)
-        
+
         # Assert
         assert len(result) == 1
         assert result[0].token == "active_token"
@@ -303,18 +305,20 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         # Arrange
         models = [
             self._create_model_token(id=uuid4(), token="token1", is_revoked=False),
-            self._create_model_token(id=uuid4(), token="token2", is_revoked=False)
+            self._create_model_token(id=uuid4(), token="token2", is_revoked=False),
         ]
-        
+
         mock_result = Mock(spec=Result)
         mock_scalars = Mock(spec=ScalarResult)
         mock_scalars.all.return_value = models
         mock_result.scalars.return_value = mock_scalars
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
-        count = await self.repository.revoke_all_for_user(self.test_user_id, "logout_all")
-        
+        count = await self.repository.revoke_all_for_user(
+            self.test_user_id, "logout_all"
+        )
+
         # Assert
         assert count == 2
         for model in models:
@@ -327,19 +331,23 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         # Arrange
         cutoff_date = self.now - timedelta(days=1)
         expired_models = [
-            self._create_model_token(id=uuid4(), expires_at=cutoff_date - timedelta(hours=1)),
-            self._create_model_token(id=uuid4(), expires_at=cutoff_date - timedelta(hours=2))
+            self._create_model_token(
+                id=uuid4(), expires_at=cutoff_date - timedelta(hours=1)
+            ),
+            self._create_model_token(
+                id=uuid4(), expires_at=cutoff_date - timedelta(hours=2)
+            ),
         ]
-        
+
         mock_result = Mock(spec=Result)
         mock_scalars = Mock(spec=ScalarResult)
         mock_scalars.all.return_value = expired_models
         mock_result.scalars.return_value = mock_scalars
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
         count = await self.repository.cleanup_expired_tokens(cutoff_date)
-        
+
         # Assert
         assert count == 2
         assert self.mock_session.delete.call_count == 2
@@ -351,18 +359,18 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         active_models = [
             self._create_model_token(id=uuid4(), token="token1"),
             self._create_model_token(id=uuid4(), token="token2"),
-            self._create_model_token(id=uuid4(), token="token3")
+            self._create_model_token(id=uuid4(), token="token3"),
         ]
-        
+
         mock_result = Mock(spec=Result)
         mock_scalars = Mock(spec=ScalarResult)
         mock_scalars.all.return_value = active_models
         mock_result.scalars.return_value = mock_scalars
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
         count = await self.repository.count_active_sessions(self.test_user_id)
-        
+
         # Assert
         assert count == 3
         self.mock_session.execute.assert_called_once()
@@ -371,13 +379,12 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         """Test la conversion du modèle vers l'entité domaine."""
         # Arrange
         model = self._create_model_token(
-            revoke_reason="test_reason",
-            last_used_at=self.now
+            revoke_reason="test_reason", last_used_at=self.now
         )
-        
+
         # Act
         domain_entity = self.repository._to_domain(model)
-        
+
         # Assert
         assert isinstance(domain_entity, DomainRefreshToken)
         assert domain_entity.id == model.id
@@ -395,14 +402,12 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         """Test la conversion avec des valeurs nulles."""
         # Arrange
         model = self._create_model_token(
-            revoke_reason=None,
-            ip_address=None,
-            user_agent=None
+            revoke_reason=None, ip_address=None, user_agent=None
         )
-        
+
         # Act
         domain_entity = self.repository._to_domain(model)
-        
+
         # Assert
         assert domain_entity.revoke_reason == ""
         assert domain_entity.ip_address == ""
@@ -412,13 +417,12 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         """Test la conversion de l'entité domaine vers le modèle."""
         # Arrange
         domain_entity = self._create_domain_token(
-            revoke_reason="test_reason",
-            last_used_at=self.now
+            revoke_reason="test_reason", last_used_at=self.now
         )
-        
+
         # Act
         model = self.repository._to_persistence(domain_entity)
-        
+
         # Assert
         assert isinstance(model, RefreshToken)
         assert model.id == domain_entity.id
@@ -436,14 +440,12 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
         """Test la conversion avec des chaînes vides."""
         # Arrange
         domain_entity = self._create_domain_token(
-            revoke_reason="",
-            ip_address="",
-            user_agent=""
+            revoke_reason="", ip_address="", user_agent=""
         )
-        
+
         # Act
         model = self.repository._to_persistence(domain_entity)
-        
+
         # Assert
         assert model.revoke_reason is None
         assert model.ip_address is None
@@ -457,12 +459,12 @@ class TestSQLAlchemyRefreshTokenRepositoryIntegration:
             token="new_token",
             last_used_at=self.now,
             is_revoked=True,
-            revoke_reason="updated_reason"
+            revoke_reason="updated_reason",
         )
-        
+
         # Act
         self.repository._update_model(original_model, updated_entity)
-        
+
         # Assert
         assert original_model.token == "new_token"
         assert original_model.last_used_at == self.now
@@ -483,7 +485,7 @@ class TestSQLAlchemyRefreshTokenRepositoryEdgeCases:
         """Test l'initialisation du repository."""
         # Act
         repo = SQLAlchemyRefreshTokenRepository(self.mock_session)
-        
+
         # Assert
         assert repo.session == self.mock_session
 
@@ -495,11 +497,11 @@ class TestSQLAlchemyRefreshTokenRepositoryEdgeCases:
         mock_scalars.all.return_value = []
         mock_result.scalars.return_value = mock_scalars
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
         user_tokens = await self.repository.find_by_user_id(uuid4())
         active_tokens = await self.repository.find_active_by_user_id(uuid4())
-        
+
         # Assert
         assert user_tokens == []
         assert active_tokens == []
@@ -512,10 +514,10 @@ class TestSQLAlchemyRefreshTokenRepositoryEdgeCases:
         mock_scalars.all.return_value = []
         mock_result.scalars.return_value = mock_scalars
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
         count = await self.repository.revoke_all_for_user(uuid4())
-        
+
         # Assert
         assert count == 0
         self.mock_session.flush.assert_called_once()
@@ -528,10 +530,10 @@ class TestSQLAlchemyRefreshTokenRepositoryEdgeCases:
         mock_scalars.all.return_value = []
         mock_result.scalars.return_value = mock_scalars
         self.mock_session.execute.return_value = mock_result
-        
+
         # Act
         count = await self.repository.cleanup_expired_tokens(datetime.now(timezone.utc))
-        
+
         # Assert
         assert count == 0
         self.mock_session.delete.assert_not_called()

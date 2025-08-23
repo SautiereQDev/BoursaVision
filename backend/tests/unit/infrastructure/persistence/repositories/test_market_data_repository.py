@@ -6,8 +6,8 @@ Couvre les requêtes async, les opérations en lot, les agrégations temporelles
 """
 
 import sys
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -25,6 +25,7 @@ try:
     from boursa_vision.infrastructure.persistence.repositories.market_data_repository import (
         SQLAlchemyMarketDataRepository,
     )
+
     REPOSITORY_AVAILABLE = True
 except ImportError as e:
     print(f"Import warning: {e}")
@@ -34,35 +35,49 @@ except ImportError as e:
 # Mock du repository pour les tests car la classe originale est abstraite
 class MockMarketDataRepository(SQLAlchemyMarketDataRepository):
     """Mock repository qui implémente toutes les méthodes abstraites."""
-    
+
     def __init__(self):
         self._mapper = MagicMock()
 
     # Méthodes abstraites implémentées comme des stubs
     async def cleanup_old_data(self, older_than_days: int = 365) -> int:
         return 0
+
     async def count_by_symbol(self, symbol: str) -> int:
         return 0
+
     async def delete(self, entity_id):
         pass
-    async def delete_by_symbol_and_date_range(self, symbol: str, start_date, end_date) -> int:
+
+    async def delete_by_symbol_and_date_range(
+        self, symbol: str, start_date, end_date
+    ) -> int:
         return 0
+
     async def exists_by_symbol_and_timestamp(self, symbol: str, timestamp) -> bool:
         return False
+
     async def find_by_id(self, entity_id):
         return None
+
     async def find_by_symbol(self, symbol: str):
         return []
+
     async def find_by_symbol_and_timestamp(self, symbol: str, timestamp):
         return None
+
     async def find_latest_by_symbols(self, symbols):
         return {}
+
     async def find_missing_dates(self, symbol: str, start_date, end_date):
         return []
+
     async def get_available_symbols(self):
         return []
+
     async def get_date_range_for_symbol(self, symbol: str):
         return None, None
+
     async def update(self, entity):
         pass
 
@@ -107,7 +122,7 @@ class TestFindLatestBySymbol:
 
             db_model = MagicMock()
             db_model.symbol = "AAPL"
-            
+
             result = MagicMock()
             result.scalar_one_or_none.return_value = db_model
             session.execute.return_value = result
@@ -146,7 +161,7 @@ class TestFindLatestBySymbol:
         ) as mock_get_session:
             session = AsyncMock(spec=AsyncSession)
             mock_get_session.return_value.__aenter__.return_value = session
-            
+
             session.execute.side_effect = SQLAlchemyError("DB Error")
 
             with pytest.raises(SQLAlchemyError, match="DB Error"):
@@ -176,7 +191,7 @@ class TestFindBySymbolAndTimerange:
 
             start_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
             end_date = datetime(2024, 1, 31, tzinfo=timezone.utc)
-            
+
             response = await repository.find_by_symbol_and_timerange(
                 "AAPL", start_date, end_date
             )
@@ -199,7 +214,7 @@ class TestFindBySymbolAndTimerange:
 
             start_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
             end_date = datetime(2024, 1, 31, tzinfo=timezone.utc)
-            
+
             response = await repository.find_by_symbol_and_timerange(
                 "UNKNOWN", start_date, end_date
             )
@@ -222,9 +237,9 @@ class TestFindLatestPrices:
 
             row1 = MagicMock()
             row1.symbol = "AAPL"
-            row2 = MagicMock() 
+            row2 = MagicMock()
             row2.symbol = "GOOGL"
-            
+
             result = MagicMock()
             result.fetchall.return_value = [row1, row2]
             session.execute.return_value = result
@@ -267,12 +282,12 @@ class TestSave:
     async def test_save_success(self, repository):
         """Test de sauvegarde réussie."""
         # Mock complet de la méthode save pour éviter l'implémentation complexe
-        with patch.object(repository, 'save') as mock_save:
+        with patch.object(repository, "save") as mock_save:
             mock_save.return_value = None
-            
+
             domain_entity = MagicMock()
             await repository.save(domain_entity)
-            
+
             mock_save.assert_called_once_with(domain_entity)
 
 
@@ -291,7 +306,7 @@ class TestSaveBulk:
 
             domain_entities = [MagicMock(), MagicMock()]
             persistence_data = [{"symbol": "AAPL"}, {"symbol": "GOOGL"}]
-            
+
             repository._mapper.to_persistence.side_effect = persistence_data
 
             await repository.save_bulk(domain_entities)
@@ -304,7 +319,7 @@ class TestSaveBulk:
     async def test_save_bulk_empty_list(self, repository):
         """Test de sauvegarde avec liste vide."""
         # Pour une liste vide, on mock la fonction save_bulk pour éviter l'appel à get_db_session
-        with patch.object(repository, 'save_bulk', return_value=[]) as mock_save_bulk:
+        with patch.object(repository, "save_bulk", return_value=[]) as mock_save_bulk:
             response = await repository.save_bulk([])
             mock_save_bulk.assert_called_once_with([])
             assert response == []
@@ -317,7 +332,7 @@ class TestMarketDataRepositoryIntegration:
     def test_repository_methods_are_async(self, repository):
         """Test que les méthodes sont async."""
         import inspect
-        
+
         assert inspect.iscoroutinefunction(repository.find_latest_by_symbol)
         assert inspect.iscoroutinefunction(repository.find_by_symbol_and_timerange)
         assert inspect.iscoroutinefunction(repository.find_latest_prices)
@@ -332,25 +347,25 @@ class TestMarketDataRepositoryIntegration:
             "boursa_vision.infrastructure.persistence.repositories.market_data_repository.get_db_session"
         ) as mock_get_session:
             call_count = 0
-            
+
             def session_factory():
                 nonlocal call_count
                 call_count += 1
                 session = AsyncMock(spec=AsyncSession)
                 session.__aenter__.return_value = session
-                
+
                 result = MagicMock()
                 result.scalar_one_or_none.return_value = None
                 result.fetchall.return_value = []
                 session.execute.return_value = result
-                
+
                 return session
-            
+
             mock_get_session.side_effect = session_factory
 
             await repository.find_latest_by_symbol("AAPL")
             await repository.find_latest_prices(["GOOGL"])
-            
+
             assert call_count == 2
 
 
@@ -369,7 +384,7 @@ class TestMarketDataRepositoryErrorHandling:
             with pytest.raises(Exception, match="Connection failed"):
                 await repository.find_latest_by_symbol("AAPL")
 
-    @pytest.mark.skipif(not REPOSITORY_AVAILABLE, reason="Repository not available") 
+    @pytest.mark.skipif(not REPOSITORY_AVAILABLE, reason="Repository not available")
     @pytest.mark.asyncio
     async def test_mapper_error_handling(self, repository):
         """Test de gestion d'erreur du mapper."""
@@ -412,12 +427,13 @@ class TestMarketDataRepositoryTimescaleOptimizations:
 
             # Vérifier qu'une requête a été exécutée
             session.execute.assert_called_once()
-            
+
             # Vérifier que la requête contient des éléments typiques des requêtes TimescaleDB
             call_args = session.execute.call_args[0][0]
             query_str = str(call_args).upper()
-            
+
             # Au minimum, la requête devrait contenir des éléments SQL
-            assert any(keyword in query_str for keyword in [
-                "SELECT", "FROM", "WHERE", "SYMBOL", "LAST", "TIME"
-            ])
+            assert any(
+                keyword in query_str
+                for keyword in ["SELECT", "FROM", "WHERE", "SYMBOL", "LAST", "TIME"]
+            )
