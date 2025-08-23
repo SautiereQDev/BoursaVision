@@ -6,10 +6,9 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 # Import exceptions for DTO validation
-from ..exceptions import InvalidSymbolError, PriceRangeError
 
 # Constants to avoid string duplication
 ASSET_SYMBOL_DESC = "Asset symbol"
@@ -31,10 +30,11 @@ CURRENT_PRICE_DESC = "Current market price"
 class BaseDTO(BaseModel):
     """Base DTO with common configuration."""
 
-    class Config:
-        from_attributes = True
-        json_encoders = {
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_encoders={
             UUID: str,
             datetime: lambda v: v.isoformat(),
             Decimal: float,
-        }
+        },
+    )
