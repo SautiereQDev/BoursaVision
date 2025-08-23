@@ -4,7 +4,6 @@ Ensures consistency across multiple repository operations.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -60,7 +59,7 @@ class SQLAlchemyUnitOfWork(IUnitOfWork):
     """
 
     def __init__(self):
-        self._session: Optional[AsyncSession] = None
+        self._session: AsyncSession | None = None
         self._db_manager = get_db_manager()
 
         # Initialize repositories (will be bound to session on enter)
@@ -121,7 +120,7 @@ class UnitOfWorkFactory:
 
 
 # Dependency injection support
-_uow_factory: Optional[UnitOfWorkFactory] = None
+_uow_factory: UnitOfWorkFactory | None = None
 
 
 def init_uow_factory(factory: UnitOfWorkFactory) -> None:

@@ -2,24 +2,20 @@
 Database configuration and session management for SQLAlchemy with TimescaleDB.
 """
 
-import asyncio
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Optional
 
-from sqlalchemy import MetaData, event, text
-from sqlalchemy.engine import Engine
+from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.pool import NullPool, QueuePool
+from sqlalchemy.pool import QueuePool
 
 from boursa_vision.application.exceptions import DatabaseNotInitializedError
-
-from ..models.base import Base
 
 logger = logging.getLogger(__name__)
 
@@ -52,8 +48,8 @@ class DatabaseManager:
 
     def __init__(self, config: DatabaseConfig):
         self.config = config
-        self._engine: Optional[AsyncEngine] = None
-        self._session_factory: Optional[async_sessionmaker] = None
+        self._engine: AsyncEngine | None = None
+        self._session_factory: async_sessionmaker | None = None
 
     async def initialize(self) -> None:
         """Initialize database engine and session factory."""
@@ -261,8 +257,8 @@ class TimescaleDBManager:
 
 
 # Global database manager instance
-_db_manager: Optional[DatabaseManager] = None
-_timescale_manager: Optional[TimescaleDBManager] = None
+_db_manager: DatabaseManager | None = None
+_timescale_manager: TimescaleDBManager | None = None
 
 
 def init_database(config: DatabaseConfig) -> None:

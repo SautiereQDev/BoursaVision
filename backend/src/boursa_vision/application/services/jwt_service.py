@@ -6,8 +6,8 @@ Service for JWT token generation, validation, and management.
 """
 
 import secrets
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import UUID
 
 import jwt
@@ -49,9 +49,9 @@ class JWTService:
         user_id: UUID,
         email: str,
         role: UserRole,
-        permissions: List[str],
-        extra_claims: Optional[Dict[str, Any]] = None,
-        expires_delta: Optional[timedelta] = None,
+        permissions: list[str],
+        extra_claims: dict[str, Any] | None = None,
+        expires_delta: timedelta | None = None,
     ) -> AccessToken:
         """
         Create a new access token.
@@ -75,7 +75,7 @@ class JWTService:
         if not role:
             raise ValueError("Role is required")
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if expires_delta:
             expires_at = now + expires_delta
         else:
@@ -114,7 +114,7 @@ class JWTService:
         Returns:
             RefreshToken value object
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expires_at = now + timedelta(days=self.refresh_token_expire_days)
 
         # Refresh tokens are longer and more random
@@ -132,8 +132,8 @@ class JWTService:
         user_id: UUID,
         email: str,
         role: UserRole,
-        permissions: List[str],
-        extra_claims: Optional[Dict[str, Any]] = None,
+        permissions: list[str],
+        extra_claims: dict[str, Any] | None = None,
     ) -> TokenPair:
         """
         Create a pair of access and refresh tokens.
@@ -160,7 +160,7 @@ class JWTService:
 
         return TokenPair(access_token=access_token, refresh_token=refresh_token)
 
-    def verify_access_token(self, token: str) -> Optional[Dict[str, Any]]:
+    def verify_access_token(self, token: str) -> dict[str, Any] | None:
         """
         Verify and decode an access token.
 
@@ -183,7 +183,7 @@ class JWTService:
         except InvalidTokenError:
             return None
 
-    def decode_access_token(self, token: str) -> Dict[str, Any]:
+    def decode_access_token(self, token: str) -> dict[str, Any]:
         """
         Decode an access token (throws exception if invalid).
 

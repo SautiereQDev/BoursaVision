@@ -6,8 +6,7 @@ SQLAlchemy models for financial transactions.
 # Modèles SQLAlchemy pour les transactions financières
 # ================================================================
 
-
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlalchemy import CheckConstraint, Column, Index, Numeric, String, Text
@@ -36,7 +35,7 @@ class Transaction(Base, DatabaseMixin, PortfolioInstrumentMixin):
     notes = Column(Text)
     external_id = Column(String(100))  # ID transaction broker externe
     executed_at = Column(TIMESTAMP, nullable=False)
-    created_at = Column(TIMESTAMP, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP, default=lambda: datetime.now(UTC))
 
     # Relations
     portfolio = relationship("Portfolio", back_populates="transactions")

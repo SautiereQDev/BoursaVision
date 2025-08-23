@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field  # Removed unused `asdict`
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional, Union  # Reintroduced `Any` import
+from typing import Any  # Reintroduced `Any` import
 
 import redis
 from redis.exceptions import RedisError
@@ -45,14 +45,14 @@ class CacheConfig:
     host: str = "localhost"
     port: int = 6379
     db: int = 0
-    password: Optional[str] = None
+    password: str | None = None
     socket_timeout: float = 5.0
     socket_connect_timeout: float = 5.0
     health_check_interval: int = 30
     max_connections: int = 10
 
     # TTL settings (grouped into a dictionary to reduce attributes)
-    ttl_settings: Dict[str, int] = field(
+    ttl_settings: dict[str, int] = field(
         default_factory=lambda: {
             "real_time": 30,
             "intraday": 300,
@@ -169,7 +169,7 @@ class RedisCache:
             logger.error("Cache error: %s", e)
             self._redis = None
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get value from cache"""
         if not self._redis:
             return None
@@ -237,7 +237,7 @@ class RedisCache:
             logger.warning("Cache exists error for key %s: %s", key, e)
             return False
 
-    def get_ttl(self, key: str) -> Optional[int]:
+    def get_ttl(self, key: str) -> int | None:
         """Get remaining TTL for key"""
         if not self._redis:
             return None
@@ -268,7 +268,7 @@ class RedisCache:
             logger.warning("Cache flush pattern error for %s: %s", pattern, e)
             return 0
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         if not self._redis:
             return {"status": "disconnected"}
@@ -340,7 +340,7 @@ class CacheKeyBuilder:
         self.parts.append(f"type:{data_type}")
         return self
 
-    def add_date(self, date: Union[str, datetime]) -> "CacheKeyBuilder":
+    def add_date(self, date: str | datetime) -> "CacheKeyBuilder":
         """Add date to key"""
         if isinstance(date, datetime):
             date_str = date.strftime("%Y-%m-%d")

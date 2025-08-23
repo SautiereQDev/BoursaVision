@@ -11,10 +11,10 @@ Classes:
 """
 
 import statistics
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Iterator, List, Optional
 
 from .money import Currency, Money
 
@@ -30,7 +30,7 @@ class Price:
 
     value: Decimal
     currency: Currency
-    timestamp: Optional[datetime] = None
+    timestamp: datetime | None = None
 
     def __post_init__(self):
         """Validation specific to financial prices"""
@@ -52,7 +52,7 @@ class Price:
         cls,
         value: float,
         currency: Currency,
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> "Price":
         """Création depuis un float"""
         return cls(Decimal(str(value)), currency, timestamp)
@@ -99,7 +99,6 @@ class Price:
 
 @dataclass(frozen=True)
 class PricePoint:
-
     """
     Point de données OHLCV (Open, High, Low, Close, Volume)
     """
@@ -115,7 +114,7 @@ class PricePoint:
     low_price: Price
     close_price: Price
     volume: int
-    adjusted_close: Optional[Price] = None
+    adjusted_close: Price | None = None
 
     def __post_init__(self):
         """OHLC consistency validation"""
@@ -130,7 +129,7 @@ class PricePoint:
         self._validate_ohlc_logic()
         self._validate_volume()
 
-    def _validate_currencies(self, prices: List["Price"]) -> None:
+    def _validate_currencies(self, prices: list["Price"]) -> None:
         currencies = {p.currency for p in prices}
         if len(currencies) > 1:
             raise ValueError("All prices must be in the same currency")
@@ -186,7 +185,7 @@ class PriceData:
     """Collection of price points with analysis methods"""
 
     symbol: str
-    points: List[PricePoint]
+    points: list[PricePoint]
     interval: str  # 1d, 1h, 5m, etc.
 
     def __post_init__(self):
@@ -250,11 +249,11 @@ class PriceData:
         """Volume total"""
         return sum(point.volume for point in self.points)
 
-    def get_closing_prices(self) -> List[Decimal]:
+    def get_closing_prices(self) -> list[Decimal]:
         """Extrait la série des prix de clôture"""
         return [point.close_price.value for point in self.points]
 
-    def get_returns(self) -> List[Decimal]:
+    def get_returns(self) -> list[Decimal]:
         """Calculate the series of daily returns"""
         closes = self.get_closing_prices()
         if len(closes) < 2:
@@ -276,7 +275,7 @@ class PriceData:
 
         return Decimal(str(statistics.stdev(returns)))
 
-    def get_price_at_date(self, target_date: date) -> Optional[Price]:
+    def get_price_at_date(self, target_date: date) -> Price | None:
         """Trouve le prix à une date donnée"""
         for point in self.points:
             if point.timestamp.date() == target_date:

@@ -12,13 +12,13 @@ import os
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def parse_list_env(value: str) -> List[str]:
+def parse_list_env(value: str) -> list[str]:
     """Parse une liste depuis une variable d'environnement."""
     if not value or value == "":
         return []
@@ -67,8 +67,8 @@ class GlobalSettings(BaseSettings):
     postgres_port: int = Field(default=5432, env="POSTGRES_PORT")
 
     # URL construite automatiquement
-    database_url: Optional[str] = Field(default=None, env="DATABASE_URL")
-    test_database_url: Optional[str] = Field(default=None, env="TEST_DATABASE_URL")
+    database_url: str | None = Field(default=None, env="DATABASE_URL")
+    test_database_url: str | None = Field(default=None, env="TEST_DATABASE_URL")
 
     # Pool settings
     db_pool_size: int = Field(default=5, env="DB_POOL_SIZE")
@@ -80,15 +80,15 @@ class GlobalSettings(BaseSettings):
     # =====================================
     redis_host: str = Field(default="localhost", env="REDIS_HOST")
     redis_port: int = Field(default=6379, env="REDIS_PORT")
-    redis_password: Optional[str] = Field(default=None, env="REDIS_PASSWORD")
+    redis_password: str | None = Field(default=None, env="REDIS_PASSWORD")
     redis_db: int = Field(default=0, env="REDIS_DB")
-    redis_url: Optional[str] = Field(default=None, env="REDIS_URL")
+    redis_url: str | None = Field(default=None, env="REDIS_URL")
 
     # =====================================
     # SECURITY & AUTH
     # =====================================
     secret_key: str = Field(env="SECRET_KEY")
-    jwt_secret_key: Optional[str] = Field(default=None, env="JWT_SECRET_KEY")
+    jwt_secret_key: str | None = Field(default=None, env="JWT_SECRET_KEY")
     access_token_expire_minutes: int = Field(
         default=1440, env="ACCESS_TOKEN_EXPIRE_MINUTES"
     )
@@ -98,18 +98,18 @@ class GlobalSettings(BaseSettings):
     # API CONFIGURATION
     # =====================================
     api_v1_str: str = Field(default="/api/v1", env="API_V1_STR")
-    allowed_hosts_env: Optional[str] = Field(default=None, env="ALLOWED_HOSTS")
-    cors_origins_env: Optional[str] = Field(default=None, env="CORS_ORIGINS")
+    allowed_hosts_env: str | None = Field(default=None, env="ALLOWED_HOSTS")
+    cors_origins_env: str | None = Field(default=None, env="CORS_ORIGINS")
 
     @property
-    def allowed_hosts(self) -> List[str]:
+    def allowed_hosts(self) -> list[str]:
         """Liste des hôtes autorisés."""
         if self.allowed_hosts_env:
             return parse_list_env(self.allowed_hosts_env)
         return ["localhost", "127.0.0.1"]
 
     @property
-    def cors_origins(self) -> List[str]:
+    def cors_origins(self) -> list[str]:
         """Liste des origines CORS autorisées."""
         if self.cors_origins_env:
             return parse_list_env(self.cors_origins_env)
@@ -169,10 +169,8 @@ class GlobalSettings(BaseSettings):
     # =====================================
     # BACKGROUND TASKS
     # =====================================
-    celery_broker_url: Optional[str] = Field(default=None, env="CELERY_BROKER_URL")
-    celery_result_backend: Optional[str] = Field(
-        default=None, env="CELERY_RESULT_BACKEND"
-    )
+    celery_broker_url: str | None = Field(default=None, env="CELERY_BROKER_URL")
+    celery_result_backend: str | None = Field(default=None, env="CELERY_RESULT_BACKEND")
 
     # =====================================
     # TESTING & DEVELOPMENT
@@ -191,7 +189,7 @@ class GlobalSettings(BaseSettings):
 
     @field_validator("database_url", mode="before")
     @classmethod
-    def assemble_database_url(cls, v: Optional[str], info) -> str:
+    def assemble_database_url(cls, v: str | None, info) -> str:
         """Construit l'URL de la base de données si elle n'est pas fournie."""
         if isinstance(v, str) and v:
             return v
@@ -210,7 +208,7 @@ class GlobalSettings(BaseSettings):
 
     @field_validator("test_database_url", mode="before")
     @classmethod
-    def assemble_test_database_url(cls, v: Optional[str], info) -> str:
+    def assemble_test_database_url(cls, v: str | None, info) -> str:
         """Construit l'URL de la base de données de test si elle n'est pas fournie."""
         if isinstance(v, str) and v:
             return v
@@ -232,7 +230,7 @@ class GlobalSettings(BaseSettings):
 
     @field_validator("redis_url", mode="before")
     @classmethod
-    def assemble_redis_url(cls, v: Optional[str], info) -> str:
+    def assemble_redis_url(cls, v: str | None, info) -> str:
         """Construit l'URL Redis si elle n'est pas fournie."""
         if isinstance(v, str) and v:
             return v
@@ -249,7 +247,7 @@ class GlobalSettings(BaseSettings):
 
     @field_validator("celery_broker_url", mode="before")
     @classmethod
-    def assemble_celery_broker_url(cls, v: Optional[str], info) -> str:
+    def assemble_celery_broker_url(cls, v: str | None, info) -> str:
         """Construit l'URL du broker Celery si elle n'est pas fournie."""
         if isinstance(v, str) and v:
             return v
@@ -258,7 +256,7 @@ class GlobalSettings(BaseSettings):
 
     @field_validator("celery_result_backend", mode="before")
     @classmethod
-    def assemble_celery_result_backend(cls, v: Optional[str], info) -> str:
+    def assemble_celery_result_backend(cls, v: str | None, info) -> str:
         """Construit l'URL du backend de résultats Celery si elle n'est pas fournie."""
         if isinstance(v, str) and v:
             return v
@@ -267,7 +265,7 @@ class GlobalSettings(BaseSettings):
 
     @field_validator("jwt_secret_key", mode="before")
     @classmethod
-    def assemble_jwt_secret_key(cls, v: Optional[str], info) -> str:
+    def assemble_jwt_secret_key(cls, v: str | None, info) -> str:
         """Utilise secret_key comme JWT secret key si non fournie."""
         if isinstance(v, str) and v:
             return v
@@ -360,7 +358,7 @@ def find_project_root() -> Path:
     return current_path.parent
 
 
-def load_env_variables() -> Dict[str, Any]:
+def load_env_variables() -> dict[str, Any]:
     """
     Charge les variables d'environnement depuis les fichiers .env appropriés.
 
@@ -370,7 +368,7 @@ def load_env_variables() -> Dict[str, Any]:
     3. .env.local (non versionné, spécifique à la machine)
     """
     project_root = find_project_root()
-    env_vars: Dict[str, Any] = {}
+    env_vars: dict[str, Any] = {}
 
     # Fichiers .env à charger par ordre de priorité (le dernier écrase le premier)
     env_files = [
@@ -386,12 +384,12 @@ def load_env_variables() -> Dict[str, Any]:
     return env_vars
 
 
-def _parse_env_file(env_file: Path, existing_vars: Dict[str, Any]) -> Dict[str, Any]:
+def _parse_env_file(env_file: Path, existing_vars: dict[str, Any]) -> dict[str, Any]:
     """Parse un fichier .env et retourne les variables."""
-    vars_dict: Dict[str, Any] = {}
+    vars_dict: dict[str, Any] = {}
 
     try:
-        with open(env_file, "r", encoding="utf-8") as f:
+        with open(env_file, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
 
@@ -430,7 +428,7 @@ def _remove_quotes(value: str) -> str:
     return value
 
 
-def _substitute_variables(value: str, existing_vars: Dict[str, Any]) -> str:
+def _substitute_variables(value: str, existing_vars: dict[str, Any]) -> str:
     """Substitue les variables ${VAR} dans une valeur."""
     for match in re.finditer(r"\$\{([^}]+)\}", value):
         var_name = match.group(1)
@@ -440,7 +438,7 @@ def _substitute_variables(value: str, existing_vars: Dict[str, Any]) -> str:
     return value
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> GlobalSettings:
     """
     Retourne l'instance singleton des paramètres de configuration.

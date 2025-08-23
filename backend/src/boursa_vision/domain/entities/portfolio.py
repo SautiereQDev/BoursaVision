@@ -13,13 +13,15 @@ Classes:
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Dict, List
 from uuid import UUID, uuid4
 
-from ..events import DomainEvent  # Ensure DomainEvent is imported
-from ..events import InvestmentAddedEvent, PortfolioCreatedEvent
+from ..events import (
+    DomainEvent,  # Ensure DomainEvent is imported
+    InvestmentAddedEvent,
+    PortfolioCreatedEvent,
+)
 from ..value_objects import (
     ConfidenceScore,
     Currency,
@@ -113,9 +115,9 @@ class Portfolio(AggregateRoot):
     base_currency: str
     cash_balance: Money
     created_at: datetime
-    _positions: Dict[str, Position] = field(default_factory=dict)
+    _positions: dict[str, Position] = field(default_factory=dict)
     _risk_limits: RiskLimits = field(default_factory=RiskLimits)
-    _domain_events: List[DomainEvent] = field(
+    _domain_events: list[DomainEvent] = field(
         default_factory=list
     )  # Fix for missing attribute
 
@@ -130,7 +132,7 @@ class Portfolio(AggregateRoot):
     ) -> "Portfolio":
         """Factory method to create new portfolio"""
         portfolio_id = uuid4()
-        created_at = datetime.now(timezone.utc)
+        created_at = datetime.now(UTC)
         portfolio = cls(
             id=portfolio_id,
             user_id=user_id,
@@ -201,7 +203,7 @@ class Portfolio(AggregateRoot):
             )
         )
 
-    def calculate_total_value(self, current_prices: Dict[str, Money]) -> Money:
+    def calculate_total_value(self, current_prices: dict[str, Money]) -> Money:
         """Calculate total portfolio value including cash and positions"""
         total_value = self.cash_balance.amount
 
@@ -213,7 +215,7 @@ class Portfolio(AggregateRoot):
         return Money(total_value, Currency(self.base_currency))
 
     def calculate_performance_metrics(
-        self, current_prices: Dict[str, Money]
+        self, current_prices: dict[str, Money]
     ) -> PerformanceMetrics:
         """Calculate comprehensive performance metrics"""
         current_value = self.calculate_total_value(current_prices)
@@ -229,14 +231,14 @@ class Portfolio(AggregateRoot):
             sharpe_ratio=0.0,
             max_drawdown=0.0,
             beta=1.0,
-            last_updated=datetime.now(timezone.utc),
+            last_updated=datetime.now(UTC),
         )
 
     def generate_rebalancing_signals(
         self,
-        target_allocation: Dict[str, float],
-        current_prices: Dict[str, Money],
-    ) -> List[Signal]:
+        target_allocation: dict[str, float],
+        current_prices: dict[str, Money],
+    ) -> list[Signal]:
         """Generate rebalancing signals based on target allocation"""
         signals = []
         current_allocation = self._calculate_current_allocation(current_prices)
@@ -270,7 +272,7 @@ class Portfolio(AggregateRoot):
                             f"{current_pct:.1f}% vs target "
                             f"{target_pct:.1f}%"
                         ),
-                        generated_at=datetime.now(timezone.utc),
+                        generated_at=datetime.now(UTC),
                     )
                 )
 
@@ -312,8 +314,8 @@ class Portfolio(AggregateRoot):
             )
 
     def _calculate_current_allocation(
-        self, current_prices: Dict[str, Money]
-    ) -> Dict[str, float]:
+        self, current_prices: dict[str, Money]
+    ) -> dict[str, float]:
         """Calculate current allocation percentages"""
         total_value = self.calculate_total_value(current_prices)
         allocation = {}
@@ -328,7 +330,7 @@ class Portfolio(AggregateRoot):
         return allocation
 
     @property
-    def positions(self) -> Dict[str, Position]:
+    def positions(self) -> dict[str, Position]:
         """Read-only access to positions"""
         return self._positions.copy()
 

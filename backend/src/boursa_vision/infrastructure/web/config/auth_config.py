@@ -7,7 +7,6 @@ Configuration settings for JWT authentication system.
 
 import secrets
 from datetime import timedelta
-from typing import Optional
 
 from pydantic import BaseSettings, Field
 

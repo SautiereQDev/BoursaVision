@@ -5,17 +5,8 @@ Tests End-to-End pour BoursaVision
 Tests de scénarios complets utilisateur à travers l'API REST.
 """
 
-from decimal import Decimal
-
 import pytest
 from httpx import AsyncClient
-
-from boursa_vision.domain.entities.investment import (
-    InvestmentSector,
-    InvestmentType,
-    MarketCap,
-)
-from boursa_vision.domain.value_objects.money import Currency, Money
 
 
 @pytest.mark.e2e

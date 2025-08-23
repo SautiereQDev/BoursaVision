@@ -7,7 +7,6 @@ Factory for creating optimized YFinance clients with different configurations.
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 from .cache_strategy import CacheConfig
 from .yfinance_client import OptimizedYFinanceClient, YFinanceConfig
@@ -30,7 +29,7 @@ class ClientFactoryConfig:
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
-    redis_password: Optional[str] = None
+    redis_password: str | None = None
     enable_cache: bool = True
     cache_key_prefix: str = "boursa_vision:"
 
@@ -43,13 +42,13 @@ class YFinanceClientFactory:
     based on use case profiles.
     """
 
-    def __init__(self, factory_config: Optional[ClientFactoryConfig] = None):
+    def __init__(self, factory_config: ClientFactoryConfig | None = None):
         self.factory_config = factory_config or ClientFactoryConfig()
 
     def create_client(
         self,
         profile: ClientProfile = ClientProfile.PRODUCTION,
-        custom_config: Optional[YFinanceConfig] = None,
+        custom_config: YFinanceConfig | None = None,
     ) -> OptimizedYFinanceClient:
         """
         Create a YFinance client based on profile or custom configuration.
@@ -191,7 +190,7 @@ class YFinanceClientFactory:
 
     @classmethod
     def create_development_client(
-        cls, factory_config: Optional[ClientFactoryConfig] = None
+        cls, factory_config: ClientFactoryConfig | None = None
     ) -> OptimizedYFinanceClient:
         """Convenience method for creating development client"""
         factory = cls(factory_config)
@@ -199,7 +198,7 @@ class YFinanceClientFactory:
 
     @classmethod
     def create_production_client(
-        cls, factory_config: Optional[ClientFactoryConfig] = None
+        cls, factory_config: ClientFactoryConfig | None = None
     ) -> OptimizedYFinanceClient:
         """Convenience method for creating production client"""
         factory = cls(factory_config)
@@ -207,7 +206,7 @@ class YFinanceClientFactory:
 
     @classmethod
     def create_testing_client(
-        cls, factory_config: Optional[ClientFactoryConfig] = None
+        cls, factory_config: ClientFactoryConfig | None = None
     ) -> OptimizedYFinanceClient:
         """Convenience method for creating testing client"""
         factory = cls(factory_config)

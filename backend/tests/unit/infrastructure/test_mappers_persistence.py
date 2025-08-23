@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
@@ -483,7 +483,7 @@ class TestMappersIntegration:
         if not MAPPERS_AVAILABLE:
             # Tester que les imports ont échoué de manière attendue
             with pytest.raises(ImportError):
-                from boursa_vision.infrastructure.persistence.mappers import UserMapper
+                pass
         else:
             # Si les imports fonctionnent, vérifier la disponibilité
             assert MAPPERS_AVAILABLE is True

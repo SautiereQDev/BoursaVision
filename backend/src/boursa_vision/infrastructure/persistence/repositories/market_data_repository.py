@@ -3,7 +3,6 @@ SQLAlchemy repository implementation for MarketData with TimescaleDB optimizatio
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
 
 from sqlalchemy import and_, desc, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,12 +27,12 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
     # Class-level mapper for test mocking compatibility
     _mapper = MarketDataMapper()
 
-    def __init__(self, session: Optional[AsyncSession] = None):
+    def __init__(self, session: AsyncSession | None = None):
         # self._mapper = MapperFactory.get_mapper("market_data")
         self._mapper = MarketDataMapper()
         self._session = session  # Optional injected session for testing
 
-    async def find_latest_by_symbol(self, symbol: str) -> Optional[DomainMarketData]:
+    async def find_latest_by_symbol(self, symbol: str) -> DomainMarketData | None:
         """Find latest market data for symbol."""
         async with get_db_session() as session:
             query = (
@@ -56,7 +55,7 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
         start_time: datetime,
         end_time: datetime,
         interval_type: str = "1d",
-    ) -> List[DomainMarketData]:
+    ) -> list[DomainMarketData]:
         """Find market data for symbol within time range."""
         async with get_db_session() as session:
             query = (
@@ -77,8 +76,8 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
             return [self._mapper.to_domain(model) for model in market_data_models]
 
     async def find_latest_prices(
-        self, symbols: List[str]
-    ) -> Dict[str, DomainMarketData]:
+        self, symbols: list[str]
+    ) -> dict[str, DomainMarketData]:
         """Find latest prices for multiple symbols (optimized query)."""
         async with get_db_session() as session:
             # Use TimescaleDB's last() function for optimal performance
@@ -148,7 +147,7 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
 
             return self._mapper.to_domain(market_data_model)
 
-    async def save_bulk(self, market_data_list: List[DomainMarketData]) -> None:
+    async def save_bulk(self, market_data_list: list[DomainMarketData]) -> None:
         """Bulk save market data for better performance."""
         async with get_db_session() as session:
             market_data_dicts = [
@@ -193,7 +192,7 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
 
             return result.rowcount or 0
 
-    async def get_market_summary(self, symbols: List[str]) -> Dict[str, Dict]:
+    async def get_market_summary(self, symbols: list[str]) -> dict[str, dict]:
         """Get market summary statistics using TimescaleDB functions."""
         async with get_db_session() as session:
             # Use TimescaleDB's time_bucket for aggregations
@@ -251,8 +250,8 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
     async def count_by_symbol(
         self,
         symbol: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> int:
         """Count market data entries by symbol."""
         async with get_db_session() as session:
@@ -304,7 +303,7 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
             result = await session.execute(query)
             return result.scalar_one_or_none() is not None
 
-    async def find_by_id(self, entity_id) -> Optional[DomainMarketData]:
+    async def find_by_id(self, entity_id) -> DomainMarketData | None:
         """Find market data by ID."""
         async with get_db_session() as session:
             market_data = await session.get(MarketData, entity_id)
@@ -314,7 +313,7 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
 
     async def find_by_symbol(
         self, symbol: str, limit: int = 100, offset: int = 0
-    ) -> List[DomainMarketData]:
+    ) -> list[DomainMarketData]:
         """Find market data by symbol."""
         async with get_db_session() as session:
             query = (
@@ -330,7 +329,7 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
 
     async def find_by_symbol_and_timestamp(
         self, symbol: str, timestamp: datetime
-    ) -> Optional[DomainMarketData]:
+    ) -> DomainMarketData | None:
         """Find market data by symbol and timestamp."""
         async with get_db_session() as session:
             query = select(MarketData).where(
@@ -343,8 +342,8 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
             return None
 
     async def find_latest_by_symbols(
-        self, symbols: List[str]
-    ) -> Dict[str, DomainMarketData]:
+        self, symbols: list[str]
+    ) -> dict[str, DomainMarketData]:
         """Find latest market data for multiple symbols."""
         result = {}
         for symbol in symbols:
@@ -355,12 +354,12 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
 
     async def find_missing_dates(
         self, symbol: str, start_date: datetime, end_date: datetime
-    ) -> List[datetime]:
+    ) -> list[datetime]:
         """Find missing dates for a symbol in a date range."""
         # Simple implementation - returns empty list
         return []
 
-    async def get_available_symbols(self) -> List[str]:
+    async def get_available_symbols(self) -> list[str]:
         """Get all available symbols."""
         async with get_db_session() as session:
             query = select(MarketData.symbol.distinct())
@@ -369,7 +368,7 @@ class SQLAlchemyMarketDataRepository(IMarketDataRepository):
 
     async def get_date_range_for_symbol(
         self, symbol: str
-    ) -> Optional[tuple[datetime, datetime]]:
+    ) -> tuple[datetime, datetime] | None:
         """Get date range for a symbol."""
         async with get_db_session() as session:
             query = (

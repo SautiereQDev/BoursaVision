@@ -7,7 +7,6 @@ Repository interface for refresh token aggregate following DDD patterns.
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import List, Optional
 from uuid import UUID
 
 from ..entities.refresh_token import RefreshToken
@@ -18,17 +17,17 @@ class IRefreshTokenRepository(IBaseRepository[RefreshToken], ABC):
     """Interface for refresh token repository operations"""
 
     @abstractmethod
-    async def find_by_token(self, token: str) -> Optional[RefreshToken]:
+    async def find_by_token(self, token: str) -> RefreshToken | None:
         """Find refresh token by token string"""
         raise NotImplementedError
 
     @abstractmethod
-    async def find_by_user_id(self, user_id: UUID) -> List[RefreshToken]:
+    async def find_by_user_id(self, user_id: UUID) -> list[RefreshToken]:
         """Find all refresh tokens for a user"""
         raise NotImplementedError
 
     @abstractmethod
-    async def find_active_by_user_id(self, user_id: UUID) -> List[RefreshToken]:
+    async def find_active_by_user_id(self, user_id: UUID) -> list[RefreshToken]:
         """Find all active (non-revoked, non-expired) refresh tokens for a user"""
         raise NotImplementedError
 

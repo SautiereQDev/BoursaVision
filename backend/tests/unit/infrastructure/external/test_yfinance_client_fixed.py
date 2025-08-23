@@ -1,11 +1,9 @@
 """
-Basic infrastructure tests for OptimizedYFinanceClient - Priority #4 
+Basic infrastructure tests for OptimizedYFinanceClient - Priority #4
 Testing configuration, metrics, and exception classes
 """
 
-from unittest.mock import MagicMock, Mock, patch
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 from boursa_vision.infrastructure.external.yfinance_client import (
     OptimizedYFinanceClient,

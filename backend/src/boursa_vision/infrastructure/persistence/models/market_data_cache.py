@@ -7,8 +7,7 @@ temporelle et des stratégies de cache.
 """
 
 import uuid
-from datetime import datetime, timezone
-from decimal import Decimal
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     TIMESTAMP,
@@ -16,7 +15,6 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Column,
-    Enum,
     Index,
     Integer,
     Numeric,
@@ -26,7 +24,6 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.orm import relationship
 
 from ..models.base import Base
 
@@ -57,7 +54,9 @@ class MarketDataCache(Base):
     # Métadonnées de cache et précision
     data_source = Column(String(20), nullable=False, default="yfinance")
     precision_level = Column(
-        String(15), nullable=False, index=True  # Index pour les requêtes par précision
+        String(15),
+        nullable=False,
+        index=True,  # Index pour les requêtes par précision
     )
 
     # Informations de cache
@@ -79,18 +78,16 @@ class MarketDataCache(Base):
     fetched_at = Column(
         TIMESTAMP(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
     data_age_hours = Column(Numeric(10, 2), nullable=True)
 
     # Timestamps (remplacent TimestampMixin)
-    created_at = Column(
-        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(UTC))
     updated_at = Column(
         TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # Constraints
@@ -152,13 +149,11 @@ class TimelineMetrics(Base):
     significant_gaps_count = Column(Integer, nullable=False, default=0)
 
     # Timestamps (remplacent TimestampMixin)
-    created_at = Column(
-        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(UTC))
     updated_at = Column(
         TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # Distribution de précision (JSON)
@@ -177,7 +172,7 @@ class TimelineMetrics(Base):
     last_calculated = Column(
         TIMESTAMP(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
 
     __table_args__ = (
@@ -226,13 +221,11 @@ class CacheStatistics(Base):
     cache_entries_count = Column(Integer, nullable=False, default=0)
 
     # Timestamps (remplacent TimestampMixin)
-    created_at = Column(
-        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(UTC))
     updated_at = Column(
         TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # Évictions et nettoyage
@@ -269,13 +262,11 @@ class DataGaps(Base):
     interval_type = Column(String(5), nullable=False)
 
     # Timestamps (remplacent TimestampMixin)
-    created_at = Column(
-        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(UTC))
     updated_at = Column(
         TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # Classification
@@ -321,13 +312,11 @@ class PrecisionPolicies(Base):
     volume_min = Column(BigInteger, nullable=True)
 
     # Timestamps (remplacent TimestampMixin)
-    created_at = Column(
-        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(UTC))
     updated_at = Column(
         TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # Configuration de précision

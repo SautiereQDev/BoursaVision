@@ -6,24 +6,20 @@ Tests complets pour le service de scan de marché avec toutes les stratégies,
 observateurs et métriques d'analyse technique/fondamentale.
 """
 
-import asyncio
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, Mock, patch
 
 import pandas as pd
 import pytest
 
 from boursa_vision.application.services.market_scanner import (
     FullMarketStrategy,
-    FundamentalAnalyzer,
     MarketScannerService,
     ScanConfig,
     ScanResult,
     ScanResultObserver,
     ScanStrategy,
     SectorStrategy,
-    TechnicalAnalyzer,
 )
 
 # Tolerance pour les comparaisons flottantes
@@ -344,7 +340,7 @@ class TestScanResult:
     @pytest.mark.unit
     def test_scan_result_to_dict(self):
         """Test de conversion en dictionnaire"""
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         result = ScanResult(
             symbol="MSFT",
             name="Microsoft Corp.",
@@ -451,13 +447,17 @@ class TestMarketScanIntegration:
         market_scanner_service.add_observer(mock_observer)
 
         # Mock des méthodes d'analyse (classes statiques)
-        with patch(
-            "boursa_vision.application.services.market_scanner.TechnicalAnalyzer.calculate_technical_score"
-        ) as mock_technical, patch(
-            "boursa_vision.application.services.market_scanner.FundamentalAnalyzer.calculate_fundamental_score"
-        ) as mock_fund_score, patch.object(
-            market_scanner_service, "_extract_fundamental_data"
-        ) as mock_extract_fund:
+        with (
+            patch(
+                "boursa_vision.application.services.market_scanner.TechnicalAnalyzer.calculate_technical_score"
+            ) as mock_technical,
+            patch(
+                "boursa_vision.application.services.market_scanner.FundamentalAnalyzer.calculate_fundamental_score"
+            ) as mock_fund_score,
+            patch.object(
+                market_scanner_service, "_extract_fundamental_data"
+            ) as mock_extract_fund,
+        ):
             mock_extract_fund.return_value = {"pe_ratio": 28.5, "pb_ratio": 2.5}
             mock_technical.return_value = 75.0
             mock_fund_score.return_value = 80.0

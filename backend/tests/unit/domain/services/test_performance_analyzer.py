@@ -5,7 +5,7 @@ Tests unitaires pour PerformanceAnalyzerService
 Tests unitaires complets pour le service d'analyse de performance du domaine.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
 from unittest.mock import Mock, patch
 

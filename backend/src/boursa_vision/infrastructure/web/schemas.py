@@ -1,9 +1,9 @@
 """
 API Schemas for the REST API
 """
+
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -25,7 +25,7 @@ class PortfolioCreate(BaseAPISchema):
     """Schema for creating a portfolio."""
 
     name: str = Field(..., description="Portfolio name", min_length=1, max_length=100)
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None, description="Portfolio description", max_length=500
     )
     currency: str = Field(..., description="Base currency", pattern="^[A-Z]{3}$")
@@ -34,10 +34,10 @@ class PortfolioCreate(BaseAPISchema):
 class PortfolioUpdate(BaseAPISchema):
     """Schema for updating a portfolio."""
 
-    name: Optional[str] = Field(
+    name: str | None = Field(
         None, description="Portfolio name", min_length=1, max_length=100
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None, description="Portfolio description", max_length=500
     )
 
@@ -47,7 +47,7 @@ class PortfolioResponse(BaseAPISchema):
 
     id: UUID = Field(..., description="Portfolio ID")
     name: str = Field(..., description="Portfolio name")
-    description: Optional[str] = Field(None, description="Portfolio description")
+    description: str | None = Field(None, description="Portfolio description")
     currency: str = Field(..., description="Base currency")
     total_value: Decimal = Field(..., description="Total portfolio value")
     created_at: datetime = Field(..., description="Creation timestamp")
@@ -57,7 +57,7 @@ class PortfolioResponse(BaseAPISchema):
 class PortfolioListResponse(BaseAPISchema):
     """Schema for portfolio list response."""
 
-    portfolios: List[PortfolioResponse] = Field(..., description="List of portfolios")
+    portfolios: list[PortfolioResponse] = Field(..., description="List of portfolios")
     total: int = Field(..., description="Total number of portfolios")
 
 
@@ -83,7 +83,7 @@ class InvestmentResponse(BaseAPISchema):
     investment_type: str = Field(..., description="Type of investment")
     exchange: str = Field(..., description="Exchange name")
     currency: str = Field(..., description="Trading currency")
-    current_price: Optional[Decimal] = Field(None, description="Current market price")
+    current_price: Decimal | None = Field(None, description="Current market price")
     created_at: datetime = Field(..., description="Creation timestamp")
 
 
@@ -95,14 +95,14 @@ class InvestmentRecommendation(BaseAPISchema):
         ..., description="Recommendation type (BUY, SELL, HOLD)"
     )
     score: float = Field(..., description="Recommendation score", ge=0.0, le=1.0)
-    reasons: List[str] = Field(..., description="Reasons for recommendation")
+    reasons: list[str] = Field(..., description="Reasons for recommendation")
     risk_level: str = Field(..., description="Risk level assessment")
 
 
 class InvestmentRecommendationsResponse(BaseAPISchema):
     """Schema for investment recommendations response."""
 
-    recommendations: List[InvestmentRecommendation] = Field(
+    recommendations: list[InvestmentRecommendation] = Field(
         ..., description="List of recommendations"
     )
     generated_at: datetime = Field(..., description="Generation timestamp")
@@ -124,8 +124,8 @@ class MarketDataResponse(BaseAPISchema):
     """Schema for market data response."""
 
     symbol: str = Field(..., description="Investment symbol")
-    data: List[MarketDataPoint] = Field(..., description="Market data points")
-    metadata: Dict[str, str] = Field(
+    data: list[MarketDataPoint] = Field(..., description="Market data points")
+    metadata: dict[str, str] = Field(
         default_factory=dict, description="Additional metadata"
     )
 
@@ -135,7 +135,7 @@ class WebSocketMessage(BaseAPISchema):
     """Schema for WebSocket messages."""
 
     type: str = Field(..., description="Message type")
-    data: Dict = Field(..., description="Message data")
+    data: dict = Field(..., description="Message data")
     timestamp: datetime = Field(
         default_factory=datetime.utcnow, description="Message timestamp"
     )
@@ -158,13 +158,13 @@ class ErrorDetail(BaseAPISchema):
     type: str = Field(..., description="Error type")
     message: str = Field(..., description="Error message")
     status_code: int = Field(..., description="HTTP status code")
-    details: Optional[Dict] = Field(None, description="Additional error details")
+    details: dict | None = Field(None, description="Additional error details")
 
 
 class ValidationErrorDetail(BaseAPISchema):
     """Schema for validation error details."""
 
-    loc: List[str] = Field(..., description="Error location")
+    loc: list[str] = Field(..., description="Error location")
     msg: str = Field(..., description="Error message")
     type: str = Field(..., description="Error type")
 
@@ -173,7 +173,7 @@ class ValidationErrorResponse(BaseAPISchema):
     """Schema for validation error response."""
 
     error: ErrorDetail = Field(..., description="Error information")
-    details: List[ValidationErrorDetail] = Field(
+    details: list[ValidationErrorDetail] = Field(
         ..., description="Validation error details"
     )
 

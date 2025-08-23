@@ -3,9 +3,10 @@ Domain Events for Portfolio Operations
 
 Events that occur within the portfolio domain for CQRS and event sourcing.
 """
+
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ..entities.base import DomainEvent
@@ -77,7 +78,7 @@ class RiskLimitExceededEvent(DomainEvent):
     risk_type: str  # "position_limit", "sector_exposure", "daily_loss"
     current_value: float
     limit_value: float
-    symbol: Optional[str] = None
+    symbol: str | None = None
 
 
 @dataclass
@@ -93,9 +94,7 @@ class PositionUpdatedEvent(DomainEvent):
 
 
 @dataclass
-class PerformanceCalculatedEvent(
-    DomainEvent
-):  # pylint: disable=too-many-instance-attributes
+class PerformanceCalculatedEvent(DomainEvent):  # pylint: disable=too-many-instance-attributes
     """Event raised when portfolio performance is calculated"""
 
     portfolio_id: UUID

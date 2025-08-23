@@ -13,9 +13,8 @@ Classes:
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Optional
 from uuid import UUID, uuid4
 
 from ..events.portfolio_events import InvestmentCreatedEvent
@@ -34,7 +33,7 @@ class InvestmentCreateParams:
     market_cap: "MarketCap"
     currency: "Currency"
     exchange: str
-    isin: Optional[str] = None
+    isin: str | None = None
 
 
 class InvestmentType(str, Enum):
@@ -79,18 +78,18 @@ class MarketCap(str, Enum):
 class FundamentalData:
     """Fundamental analysis data for an investment"""
 
-    pe_ratio: Optional[float] = None
-    pb_ratio: Optional[float] = None
-    debt_to_equity: Optional[float] = None
-    roe: Optional[float] = None  # Return on Equity
-    revenue_growth: Optional[float] = None
-    eps_growth: Optional[float] = None
-    dividend_yield: Optional[float] = None
-    peg_ratio: Optional[float] = None
-    current_ratio: Optional[float] = None
-    gross_margin: Optional[float] = None
-    net_margin: Optional[float] = None
-    last_updated: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    pe_ratio: float | None = None
+    pb_ratio: float | None = None
+    debt_to_equity: float | None = None
+    roe: float | None = None  # Return on Equity
+    revenue_growth: float | None = None
+    eps_growth: float | None = None
+    dividend_yield: float | None = None
+    peg_ratio: float | None = None
+    current_ratio: float | None = None
+    gross_margin: float | None = None
+    net_margin: float | None = None
+    last_updated: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def calculate_fundamental_score(self, scoring_service) -> float:
         """
@@ -130,16 +129,16 @@ class FundamentalData:
 class TechnicalData:
     """Technical analysis data for an investment"""
 
-    rsi: Optional[float] = None
-    macd_signal: Optional[str] = None  # "BUY", "SELL", "NEUTRAL"
-    sma_50: Optional[Money] = None
-    sma_200: Optional[Money] = None
+    rsi: float | None = None
+    macd_signal: str | None = None  # "BUY", "SELL", "NEUTRAL"
+    sma_50: Money | None = None
+    sma_200: Money | None = None
     # Position within Bollinger Bands
-    bollinger_position: Optional[float] = None
-    volume_trend: Optional[str] = None  # "INCREASING", "DECREASING", "STABLE"
-    support_level: Optional[Money] = None
-    resistance_level: Optional[Money] = None
-    last_updated: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    bollinger_position: float | None = None
+    volume_trend: str | None = None  # "INCREASING", "DECREASING", "STABLE"
+    support_level: Money | None = None
+    resistance_level: Money | None = None
+    last_updated: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def _score_rsi(self) -> tuple[float, float]:
         """Score RSI component"""
@@ -244,12 +243,12 @@ class Investment(AggregateRoot):  # pylint: disable=too-many-instance-attributes
     market_cap: MarketCap
     currency: Currency
     exchange: str
-    isin: Optional[str] = None
-    current_price: Optional[Money] = None
-    fundamental_data: Optional[FundamentalData] = None
-    technical_data: Optional[TechnicalData] = None
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    last_analyzed: Optional[datetime] = None
+    isin: str | None = None
+    current_price: Money | None = None
+    fundamental_data: FundamentalData | None = None
+    technical_data: TechnicalData | None = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    last_analyzed: datetime | None = None
 
     def __post_init__(self):
         """Initialize aggregate root functionality"""
@@ -302,7 +301,7 @@ class Investment(AggregateRoot):  # pylint: disable=too-many-instance-attributes
             )
 
         investment_id = uuid4()
-        created_at = datetime.now(timezone.utc)
+        created_at = datetime.now(UTC)
 
         investment = cls._build_investment(
             investment_id,
@@ -365,12 +364,12 @@ class Investment(AggregateRoot):  # pylint: disable=too-many-instance-attributes
     def update_fundamental_data(self, fundamental_data: FundamentalData) -> None:
         """Update fundamental analysis data"""
         self.fundamental_data = fundamental_data
-        self.last_analyzed = datetime.now(timezone.utc)
+        self.last_analyzed = datetime.now(UTC)
 
     def update_technical_data(self, technical_data: TechnicalData) -> None:
         """Update technical analysis data"""
         self.technical_data = technical_data
-        self.last_analyzed = datetime.now(timezone.utc)
+        self.last_analyzed = datetime.now(UTC)
 
     def calculate_composite_score(self):
         """Calculate a composite score based on fundamental and technical data."""
@@ -434,7 +433,7 @@ class Investment(AggregateRoot):  # pylint: disable=too-many-instance-attributes
         if not self.last_analyzed:
             return True
 
-        age = datetime.now(timezone.utc) - self.last_analyzed
+        age = datetime.now(UTC) - self.last_analyzed
         return age.total_seconds() > (max_age_hours * 3600)
 
 

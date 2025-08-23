@@ -750,7 +750,7 @@ class TestEventHandlersIntegration:
 
         for handler_class in handlers:
             assert hasattr(handler_class, "handle")
-            assert callable(getattr(handler_class, "handle"))
+            assert callable(handler_class.handle)
 
     def test_handlers_dependency_injection(self):
         """Test injection de dépendances des handlers"""

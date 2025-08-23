@@ -14,7 +14,6 @@ Classes:
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List
 
 
 @dataclass(kw_only=True)
@@ -36,13 +35,13 @@ class AggregateRoot(ABC):
     """
 
     def __init__(self):
-        self._domain_events: List[DomainEvent] = []
+        self._domain_events: list[DomainEvent] = []
 
     def _add_domain_event(self, event: DomainEvent) -> None:
         """Add domain event to be published"""
         self._domain_events.append(event)
 
-    def get_domain_events(self) -> List[DomainEvent]:
+    def get_domain_events(self) -> list[DomainEvent]:
         """Get all domain events"""
         return self._domain_events.copy()
 

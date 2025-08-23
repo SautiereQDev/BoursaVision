@@ -5,9 +5,7 @@ Tests conformes à l'architecture définie dans TESTS.md.
 Focus sur la configuration et l'initialisation de Celery.
 """
 
-import os
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -39,7 +37,7 @@ class TestCeleryAppModuleStructure:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "Configuration et initialisation de l'application Celery" in content
@@ -71,7 +69,7 @@ class TestCeleryAppImports:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "try:" in content
@@ -91,7 +89,7 @@ class TestCeleryAppImports:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "Mock pour développement" in content
@@ -114,7 +112,7 @@ class TestCeleryAppConfiguration:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "CELERY_BROKER_URL = os.getenv(" in content
@@ -132,7 +130,7 @@ class TestCeleryAppConfiguration:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "celery_app = Celery(" in content
@@ -151,7 +149,7 @@ class TestCeleryAppConfiguration:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "src.infrastructure.background.tasks" in content
@@ -171,7 +169,7 @@ class TestCeleryAppLogging:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "logger = logging.getLogger(__name__)" in content
@@ -191,7 +189,7 @@ class TestCeleryAppEnvironmentVariables:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "os.getenv(" in content
@@ -209,7 +207,7 @@ class TestCeleryAppEnvironmentVariables:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "redis://redis:6379/0" in content
@@ -229,7 +227,7 @@ class TestCeleryAppTaskConfiguration:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         # Recherche de configuration de tâches
@@ -249,7 +247,7 @@ class TestCeleryAppTaskConfiguration:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         # Recherche de configuration de schedule
@@ -272,7 +270,7 @@ class TestCeleryAppMockImplementation:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "def __init__(self, *args, **kwargs):" in content
@@ -291,7 +289,7 @@ class TestCeleryAppMockImplementation:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "@property" in content
@@ -308,7 +306,7 @@ class TestCeleryAppMockImplementation:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "def update(self, *args, **kwargs):" in content
@@ -328,7 +326,7 @@ class TestCeleryAppModuleComments:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "# Configuration de base depuis les variables" in content
@@ -344,7 +342,7 @@ class TestCeleryAppModuleComments:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "archivage automatique des données de marché" in content
@@ -364,7 +362,7 @@ class TestCeleryAppErrorHandling:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "try:" in content
@@ -382,7 +380,7 @@ class TestCeleryAppErrorHandling:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "Celery = MockCelery" in content
@@ -402,7 +400,7 @@ class TestCeleryAppTypeAnnotations:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "from typing import Any, Dict" in content
@@ -417,7 +415,7 @@ class TestCeleryAppTypeAnnotations:
             / "background"
             / "celery_app.py"
         )
-        with open(celery_path, "r") as f:
+        with open(celery_path) as f:
             content = f.read()
 
         assert "Dict" in content

@@ -5,10 +5,7 @@ Tests conformes à l'architecture définie dans TESTS.md.
 Focus sur la structure et les méthodes d'archivage.
 """
 
-from datetime import datetime, timezone
-from decimal import Decimal
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -40,7 +37,7 @@ class TestMarketDataArchiverModuleStructure:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert "Service d'archivage continu des données de marché" in content
@@ -71,7 +68,7 @@ class TestMarketDataArchiverImports:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         # YFinance et pandas
@@ -101,7 +98,7 @@ class TestMarketDataArchiverClass:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert "class MarketDataArchiver:" in content
@@ -121,7 +118,7 @@ class TestMarketDataArchiverClass:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert "def __init__(self):" in content
@@ -139,7 +136,7 @@ class TestMarketDataArchiverClass:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert "def _load_financial_indices(self) -> Dict[str, List[str]]:" in content
@@ -160,7 +157,7 @@ class TestMarketDataArchiverFinancialIndices:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert '"cac40": [' in content
@@ -179,7 +176,7 @@ class TestMarketDataArchiverFinancialIndices:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert '"nasdaq100": [' in content
@@ -199,7 +196,7 @@ class TestMarketDataArchiverFinancialIndices:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert '"ftse100": [' in content
@@ -222,7 +219,7 @@ class TestMarketDataArchiverMethods:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         # Recherche de méthodes d'archivage
@@ -238,7 +235,7 @@ class TestMarketDataArchiverMethods:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         # Recherche de méthodes de fetch
@@ -259,7 +256,7 @@ class TestMarketDataArchiverMethods:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         # Recherche de méthodes de transformation
@@ -285,7 +282,7 @@ class TestMarketDataArchiverLogging:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert "logger = logging.getLogger(__name__)" in content
@@ -300,7 +297,7 @@ class TestMarketDataArchiverLogging:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         # Recherche de logs
@@ -325,7 +322,7 @@ class TestMarketDataArchiverConfiguration:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert "from ...core.config import get_settings" in content
@@ -341,7 +338,7 @@ class TestMarketDataArchiverConfiguration:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert "self.request_delay = 0.2" in content
@@ -362,7 +359,7 @@ class TestMarketDataArchiverDomainIntegration:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert "from ...domain.entities.market_data import" in content
@@ -381,7 +378,7 @@ class TestMarketDataArchiverDomainIntegration:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert "from ...domain.value_objects.money import Currency" in content
@@ -396,7 +393,7 @@ class TestMarketDataArchiverDomainIntegration:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert (
@@ -423,7 +420,7 @@ class TestMarketDataArchiverAsyncSupport:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert "async def " in content
@@ -438,7 +435,7 @@ class TestMarketDataArchiverAsyncSupport:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert "import asyncio" in content
@@ -458,7 +455,7 @@ class TestMarketDataArchiverErrorHandling:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert ("try:" in content and "except" in content) or "Exception" in content
@@ -473,7 +470,7 @@ class TestMarketDataArchiverErrorHandling:
             / "background"
             / "market_data_archiver.py"
         )
-        with open(archiver_path, "r") as f:
+        with open(archiver_path) as f:
             content = f.read()
 
         assert "erreurs et la résilience" in content

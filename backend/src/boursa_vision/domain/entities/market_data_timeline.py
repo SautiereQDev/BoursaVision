@@ -12,10 +12,9 @@ Design Patterns:
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
 from uuid import UUID, uuid4
 
 
@@ -102,7 +101,7 @@ class TimelinePoint:
     interval_type: IntervalType
     source: DataSource
     precision_level: PrecisionLevel
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def __post_init__(self):
         """Validation des données après initialisation"""
@@ -152,7 +151,7 @@ class TimelinePoint:
 
     def get_age_in_hours(self) -> float:
         """Retourne l'âge du point en heures"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         return (now - self.timestamp).total_seconds() / 3600
 
 
@@ -201,9 +200,9 @@ class TimelineMetrics:
     data_coverage_percent: float
     gaps_count: int
     significant_gaps_count: int
-    precision_distribution: Dict[PrecisionLevel, int]
-    oldest_point: Optional[datetime]
-    newest_point: Optional[datetime]
+    precision_distribution: dict[PrecisionLevel, int]
+    oldest_point: datetime | None
+    newest_point: datetime | None
 
     @property
     def data_quality_score(self) -> float:
@@ -248,32 +247,32 @@ class MarketDataTimeline(AggregateRoot):
     """
 
     def __init__(
-        self, symbol: str, currency: Currency, timeline_id: Optional[UUID] = None
+        self, symbol: str, currency: Currency, timeline_id: UUID | None = None
     ):
         super().__init__()
         self.id = timeline_id or uuid4()
         self.symbol = symbol.upper()
         self.currency = currency
-        self._points: Dict[datetime, TimelinePoint] = {}
-        self._gaps: List[DataGap] = []
+        self._points: dict[datetime, TimelinePoint] = {}
+        self._gaps: list[DataGap] = []
         self._is_dirty = False
-        self.created_at = datetime.now(timezone.utc)
+        self.created_at = datetime.now(UTC)
         self.updated_at = self.created_at
 
     @property
-    def points(self) -> List[TimelinePoint]:
+    def points(self) -> list[TimelinePoint]:
         """Retourne tous les points triés par timestamp"""
         return sorted(self._points.values(), key=lambda p: p.timestamp)
 
     @property
-    def latest_point(self) -> Optional[TimelinePoint]:
+    def latest_point(self) -> TimelinePoint | None:
         """Retourne le point le plus récent"""
         if not self._points:
             return None
         return max(self._points.values(), key=lambda p: p.timestamp)
 
     @property
-    def oldest_point(self) -> Optional[TimelinePoint]:
+    def oldest_point(self) -> TimelinePoint | None:
         """Retourne le point le plus ancien"""
         if not self._points:
             return None
@@ -300,10 +299,10 @@ class MarketDataTimeline(AggregateRoot):
             self._points[point.timestamp] = point
             self._is_dirty = True
 
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
         self._update_gaps()
 
-    def add_points(self, points: List[TimelinePoint]) -> None:
+    def add_points(self, points: list[TimelinePoint]) -> None:
         """Ajoute plusieurs points en lot"""
         for point in points:
             # Ne pas mettre à jour les gaps à chaque point pour performance
@@ -322,15 +321,15 @@ class MarketDataTimeline(AggregateRoot):
                 self._points[point.timestamp] = point
                 self._is_dirty = True
 
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
         self._update_gaps()
 
     def get_points_in_range(
         self,
         start_time: datetime,
         end_time: datetime,
-        interval_type: Optional[IntervalType] = None,
-    ) -> List[TimelinePoint]:
+        interval_type: IntervalType | None = None,
+    ) -> list[TimelinePoint]:
         """Récupère les points dans une plage temporelle"""
         points = [
             point
@@ -343,7 +342,7 @@ class MarketDataTimeline(AggregateRoot):
 
         return sorted(points, key=lambda p: p.timestamp)
 
-    def get_latest_price(self) -> Optional[Money]:
+    def get_latest_price(self) -> Money | None:
         """Retourne le dernier prix de clôture"""
         latest = self.latest_point
         return latest.close_price if latest else None
@@ -380,7 +379,7 @@ class MarketDataTimeline(AggregateRoot):
         else:
             return PrecisionLevel.VERY_LOW
 
-    def get_gaps(self) -> List[DataGap]:
+    def get_gaps(self) -> list[DataGap]:
         """Retourne la liste des gaps détectés"""
         return self._gaps.copy()
 
@@ -398,7 +397,7 @@ class MarketDataTimeline(AggregateRoot):
             )
 
         # Distribution de précision
-        precision_dist: Dict[PrecisionLevel, int] = {}
+        precision_dist: dict[PrecisionLevel, int] = {}
         for point in self._points.values():
             level = point.precision_level
             precision_dist[level] = precision_dist.get(level, 0) + 1

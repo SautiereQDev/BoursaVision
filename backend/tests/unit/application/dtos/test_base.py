@@ -2,6 +2,7 @@
 Tests unitaires pour le module application.dtos.base
 Couvre la classe BaseDTO et les constantes associées
 """
+
 import pytest
 
 from boursa_vision.application.dtos.base import (
@@ -235,11 +236,10 @@ class TestBaseDTO:
 
     def test_basedto_optional_fields(self):
         """BaseDTO gère les champs optionnels"""
-        from typing import Optional
 
         class TestDTO(BaseDTO):
             required_field: str
-            optional_field: Optional[str] = None
+            optional_field: str | None = None
 
         # Avec champ optionnel fourni
         dto1 = TestDTO(required_field="req", optional_field="opt")

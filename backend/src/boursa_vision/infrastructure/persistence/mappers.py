@@ -5,19 +5,13 @@ This module provides mapping between domain entities and SQLAlchemy models,
 ensuring clean separation between business logic and persistence concerns.
 """
 
-from datetime import datetime
-from typing import Optional
-from uuid import UUID
-
 from ...domain.entities.investment import Investment
 from ...domain.entities.market_data import MarketData as DomainMarketData
 from ...domain.entities.portfolio import Portfolio as DomainPortfolio
-from ...domain.entities.portfolio import Position as DomainPosition
 from ...domain.entities.user import User as DomainUser
 from ...domain.entities.user import UserRole
 from ...domain.value_objects.money import Currency, Money
-from ...domain.value_objects.price import Price
-from .models import Instrument, MarketData, Portfolio, Position, User
+from .models import Instrument, MarketData, Portfolio, User
 
 
 class UserMapper:
@@ -180,7 +174,6 @@ class InvestmentMapper:
 
     def to_domain(self, model: "InvestmentModel") -> Investment:
         """Convert SQLAlchemy InvestmentModel to domain Investment entity."""
-        from .models.investment import InvestmentModel
 
         return Investment.create(
             symbol=model.symbol,

@@ -9,9 +9,10 @@ import asyncio
 import random
 import time
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Optional, TypeVar
+from typing import TypeVar
 
 T = TypeVar("T")
 
@@ -35,7 +36,7 @@ class RetryConfig:
     max_delay: float = 60.0  # Maximum delay in seconds
     exponential_base: float = 2.0
     jitter: bool = True
-    retry_conditions: Optional[set[RetryCondition]] = None
+    retry_conditions: set[RetryCondition] | None = None
 
     def __post_init__(self):
         if self.retry_conditions is None:
@@ -136,7 +137,7 @@ class RetryHandler:
         _calculate_delay: Calculates the delay between attempts based on backoff.
     """
 
-    def __init__(self, config: RetryConfig, strategy: Optional[RetryStrategy] = None):
+    def __init__(self, config: RetryConfig, strategy: RetryStrategy | None = None):
         self.config = config
         self.strategy = strategy or ExponentialBackoffStrategy(
             exponential_base=config.exponential_base, jitter=config.jitter
@@ -246,7 +247,7 @@ class RetryDecorator:
             pass
     """
 
-    def __init__(self, config: RetryConfig, strategy: Optional[RetryStrategy] = None):
+    def __init__(self, config: RetryConfig, strategy: RetryStrategy | None = None):
         self.handler = RetryHandler(config, strategy)
 
     def __call__(self, func: Callable[..., T]) -> Callable[..., T]:

@@ -6,8 +6,6 @@ Handlers for processing queries following CQRS pattern.
 Each handler is responsible for executing a specific query.
 """
 
-from typing import Dict, List
-
 from ..common import IQueryHandler
 from ..dtos import (
     InvestmentDTO,
@@ -135,13 +133,13 @@ class AnalyzePortfolioQueryHandler(
         return await self._analyze_portfolio_use_case.execute(query)
 
 
-class GetUserPortfoliosQueryHandler(IQueryHandler[Dict, List[PortfolioDTO]]):
+class GetUserPortfoliosQueryHandler(IQueryHandler[dict, list[PortfolioDTO]]):
     """Handler for getting user portfolios"""
 
     def __init__(self, portfolio_repository):
         self._portfolio_repository = portfolio_repository
 
-    async def handle(self, query: Dict) -> List[PortfolioDTO]:
+    async def handle(self, query: dict) -> list[PortfolioDTO]:
         """
         Handle the get user portfolios query.
 
@@ -163,7 +161,7 @@ class GetUserPortfoliosQueryHandler(IQueryHandler[Dict, List[PortfolioDTO]]):
     ) -> PortfolioDTO:
         """Map portfolio entity to DTO"""
         from datetime import datetime
-        from uuid import UUID, uuid4
+        from uuid import UUID
 
         # Handle MagicMock values safely
         def safe_getattr(obj, attr, default):

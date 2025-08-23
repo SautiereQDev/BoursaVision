@@ -7,7 +7,7 @@ and orchestrates domain services for market analysis.
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..dtos import TechnicalAnalysisDTO
 
@@ -93,8 +93,8 @@ class TechnicalAnalyzer:
             return self._create_empty_analysis(symbol)
 
     async def analyze_multiple_investments(
-        self, symbols: List[str], period_days: int = 252
-    ) -> Dict[str, TechnicalAnalysisDTO]:
+        self, symbols: list[str], period_days: int = 252
+    ) -> dict[str, TechnicalAnalysisDTO]:
         """
         Analyze multiple investments for technical indicators.
 
@@ -134,7 +134,7 @@ class TechnicalAnalyzer:
 
     def _calculate_technical_indicators(
         self, market_data: Any
-    ) -> Dict[str, Optional[float]]:
+    ) -> dict[str, float | None]:
         """
         Calculate various technical indicators from market data.
 
@@ -188,7 +188,7 @@ class TechnicalAnalyzer:
             print(f"Error calculating technical indicators: {e}")
             return {}
 
-    def _calculate_rsi(self, prices: List[float], period: int = 14) -> Optional[float]:
+    def _calculate_rsi(self, prices: list[float], period: int = 14) -> float | None:
         """Calculate Relative Strength Index."""
         if len(prices) < period + 1:
             return None
@@ -223,7 +223,7 @@ class TechnicalAnalyzer:
         except (ZeroDivisionError, ValueError):
             return None
 
-    def _calculate_macd(self, prices: List[float]) -> Optional[float]:
+    def _calculate_macd(self, prices: list[float]) -> float | None:
         """Calculate MACD (Moving Average Convergence Divergence)."""
         if len(prices) < 26:
             return None
@@ -240,7 +240,7 @@ class TechnicalAnalyzer:
         except (ValueError, TypeError):
             return None
 
-    def _calculate_ema(self, prices: List[float], period: int) -> Optional[float]:
+    def _calculate_ema(self, prices: list[float], period: int) -> float | None:
         """Calculate Exponential Moving Average."""
         if len(prices) < period:
             return None
@@ -257,7 +257,7 @@ class TechnicalAnalyzer:
         except (ValueError, TypeError):
             return None
 
-    def _calculate_sma(self, prices: List[float], period: int) -> Optional[float]:
+    def _calculate_sma(self, prices: list[float], period: int) -> float | None:
         """Calculate Simple Moving Average."""
         if len(prices) < period:
             return None
@@ -268,8 +268,8 @@ class TechnicalAnalyzer:
             return None
 
     def _calculate_bollinger_position(
-        self, prices: List[float], period: int = 20
-    ) -> Optional[float]:
+        self, prices: list[float], period: int = 20
+    ) -> float | None:
         """Calculate position within Bollinger Bands."""
         if len(prices) < period:
             return None
@@ -295,8 +295,8 @@ class TechnicalAnalyzer:
             return None
 
     def _calculate_volume_trend(
-        self, volumes: List[float], period: int = 10
-    ) -> Optional[float]:
+        self, volumes: list[float], period: int = 10
+    ) -> float | None:
         """Calculate volume trend indicator."""
         if len(volumes) < period * 2:
             return None

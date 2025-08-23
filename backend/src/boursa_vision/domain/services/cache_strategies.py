@@ -13,14 +13,11 @@ Design Patterns:
 """
 
 import logging
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from enum import Enum
-from typing import Any, Dict, List, Optional, Protocol
+from datetime import UTC, datetime
+from typing import Any, Protocol
 
 from ..entities.market_data_timeline import (
-    DataSource,
     IntervalType,
     PrecisionLevel,
     TimelinePoint,
@@ -57,7 +54,7 @@ class CacheConfig:
     very_low_ttl: int = 604800  # 7 jours
 
     # Tailles de cache par intervalle
-    max_points_per_symbol: Optional[Dict[IntervalType, int]] = None
+    max_points_per_symbol: dict[IntervalType, int] | None = None
 
     # Politiques de purge
     enable_lru_eviction: bool = True
@@ -181,7 +178,7 @@ class PrecisionStrategyFactory:
 
     def __init__(self, config: CacheConfig):
         self.config = config
-        self._strategies: Dict[PrecisionLevel, CacheStrategy] = {
+        self._strategies: dict[PrecisionLevel, CacheStrategy] = {
             PrecisionLevel.ULTRA_HIGH: UltraHighPrecisionStrategy(config),
             PrecisionLevel.HIGH: HighPrecisionStrategy(config),
             PrecisionLevel.MEDIUM: MediumPrecisionStrategy(config),
@@ -223,18 +220,18 @@ class CacheEntry:
     @property
     def is_expired(self) -> bool:
         """Vérifie si l'entrée a expiré"""
-        age = (datetime.now(timezone.utc) - self.cached_at).total_seconds()
+        age = (datetime.now(UTC) - self.cached_at).total_seconds()
         return age > self.ttl_seconds
 
     @property
     def age_seconds(self) -> float:
         """Âge de l'entrée en secondes"""
-        return (datetime.now(timezone.utc) - self.cached_at).total_seconds()
+        return (datetime.now(UTC) - self.cached_at).total_seconds()
 
     def access(self) -> None:
         """Marque l'entrée comme accédée"""
         self.access_count += 1
-        self.last_accessed = datetime.now(timezone.utc)
+        self.last_accessed = datetime.now(UTC)
 
 
 class MarketDataCacheManager:
@@ -243,8 +240,8 @@ class MarketDataCacheManager:
     def __init__(self, config: CacheConfig):
         self.config = config
         self.strategy_factory = PrecisionStrategyFactory(config)
-        self._cache: Dict[str, Dict[datetime, CacheEntry]] = {}
-        self._access_log: List[str] = []
+        self._cache: dict[str, dict[datetime, CacheEntry]] = {}
+        self._access_log: list[str] = []
         self._stats = {"hits": 0, "misses": 0, "evictions": 0, "total_size": 0}
 
     def _generate_key(
@@ -255,7 +252,7 @@ class MarketDataCacheManager:
 
     def get(
         self, symbol: str, timestamp: datetime, interval: IntervalType
-    ) -> Optional[TimelinePoint]:
+    ) -> TimelinePoint | None:
         """Récupère un point du cache"""
         if symbol not in self._cache:
             self._stats["misses"] += 1
@@ -299,9 +296,9 @@ class MarketDataCacheManager:
         # Crée l'entrée de cache
         entry = CacheEntry(
             point=point,
-            cached_at=datetime.now(timezone.utc),
+            cached_at=datetime.now(UTC),
             access_count=0,
-            last_accessed=datetime.now(timezone.utc),
+            last_accessed=datetime.now(UTC),
             priority=strategy.get_priority(point),
             ttl_seconds=strategy.get_cache_ttl(point),
         )
@@ -368,7 +365,7 @@ class MarketDataCacheManager:
                 self._stats["total_size"] -= 1
                 self._stats["evictions"] += 1
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Retourne les statistiques du cache"""
         total_requests = self._stats["hits"] + self._stats["misses"]
         hit_rate = self._stats["hits"] / max(1, total_requests) * 100
@@ -393,17 +390,17 @@ class MarketDataCacheManager:
         self._access_log.clear()
         self._stats["total_size"] = 0
 
-    def get_cached_symbols(self) -> List[str]:
+    def get_cached_symbols(self) -> list[str]:
         """Retourne la liste des symboles en cache"""
         return list(self._cache.keys())
 
-    def get_symbol_cache_info(self, symbol: str) -> Dict[str, Any]:
+    def get_symbol_cache_info(self, symbol: str) -> dict[str, Any]:
         """Retourne des infos sur le cache d'un symbole"""
         if symbol not in self._cache:
             return {"exists": False}
 
         symbol_cache = self._cache[symbol]
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Analyse des entrées
         total_entries = len(symbol_cache)
@@ -412,7 +409,7 @@ class MarketDataCacheManager:
             (now - entry.cached_at).total_seconds() for entry in symbol_cache.values()
         ) / max(1, total_entries)
 
-        precision_dist: Dict[str, int] = {}
+        precision_dist: dict[str, int] = {}
         for entry in symbol_cache.values():
             level = entry.point.precision_level
             precision_dist[level.value] = precision_dist.get(level.value, 0) + 1

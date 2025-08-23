@@ -9,8 +9,6 @@ Classes:
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
-from uuid import UUID
 
 from ..entities.user import User, UserRole
 from .base_repository import IBaseRepository
@@ -25,22 +23,22 @@ class IUserRepository(IBaseRepository[User], ABC):
     """
 
     @abstractmethod
-    async def find_by_email(self, email: str) -> Optional[User]:
+    async def find_by_email(self, email: str) -> User | None:
         """Find user by email address"""
         pass
 
     @abstractmethod
-    async def find_by_username(self, username: str) -> Optional[User]:
+    async def find_by_username(self, username: str) -> User | None:
         """Find user by username"""
         pass
 
     @abstractmethod
-    async def find_by_role(self, role: UserRole) -> List[User]:
+    async def find_by_role(self, role: UserRole) -> list[User]:
         """Find all users with specific role"""
         pass
 
     @abstractmethod
-    async def find_active_users(self) -> List[User]:
+    async def find_active_users(self) -> list[User]:
         """Find all active users"""
         pass
 
@@ -62,6 +60,6 @@ class IUserRepository(IBaseRepository[User], ABC):
     @abstractmethod
     async def find_all(
         self, offset: int = 0, limit: int = 100, include_inactive: bool = False
-    ) -> List[User]:
+    ) -> list[User]:
         """Find all users with pagination"""
         pass

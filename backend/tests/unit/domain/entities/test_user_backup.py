@@ -1,5 +1,5 @@
 """
-Tests for User Entity - Domain Layer  
+Tests for User Entity - Domain Layer
 ====================================
 
 Comprehensive tests for User aggregate root following DDD principles.
@@ -7,8 +7,7 @@ Tests user roles, permissions hierarchy, business validation, factory methods,
 domain events, and entity behavior.
 """
 
-from datetime import datetime, timedelta, timezone
-from typing import List
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
@@ -63,10 +62,7 @@ class TestUserRole:
         """Test VIEWER role has correct permissions"""
         basic_permissions = UserRole.VIEWER.permissions
 
-        expected_basic = [
-            "view_portfolios", 
-            "view_basic_analytics"
-        ]
+        expected_basic = ["view_portfolios", "view_basic_analytics"]
 
         assert len(basic_permissions) == 2
         for permission in expected_basic:
@@ -79,10 +75,10 @@ class TestUserRole:
         # TRADER role specific permissions based on actual definition
         expected_trader = [
             "create_portfolio",
-            "manage_own_portfolios", 
+            "manage_own_portfolios",
             "execute_trades",
             "view_analytics",
-            "manage_alerts"
+            "manage_alerts",
         ]
 
         # Total expected: 5 permissions for TRADER role
@@ -107,7 +103,7 @@ class TestUserRole:
             "view_all_portfolios",
             "execute_trades",
             "view_analytics",
-            "manage_alerts"
+            "manage_alerts",
         ]
 
         # Check all admin permissions are present
@@ -161,7 +157,7 @@ class TestUserCreation:
     def test_user_with_parameters(self):
         """Test User creation with custom parameters"""
         test_id = uuid4()
-        test_time = datetime.now(timezone.utc)
+        test_time = datetime.now(UTC)
 
         user = User(
             id=test_id,
@@ -216,14 +212,14 @@ class TestUserCreation:
 
     def test_user_timestamps_auto_generation(self):
         """Test that created_at and updated_at are automatically set"""
-        before = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
         user = User(
             email="test@example.com",
             username="testuser",
             first_name="Test",
             last_name="User",
         )
-        after = datetime.now(timezone.utc)
+        after = datetime.now(UTC)
 
         assert before <= user.created_at <= after
         assert before <= user.updated_at <= after
@@ -749,16 +745,16 @@ class TestUserLogin:
             last_login=None,
         )
 
-        before = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
         user.update_last_login()
-        after = datetime.now(timezone.utc)
+        after = datetime.now(UTC)
 
         assert user.last_login is not None
         assert before <= user.last_login <= after
 
     def test_update_last_login_overwrites_previous(self):
         """Test updating last login overwrites previous timestamp"""
-        old_time = datetime.now(timezone.utc) - timedelta(hours=1)
+        old_time = datetime.now(UTC) - timedelta(hours=1)
         user = User(
             email="test@example.com",
             username="testuser",

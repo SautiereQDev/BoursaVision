@@ -7,7 +7,7 @@ SQLAlchemy models for performance metrics (TimescaleDB).
 # ================================================================
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import Column, ForeignKey, Index, Integer, Numeric, String
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
@@ -53,7 +53,7 @@ class PortfolioPerformance(Base, DatabaseMixin):
     largest_position_pct = Column(Numeric(5, 2))
     sector_concentration = Column(Numeric(5, 2))
 
-    created_at = Column(TIMESTAMP, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP, default=lambda: datetime.now(UTC))
 
     # Relations
     portfolio = relationship("Portfolio", back_populates="performance_snapshots")

@@ -9,7 +9,7 @@ import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 try:
     import yfinance as yf
@@ -61,7 +61,7 @@ class YFinanceConfig:
 
     # Cache
     enable_cache: bool = True
-    cache_config: Optional[CacheConfig] = None
+    cache_config: CacheConfig | None = None
 
 
 @dataclass
@@ -185,7 +185,7 @@ class OptimizedYFinanceClient:
 
     def get_stock_info(
         self, symbol: str, use_cache: bool = True
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Get stock information for a single symbol.
 
@@ -249,7 +249,7 @@ class OptimizedYFinanceClient:
         period: str = "1y",
         interval: str = "1d",
         use_cache: bool = True,
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """
         Get historical price data for a symbol.
 
@@ -311,10 +311,10 @@ class OptimizedYFinanceClient:
 
     def get_multiple_stock_info(
         self,
-        symbols: List[str],
+        symbols: list[str],
         use_cache: bool = True,
-        batch_size: Optional[int] = None,
-    ) -> Dict[str, Optional[Dict[str, Any]]]:
+        batch_size: int | None = None,
+    ) -> dict[str, dict[str, Any] | None]:
         """
         Get stock information for multiple symbols in parallel.
 
@@ -344,8 +344,8 @@ class OptimizedYFinanceClient:
 
     def get_multiple_historical_data(
         self,
-        config: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        config: dict[str, Any],
+    ) -> dict[str, Any]:
         """
         Get historical data for multiple symbols in parallel.
 
@@ -384,7 +384,7 @@ class OptimizedYFinanceClient:
 
         return results
 
-    def _process_batch_parallel(self, symbols: List[str], fetch_func) -> Dict[str, Any]:
+    def _process_batch_parallel(self, symbols: list[str], fetch_func) -> dict[str, Any]:
         """Process a batch of symbols in parallel"""
         results = {}
 
@@ -405,21 +405,19 @@ class OptimizedYFinanceClient:
 
         return results
 
-    def _fetch_stock_info_with_resilience(
-        self, symbol: str
-    ) -> Optional[Dict[str, Any]]:
+    def _fetch_stock_info_with_resilience(self, symbol: str) -> dict[str, Any] | None:
         """Fetch stock info with rate limiting and circuit breaker"""
         return self.circuit_breaker.call(self._fetch_stock_info_raw, symbol)
 
     def _fetch_historical_data_with_resilience(
         self, symbol: str, period: str, interval: str
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """Fetch historical data with rate limiting and circuit breaker"""
         return self.circuit_breaker.call(
             self._fetch_historical_data_raw, symbol, period, interval
         )
 
-    def _fetch_stock_info_raw(self, symbol: str) -> Optional[Dict[str, Any]]:
+    def _fetch_stock_info_raw(self, symbol: str) -> dict[str, Any] | None:
         """Raw fetch stock info with rate limiting"""
         if not self.rate_limiter.acquire():
             wait_time = self.rate_limiter.wait_time_until_available()
@@ -461,7 +459,7 @@ class OptimizedYFinanceClient:
 
     def _fetch_historical_data_raw(
         self, symbol: str, period: str, interval: str
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """Raw fetch historical data with rate limiting"""
         if not self.rate_limiter.acquire():
             wait_time = self.rate_limiter.wait_time_until_available()
@@ -518,21 +516,21 @@ class OptimizedYFinanceClient:
         """Get current metrics"""
         return self.metrics
 
-    def get_rate_limiter_info(self) -> Dict[str, Any]:
+    def get_rate_limiter_info(self) -> dict[str, Any]:
         """Get rate limiter information"""
         return self.rate_limiter.get_rate_limit_info()
 
-    def get_circuit_breaker_stats(self) -> Dict[str, Any]:
+    def get_circuit_breaker_stats(self) -> dict[str, Any]:
         """Get circuit breaker statistics"""
         return self.circuit_breaker.get_stats()
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         if self.cache:
             return self.cache.get_stats()
         return {"status": "disabled"}
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         """Perform health check"""
         return {
             "rate_limiter": self.get_rate_limiter_info(),

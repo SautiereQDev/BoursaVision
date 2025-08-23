@@ -14,10 +14,9 @@ Design Patterns:
 
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
-from uuid import uuid4
+from typing import Any
 
 # Mock YFinance pour l'instant
 try:
@@ -42,7 +41,6 @@ from ...domain.entities.market_data_timeline import (
 from ...domain.services.cache_strategies import (
     CacheConfig,
     MarketDataCacheManager,
-    PrecisionStrategyFactory,
 )
 
 logger = logging.getLogger(__name__)
@@ -58,7 +56,7 @@ class YFinanceDataFetcher:
 
     async def fetch_historical_data(
         self, symbol: str, period: str = "1y", interval: str = "1d"
-    ) -> List[TimelinePoint]:
+    ) -> list[TimelinePoint]:
         """Récupère les données historiques avec gestion du rate limiting"""
         if not YF_AVAILABLE:
             logger.warning("YFinance not available, returning mock data")
@@ -84,11 +82,9 @@ class YFinanceDataFetcher:
                 # Détermine le niveau de précision basé sur l'âge
                 timestamp = index.to_pydatetime()
                 if timestamp.tzinfo is None:
-                    timestamp = timestamp.replace(tzinfo=timezone.utc)
+                    timestamp = timestamp.replace(tzinfo=UTC)
 
-                age_hours = (
-                    datetime.now(timezone.utc) - timestamp
-                ).total_seconds() / 3600
+                age_hours = (datetime.now(UTC) - timestamp).total_seconds() / 3600
                 precision_level = self._get_precision_for_age(age_hours)
 
                 point = TimelinePoint(
@@ -136,15 +132,18 @@ class YFinanceDataFetcher:
         self.last_request_time = datetime.now().timestamp()
 
     def _generate_mock_data(
-        self, symbol: str, period: str, interval: str  # period utilisé dans la logique
-    ) -> List[TimelinePoint]:
+        self,
+        symbol: str,
+        period: str,
+        interval: str,  # period utilisé dans la logique
+    ) -> list[TimelinePoint]:
         """Génère des données mock pour les tests"""
         points = []
         currency = self._get_currency_for_symbol(symbol)
         interval_type = self._yf_interval_to_enum(interval)
 
         # Génère 30 jours de données mock
-        start_date = datetime.now(timezone.utc) - timedelta(days=30)
+        start_date = datetime.now(UTC) - timedelta(days=30)
         base_price = Decimal("100.0")
 
         for i in range(30):
@@ -156,7 +155,7 @@ class YFinanceDataFetcher:
             low_price = open_price * Decimal("0.98")
             close_price = open_price + (price_variation * Decimal("0.5"))
 
-            age_hours = (datetime.now(timezone.utc) - timestamp).total_seconds() / 3600
+            age_hours = (datetime.now(UTC) - timestamp).total_seconds() / 3600
             precision_level = self._get_precision_for_age(age_hours)
 
             point = TimelinePoint(
@@ -222,13 +221,13 @@ class MarketDataCacheService:
     """Service principal de cache intelligent pour les données de marché"""
 
     def __init__(
-        self, cache_config: Optional[CacheConfig] = None, timeline_repository=None
+        self, cache_config: CacheConfig | None = None, timeline_repository=None
     ):
         self.cache_config = cache_config or CacheConfig()
         self.cache_manager = MarketDataCacheManager(self.cache_config)
         self.timeline_repository = timeline_repository
         self.fetcher = YFinanceDataFetcher()
-        self._timelines: Dict[str, MarketDataTimeline] = {}
+        self._timelines: dict[str, MarketDataTimeline] = {}
 
         # Statistiques du service
         self.stats = {
@@ -242,7 +241,7 @@ class MarketDataCacheService:
 
     async def get_timeline(
         self, symbol: str, force_refresh: bool = False
-    ) -> Optional[MarketDataTimeline]:
+    ) -> MarketDataTimeline | None:
         """Récupère la timeline complète d'un symbole"""
         symbol = symbol.upper()
 
@@ -275,11 +274,11 @@ class MarketDataCacheService:
     async def get_market_data(
         self,
         symbol: str,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
         interval: IntervalType = IntervalType.ONE_DAY,
         max_age_hours: float = 1.0,
-    ) -> List[TimelinePoint]:
+    ) -> list[TimelinePoint]:
         """
         Récupère les données de marché avec cache intelligent.
 
@@ -293,7 +292,7 @@ class MarketDataCacheService:
 
         # Paramètres par défaut
         if not end_time:
-            end_time = datetime.now(timezone.utc)
+            end_time = datetime.now(UTC)
         if not start_time:
             start_time = end_time - timedelta(days=365)  # 1 an par défaut
 
@@ -369,7 +368,7 @@ class MarketDataCacheService:
 
     def _determine_yfinance_params(
         self, start_time: datetime, end_time: datetime, interval: IntervalType
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         """Détermine les paramètres YFinance optimaux"""
         time_diff = end_time - start_time
         days = time_diff.days
@@ -414,7 +413,7 @@ class MarketDataCacheService:
 
         return period, yf_interval
 
-    async def get_latest_price(self, symbol: str) -> Optional[Money]:
+    async def get_latest_price(self, symbol: str) -> Money | None:
         """Récupère le dernier prix d'un symbole"""
         timeline = await self.get_timeline(symbol)
         if timeline:
@@ -423,10 +422,10 @@ class MarketDataCacheService:
 
     async def bulk_refresh_symbols(
         self,
-        symbols: List[str],
+        symbols: list[str],
         interval: IntervalType = IntervalType.ONE_DAY,
         max_concurrent: int = 10,
-    ) -> Dict[str, bool]:
+    ) -> dict[str, bool]:
         """Rafraîchit plusieurs symboles en parallèle"""
         results = {}
 
@@ -441,8 +440,8 @@ class MarketDataCacheService:
                         await self._refresh_timeline_data(
                             timeline,
                             interval,
-                            datetime.now(timezone.utc) - timedelta(days=30),
-                            datetime.now(timezone.utc),
+                            datetime.now(UTC) - timedelta(days=30),
+                            datetime.now(UTC),
                         )
                         return True
                     return False
@@ -455,7 +454,7 @@ class MarketDataCacheService:
         task_results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Compile les résultats
-        for symbol, result in zip(symbols, task_results):
+        for symbol, result in zip(symbols, task_results, strict=False):
             if isinstance(result, Exception):
                 results[symbol] = False
                 logger.error(f"Error refreshing {symbol}: {result}")
@@ -464,7 +463,7 @@ class MarketDataCacheService:
 
         return results
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Retourne les statistiques complètes du cache"""
         cache_stats = self.cache_manager.get_stats()
 
@@ -480,7 +479,7 @@ class MarketDataCacheService:
             * 100,
         }
 
-    def clear_cache(self, symbol: Optional[str] = None) -> None:
+    def clear_cache(self, symbol: str | None = None) -> None:
         """Vide le cache"""
         if symbol:
             symbol = symbol.upper()
@@ -491,18 +490,18 @@ class MarketDataCacheService:
             self._timelines.clear()
             self.cache_manager.clear_all()
 
-    def get_loaded_symbols(self) -> List[str]:
+    def get_loaded_symbols(self) -> list[str]:
         """Retourne la liste des symboles actuellement chargés en mémoire"""
         return list(self._timelines.keys())
 
     async def cleanup_old_data(
         self,
         older_than_days: int = 30,
-        precision_levels: Optional[List[PrecisionLevel]] = None,
-    ) -> Dict[str, int]:
+        precision_levels: list[PrecisionLevel] | None = None,
+    ) -> dict[str, int]:
         """Nettoie les anciennes données selon les critères"""
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=older_than_days)
-        results: Dict[str, int] = {}
+        cutoff_date = datetime.now(UTC) - timedelta(days=older_than_days)
+        results: dict[str, int] = {}
 
         if not self.timeline_repository:
             logger.warning("No repository available for cleanup")

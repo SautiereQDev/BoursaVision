@@ -3,7 +3,7 @@
 import os
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -30,7 +30,6 @@ class TestCeleryConfiguration:
         """Test mock mode activation via environment variable."""
         with patch.dict(os.environ, {"USE_MOCK_CELERY": "true"}):
             # Reimport to test environment variable effect
-            import importlib
 
             try:
                 # Clear module cache
@@ -68,8 +67,8 @@ class TestCeleryConfiguration:
                     CELERY_RESULT_BACKEND,
                 )
 
-                assert CELERY_BROKER_URL == test_broker
-                assert CELERY_RESULT_BACKEND == test_backend
+                assert test_broker == CELERY_BROKER_URL
+                assert test_backend == CELERY_RESULT_BACKEND
             except ImportError:
                 pytest.skip("Celery app module not accessible - test skipped")
 

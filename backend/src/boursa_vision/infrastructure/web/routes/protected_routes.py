@@ -5,9 +5,9 @@ Example Protected Routes
 Examples of how to use authentication in FastAPI routes.
 """
 
-from typing import Any, Dict, List
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 
 from boursa_vision.domain.entities.user import User
 from boursa_vision.infrastructure.web.dependencies.auth_dependencies import (
@@ -30,7 +30,7 @@ router = APIRouter(prefix="/api/v1/protected", tags=["Protected Routes"])
 )
 async def get_profile(
     current_user: User = Depends(get_current_active_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get current user's profile."""
     return {
         "id": current_user.id,
@@ -49,7 +49,7 @@ async def get_profile(
 )
 async def admin_only_endpoint(
     current_user: User = Depends(require_admin),
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Admin only endpoint."""
     return {
         "message": f"Hello admin {current_user.email}!",
@@ -64,7 +64,7 @@ async def admin_only_endpoint(
 )
 async def premium_only_endpoint(
     current_user: User = Depends(require_premium),
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Premium only endpoint."""
     return {
         "message": f"Hello premium user {current_user.email}!",
@@ -79,7 +79,7 @@ async def premium_only_endpoint(
 )
 async def create_portfolio(
     current_user: User = Depends(require_create_portfolio),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Create a new portfolio."""
     return {
         "message": "Portfolio creation endpoint",
@@ -95,7 +95,7 @@ async def create_portfolio(
 )
 async def execute_trade(
     current_user: User = Depends(require_execute_trades),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Execute a trade."""
     return {
         "message": "Trade execution endpoint",
@@ -111,7 +111,7 @@ async def execute_trade(
 )
 async def view_analytics(
     current_user: User = Depends(require_view_analytics),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """View analytics data."""
     return {
         "message": "Analytics data endpoint",
@@ -130,7 +130,7 @@ async def view_analytics(
 )
 async def list_users(
     current_user: User = Depends(require_admin),
-) -> Dict[str, List[str]]:
+) -> dict[str, list[str]]:
     """List all users (admin only)."""
     return {
         "message": "User management endpoint",
@@ -145,7 +145,7 @@ async def list_users(
 )
 async def get_role_info(
     current_user: User = Depends(get_current_active_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get role and permission information."""
     return {
         "user_id": current_user.id,

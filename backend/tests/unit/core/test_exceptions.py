@@ -35,11 +35,8 @@ except ImportError as e:
 
 try:
     # Import des exceptions application
-    from boursa_vision.application.exceptions import AnalysisFailedError
     from boursa_vision.application.exceptions import (
-        BoursaVisionError as AppBoursaVisionError,
-    )
-    from boursa_vision.application.exceptions import (
+        AnalysisFailedError,
         DatabaseNotInitializedError,
         FactoryProviderError,
         InvalidSymbolError,
@@ -47,6 +44,9 @@ try:
         PriceRangeError,
         RateLimitError,
         TemporaryFailureError,
+    )
+    from boursa_vision.application.exceptions import (
+        BoursaVisionError as AppBoursaVisionError,
     )
 
     APP_EXCEPTIONS_AVAILABLE = True
@@ -382,13 +382,13 @@ class TestExceptionCatchingAndHandling:
         if not CORE_EXCEPTIONS_AVAILABLE:
             # Tester que les imports ont échoué de manière attendue
             with pytest.raises(ImportError):
-                from boursa_vision.core.exceptions import BoursaVisionError
+                pass
         else:
             assert CORE_EXCEPTIONS_AVAILABLE is True
 
         if not APP_EXCEPTIONS_AVAILABLE:
             with pytest.raises(ImportError):
-                from boursa_vision.application.exceptions import PortfolioNotFoundError
+                pass
         else:
             assert APP_EXCEPTIONS_AVAILABLE is True
 
@@ -444,4 +444,4 @@ class TestExceptionIntegration:
 
         # Exception sans paramètres
         error4 = PriceRangeError()
-        assert "max_price must be greater than min_price" == str(error4)
+        assert str(error4) == "max_price must be greater than min_price"

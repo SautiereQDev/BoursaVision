@@ -5,10 +5,7 @@ Tests conformes à l'architecture définie dans TESTS.md.
 Focus sur les signatures de tâches et la structure.
 """
 
-import sys
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -40,7 +37,7 @@ class TestTasksModuleStructure:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "Tâches Celery pour l'archivage automatique" in content
@@ -71,7 +68,7 @@ class TestTasksImports:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "try:" in content
@@ -90,7 +87,7 @@ class TestTasksImports:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "from .celery_app import celery_app" in content
@@ -111,7 +108,7 @@ class TestTaskConstants:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "ARCHIVE_TASK_NAME = " in content
@@ -129,7 +126,7 @@ class TestTaskConstants:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "src.infrastructure.background.tasks" in content
@@ -149,7 +146,7 @@ class TestCallbackTaskClass:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "class CallbackTask(Task):" in content
@@ -165,7 +162,7 @@ class TestCallbackTaskClass:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "def on_success(self, retval, task_id, args, kwargs):" in content
@@ -181,7 +178,7 @@ class TestCallbackTaskClass:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "logger.info(" in content
@@ -204,7 +201,7 @@ class TestArchiveMarketDataTask:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "@celery_app.task(" in content
@@ -224,7 +221,7 @@ class TestArchiveMarketDataTask:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert 'def archive_market_data_task(self, interval: str = "1d")' in content
@@ -240,7 +237,7 @@ class TestArchiveMarketDataTask:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "Tâche d'archivage des données de marché." in content
@@ -258,7 +255,7 @@ class TestArchiveMarketDataTask:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "import asyncio" in content
@@ -275,7 +272,7 @@ class TestArchiveMarketDataTask:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "if self.request.retries < self.max_retries:" in content
@@ -297,7 +294,7 @@ class TestHealthCheckTask:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert (
@@ -315,7 +312,7 @@ class TestHealthCheckTask:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "def health_check_task(self) -> Dict[str, Any]:" in content
@@ -330,7 +327,7 @@ class TestHealthCheckTask:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "Tâche de vérification de santé du système" in content
@@ -351,7 +348,7 @@ class TestTasksLogging:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "logger = logging.getLogger(__name__)" in content
@@ -366,7 +363,7 @@ class TestTasksLogging:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "Starting market data archival task" in content
@@ -389,7 +386,7 @@ class TestTasksErrorHandling:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "try:" in content
@@ -405,7 +402,7 @@ class TestTasksErrorHandling:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert '"status": "failed"' in content
@@ -427,7 +424,7 @@ class TestTasksPerformanceFeatures:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert "timeout=1800" in content  # 30 minutes
@@ -443,7 +440,7 @@ class TestTasksPerformanceFeatures:
             / "background"
             / "tasks.py"
         )
-        with open(tasks_path, "r") as f:
+        with open(tasks_path) as f:
             content = f.read()
 
         assert 'success_rate = report.get("success_rate", 0)' in content

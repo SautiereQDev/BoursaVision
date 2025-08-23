@@ -7,7 +7,7 @@ following CQRS (Command Query Responsibility Segregation) principles.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 # Type variables for commands, queries and results
 TCommand = TypeVar("TCommand")

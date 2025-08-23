@@ -6,7 +6,6 @@ Tests unitaires complets pour le service de gestion des mots de passe.
 """
 
 import re
-from unittest.mock import Mock, patch
 
 import pytest
 

@@ -5,34 +5,25 @@ Ce module teste toutes les implémentations concrètes des repositories
 du domaine avec SQLAlchemy et TimescaleDB.
 """
 
-import asyncio
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
-from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from boursa_vision.domain.entities.investment import Investment as DomainInvestment
 from boursa_vision.domain.entities.market_data import MarketData as DomainMarketData
-from boursa_vision.domain.entities.portfolio import Portfolio as DomainPortfolio
 from boursa_vision.domain.entities.user import User as DomainUser
 from boursa_vision.infrastructure.persistence.models import (
-    Instrument,
-    InvestmentModel,
-    MarketData,
     Portfolio,
-    Position,
     User,
 )
 
 # Import direct pour avoir le vrai coverage
 from boursa_vision.infrastructure.persistence.repositories import (
     SQLAlchemyInvestmentRepository,
-    SQLAlchemyMarketDataRepository,
     SQLAlchemyPortfolioRepository,
     SQLAlchemyUserRepository,
 )
@@ -66,7 +57,7 @@ class TestSQLAlchemyUserRepository:
             first_name="Test",
             last_name="User",
             is_active=True,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
     @pytest.fixture
@@ -78,8 +69,8 @@ class TestSQLAlchemyUserRepository:
             email="test@example.com",
             password_hash="hashed_pass",  # Corrected field name
             is_active=True,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
     @pytest.mark.asyncio
@@ -408,7 +399,7 @@ class TestSQLAlchemyMarketDataRepository:
         return DomainMarketData(
             id=uuid.uuid4(),
             symbol="AAPL",
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             open_price=Decimal("150.00"),
             high_price=Decimal("155.00"),
             low_price=Decimal("149.00"),

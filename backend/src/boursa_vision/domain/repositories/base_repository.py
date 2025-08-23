@@ -9,7 +9,7 @@ Classes:
 """
 
 from abc import ABC, abstractmethod
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, TypeVar
 from uuid import UUID
 
 T = TypeVar("T")
@@ -23,7 +23,7 @@ class IBaseRepository(ABC, Generic[T]):
     """
 
     @abstractmethod
-    async def find_by_id(self, entity_id: UUID) -> Optional[T]:
+    async def find_by_id(self, entity_id: UUID) -> T | None:
         """Find entity by ID"""
         raise NotImplementedError
 

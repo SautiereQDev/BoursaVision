@@ -5,11 +5,9 @@ Ce module contient les tests pour vérifier le bon fonctionnement
 du repository des utilisateurs avec des mocks et quelques tests d'intégration.
 """
 
-from datetime import datetime, timezone
-from decimal import Decimal
-from typing import List, Optional
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
@@ -34,7 +32,7 @@ def create_test_user(**kwargs):
         "email_verified": False,
         "preferred_currency": Currency.USD,
         "two_factor_enabled": False,
-        "created_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
         "last_login": None,
     }
     defaults.update(kwargs)

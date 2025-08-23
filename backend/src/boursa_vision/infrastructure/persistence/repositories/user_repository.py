@@ -2,10 +2,9 @@
 SQLAlchemy repository implementations for User entity.
 """
 
-from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import and_, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func
 
@@ -23,7 +22,7 @@ class SQLAlchemyUserRepository(IUserRepository):
     # Class-level mapper for test mocking compatibility
     _mapper = UserMapper()
 
-    def __init__(self, session: Optional[AsyncSession] = None):
+    def __init__(self, session: AsyncSession | None = None):
         self._mapper = UserMapper()
         self._session = session  # Optional injected session for testing
 
@@ -33,7 +32,7 @@ class SQLAlchemyUserRepository(IUserRepository):
             return self._session
         return get_db_session()
 
-    async def find_by_id(self, user_id: UUID) -> Optional[DomainUser]:
+    async def find_by_id(self, user_id: UUID) -> DomainUser | None:
         """Find user by ID."""
         if self._session:
             # Use injected session (testing mode)
@@ -55,7 +54,7 @@ class SQLAlchemyUserRepository(IUserRepository):
                     return self._mapper.to_domain(user_model)
                 return None
 
-    async def find_by_email(self, email: str) -> Optional[DomainUser]:
+    async def find_by_email(self, email: str) -> DomainUser | None:
         """Find user by email."""
         if self._session:
             # Use injected session (testing mode)
@@ -77,7 +76,7 @@ class SQLAlchemyUserRepository(IUserRepository):
                     return self._mapper.to_domain(user_model)
                 return None
 
-    async def find_by_username(self, username: str) -> Optional[DomainUser]:
+    async def find_by_username(self, username: str) -> DomainUser | None:
         """Find user by username."""
         if self._session:
             # Use injected session (testing mode)
@@ -103,7 +102,7 @@ class SQLAlchemyUserRepository(IUserRepository):
 
     async def find_all(
         self, offset: int = 0, limit: int = 100, include_inactive: bool = False
-    ) -> List[DomainUser]:
+    ) -> list[DomainUser]:
         """Find all users with pagination."""
         async with get_db_session() as session:
             query = select(User)
@@ -117,7 +116,7 @@ class SQLAlchemyUserRepository(IUserRepository):
 
             return [self._mapper.to_domain(model) for model in user_models]
 
-    async def find_by_role(self, role: UserRole) -> List[DomainUser]:
+    async def find_by_role(self, role: UserRole) -> list[DomainUser]:
         """Find all users with specific role."""
         async with get_db_session() as session:
             query = select(User).where(User.role == role.value)
@@ -126,7 +125,7 @@ class SQLAlchemyUserRepository(IUserRepository):
 
             return [self._mapper.to_domain(model) for model in user_models]
 
-    async def find_active_users(self) -> List[DomainUser]:
+    async def find_active_users(self) -> list[DomainUser]:
         """Find all active users."""
         if self._session:
             # Use injected session (testing mode)
@@ -238,7 +237,7 @@ class SQLAlchemyUserRepository(IUserRepository):
                 # Return True if any rows were affected
                 return (result.rowcount or 0) > 0
 
-    async def find_all_active(self) -> List[DomainUser]:
+    async def find_all_active(self) -> list[DomainUser]:
         """Find all active users."""
         return await self.find_active_users()
 
@@ -273,7 +272,7 @@ class SQLAlchemyUserRepository(IUserRepository):
             await session.refresh(existing)
             return self._mapper.to_domain(existing)
 
-    async def find_by_email_for_auth(self, email: str) -> Optional[DomainUser]:
+    async def find_by_email_for_auth(self, email: str) -> DomainUser | None:
         """Find user by email for authentication purposes."""
         async with get_db_session() as session:
             query = select(User).where(User.email == email)
@@ -284,7 +283,7 @@ class SQLAlchemyUserRepository(IUserRepository):
                 return self._mapper.to_domain(user_model)
             return None
 
-    async def find_by_username_for_auth(self, username: str) -> Optional[DomainUser]:
+    async def find_by_username_for_auth(self, username: str) -> DomainUser | None:
         """Find user by username for authentication purposes."""
         async with get_db_session() as session:
             query = select(User).where(User.username == username)

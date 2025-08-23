@@ -7,10 +7,8 @@ avec validation des règles métier financières.
 """
 
 import statistics
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
-from typing import List
-from unittest.mock import Mock
 
 import pytest
 
@@ -27,7 +25,7 @@ class TestPrice:
         """Configuration pour chaque test"""
         self.usd = Currency.USD
         self.eur = Currency.EUR
-        self.timestamp = datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc)
+        self.timestamp = datetime(2024, 1, 15, 10, 30, tzinfo=UTC)
 
     @pytest.mark.unit
     def test_price_creation_with_decimal(self):
@@ -209,7 +207,7 @@ class TestPricePoint:
         """Configuration pour chaque test"""
         self.usd = Currency.USD
         self.eur = Currency.EUR
-        self.timestamp = datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc)
+        self.timestamp = datetime(2024, 1, 15, 10, 30, tzinfo=UTC)
 
         # Prix valides pour OHLC
         self.open_price = Price(Decimal("100.00"), self.usd)
@@ -514,7 +512,7 @@ class TestPriceData:
         self.interval = "1d"
 
         # Création de plusieurs points de prix pour une série temporelle
-        base_time = datetime(2024, 1, 15, tzinfo=timezone.utc)
+        base_time = datetime(2024, 1, 15, tzinfo=UTC)
         self.points = [
             PricePoint(
                 timestamp=base_time + timedelta(days=i),
@@ -569,7 +567,7 @@ class TestPriceData:
         """Test qu'un mélange de devises lève une erreur"""
         # Créer un point avec EUR
         eur_point = PricePoint(
-            timestamp=datetime(2024, 1, 20, tzinfo=timezone.utc),
+            timestamp=datetime(2024, 1, 20, tzinfo=UTC),
             open_price=Price(Decimal("90.00"), self.eur),
             high_price=Price(Decimal("92.00"), self.eur),
             low_price=Price(Decimal("88.00"), self.eur),
@@ -696,7 +694,7 @@ class TestPriceData:
         """Test rendements avec prix de clôture zéro"""
         # Créer un point avec close = 0
         zero_point = PricePoint(
-            timestamp=datetime(2024, 1, 10, tzinfo=timezone.utc),
+            timestamp=datetime(2024, 1, 10, tzinfo=UTC),
             open_price=Price(Decimal("1.00"), self.usd),
             high_price=Price(Decimal("2.00"), self.usd),
             low_price=Price(Decimal("0.00"), self.usd),
@@ -871,7 +869,7 @@ class TestPriceEdgeCases:
         """Test PricePoint avec tous les prix égaux"""
         equal_price = Price(Decimal("100.00"), self.usd)
         point = PricePoint(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             open_price=equal_price,
             high_price=equal_price,
             low_price=equal_price,
@@ -889,7 +887,7 @@ class TestPriceEdgeCases:
     @pytest.mark.unit
     def test_price_data_with_identical_timestamps(self):
         """Test PriceData avec timestamps identiques - devrait échouer"""
-        same_timestamp = datetime(2024, 1, 15, tzinfo=timezone.utc)
+        same_timestamp = datetime(2024, 1, 15, tzinfo=UTC)
         identical_points = [
             PricePoint(
                 timestamp=same_timestamp,

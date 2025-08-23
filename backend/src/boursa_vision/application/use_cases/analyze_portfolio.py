@@ -7,7 +7,6 @@ risk metrics, and investment recommendations.
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, List
 
 from ..common import IUseCase
 from ..dtos import PerformanceMetricsDTO, PortfolioAnalysisResultDTO, PortfolioDTO
@@ -186,7 +185,7 @@ class AnalyzePortfolioUseCase(
 
     async def _calculate_risk_metrics(
         self, portfolio, start_date: datetime, end_date: datetime
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Calculate portfolio risk metrics.
 
@@ -225,7 +224,7 @@ class AnalyzePortfolioUseCase(
             "expected_shortfall": getattr(risk_metrics, "expected_shortfall", 0.0),
         }
 
-    def _calculate_asset_allocation(self, portfolio) -> Dict[str, float]:
+    def _calculate_asset_allocation(self, portfolio) -> dict[str, float]:
         """
         Calculate asset allocation breakdown.
 
@@ -258,7 +257,7 @@ class AnalyzePortfolioUseCase(
 
         return allocation
 
-    async def _generate_recommendations(self, portfolio) -> List[str]:
+    async def _generate_recommendations(self, portfolio) -> list[str]:
         """
         Generate investment recommendations based on portfolio analysis.
 
@@ -307,7 +306,7 @@ class AnalyzePortfolioUseCase(
 
     async def _get_portfolio_historical_values(
         self, portfolio, start_date: datetime, end_date: datetime
-    ) -> List[tuple[datetime, float]]:
+    ) -> list[tuple[datetime, float]]:
         """
         Get historical portfolio values for performance calculation.
 

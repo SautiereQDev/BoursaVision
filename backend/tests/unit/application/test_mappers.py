@@ -245,9 +245,7 @@ class TestPortfolioMapper:
         portfolio.currency = "USD"
         portfolio.created_at = datetime.now()
         portfolio.updated_at = datetime.now()
-        portfolio.positions = (
-            []
-        )  # Empty positions to avoid PositionDTO validation errors
+        portfolio.positions = []  # Empty positions to avoid PositionDTO validation errors
 
         # Mock calculate_total_value method
         total_value = MagicMock()
@@ -407,7 +405,7 @@ class TestMappersIntegration:
 
         for mapper_class in mappers:
             assert hasattr(mapper_class, "to_dto")
-            assert callable(getattr(mapper_class, "to_dto"))
+            assert callable(mapper_class.to_dto)
 
     def test_mappers_are_static_classes(self):
         """Test que tous les mappers utilisent des méthodes statiques"""

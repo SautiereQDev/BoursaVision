@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 from uuid import UUID
 
 
@@ -69,17 +68,17 @@ class Alert:
     alert_type: AlertType
     condition: AlertCondition
     target_value: Decimal
-    current_value: Optional[Decimal] = None
+    current_value: Decimal | None = None
     priority: AlertPriority = AlertPriority.MEDIUM
     message: str = ""
     is_active: bool = True
-    created_at: Optional[datetime] = None
-    triggered_at: Optional[datetime] = None
-    user_id: Optional[UUID] = None
+    created_at: datetime | None = None
+    triggered_at: datetime | None = None
+    user_id: UUID | None = None
 
     # Optional range values for BETWEEN and OUTSIDE_RANGE conditions
-    min_value: Optional[Decimal] = None
-    max_value: Optional[Decimal] = None
+    min_value: Decimal | None = None
+    max_value: Decimal | None = None
 
     def __post_init__(self):
         """Validate alert parameters"""

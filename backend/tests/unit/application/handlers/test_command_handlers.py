@@ -594,7 +594,7 @@ class TestCommandHandlersIntegration:
         ]
 
         for handler_class in handlers:
-            handle_method = getattr(handler_class, "handle")
+            handle_method = handler_class.handle
             assert inspect.iscoroutinefunction(
                 handle_method
             ), f"{handler_class.__name__}.handle must be async"

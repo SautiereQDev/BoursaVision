@@ -5,10 +5,7 @@ Tests conformes à l'architecture définie dans TESTS.md.
 Focus sur la structure et les méthodes du repository refresh token.
 """
 
-from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
-from uuid import UUID
 
 import pytest
 
@@ -42,7 +39,7 @@ class TestRefreshTokenRepositoryModuleStructure:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "SQLAlchemy RefreshToken Repository Implementation" in content
@@ -77,7 +74,7 @@ class TestRefreshTokenRepositoryImports:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "from sqlalchemy import and_, select" in content
@@ -94,13 +91,10 @@ class TestRefreshTokenRepositoryImports:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
-        assert (
-            "RefreshToken as DomainRefreshToken"
-            in content
-        )
+        assert "RefreshToken as DomainRefreshToken" in content
         assert (
             "from boursa_vision.domain.repositories.refresh_token_repository import"
             in content
@@ -127,7 +121,7 @@ class TestSQLAlchemyRefreshTokenRepositoryClass:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert (
@@ -147,7 +141,7 @@ class TestSQLAlchemyRefreshTokenRepositoryClass:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "def __init__(self, session: AsyncSession):" in content
@@ -165,7 +159,7 @@ class TestSQLAlchemyRefreshTokenRepositoryClass:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "IRefreshTokenRepository" in content
@@ -186,7 +180,7 @@ class TestRefreshTokenRepositoryBasicOperations:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert (
@@ -207,7 +201,7 @@ class TestRefreshTokenRepositoryBasicOperations:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert (
@@ -229,7 +223,7 @@ class TestRefreshTokenRepositoryBasicOperations:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert (
@@ -249,7 +243,7 @@ class TestRefreshTokenRepositoryBasicOperations:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "async def delete(self, entity_id: UUID) -> bool:" in content
@@ -271,7 +265,7 @@ class TestRefreshTokenRepositorySpecializedQueries:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert (
@@ -292,7 +286,7 @@ class TestRefreshTokenRepositorySpecializedQueries:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert (
@@ -314,7 +308,7 @@ class TestRefreshTokenRepositorySpecializedQueries:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert (
@@ -336,13 +330,10 @@ class TestRefreshTokenRepositorySpecializedQueries:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
-        assert (
-            "async def revoke_all_for_user("
-            in content
-        )
+        assert "async def revoke_all_for_user(" in content
         assert "reason: str" in content
         assert '"logout_all"' in content
         assert "Revoke all refresh tokens for a user" in content
@@ -364,7 +355,7 @@ class TestRefreshTokenRepositoryAsyncOperations:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "AsyncSession" in content
@@ -382,7 +373,7 @@ class TestRefreshTokenRepositoryAsyncOperations:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "async def find_by_id(" in content
@@ -406,7 +397,7 @@ class TestRefreshTokenRepositoryTypeAnnotations:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "UUID" in content
@@ -425,7 +416,7 @@ class TestRefreshTokenRepositoryTypeAnnotations:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "from typing import List, Optional" in content
@@ -447,7 +438,7 @@ class TestRefreshTokenRepositorySQLAlchemyQueries:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "select(RefreshToken)" in content
@@ -465,7 +456,7 @@ class TestRefreshTokenRepositorySQLAlchemyQueries:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "and_(" in content
@@ -481,7 +472,7 @@ class TestRefreshTokenRepositorySQLAlchemyQueries:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "datetime.now(timezone.utc)" in content
@@ -503,7 +494,7 @@ class TestRefreshTokenRepositoryErrorHandling:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "if not model:" in content
@@ -521,7 +512,7 @@ class TestRefreshTokenRepositoryErrorHandling:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "scalar_one_or_none()" in content
@@ -543,7 +534,7 @@ class TestRefreshTokenRepositoryDataMapping:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "_to_domain(" in content or "self._to_domain(" in content
@@ -560,7 +551,7 @@ class TestRefreshTokenRepositoryDataMapping:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "_update_model(" in content or "self._update_model(" in content
@@ -581,7 +572,7 @@ class TestRefreshTokenRepositoryBusinessLogic:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "expires_at" in content
@@ -598,7 +589,7 @@ class TestRefreshTokenRepositoryBusinessLogic:
             / "repositories"
             / "refresh_token_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "is_revoked" in content

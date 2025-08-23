@@ -2,12 +2,12 @@
 Authentication Service - Application Layer
 ==========================================
 
-Main authentication service that orchestrates user login, logout, 
+Main authentication service that orchestrates user login, logout,
 token generation, and validation operations.
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from datetime import UTC
 from uuid import UUID
 
 from ...domain.entities.refresh_token import RefreshToken as RefreshTokenEntity
@@ -216,7 +216,7 @@ class AuthenticationService:
     async def logout_user(
         self,
         user_id: UUID,
-        refresh_token: Optional[str] = None,
+        refresh_token: str | None = None,
         logout_all_sessions: bool = False,
     ) -> None:
         """
@@ -258,7 +258,7 @@ class AuthenticationService:
             )
         )
 
-    async def validate_access_token(self, token: str) -> Optional[User]:
+    async def validate_access_token(self, token: str) -> User | None:
         """
         Validate access token and return user.
 
@@ -388,8 +388,8 @@ class AuthenticationService:
         Returns:
             Number of tokens cleaned up
         """
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         return await self.refresh_token_repository.cleanup_expired_tokens(
-            datetime.now(timezone.utc)
+            datetime.now(UTC)
         )

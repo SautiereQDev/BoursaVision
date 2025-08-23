@@ -6,10 +6,9 @@ Tests unitaires couvrant les fonctionnalités du repository de timelines
 avec mocks des dépendances SQLAlchemy et TimescaleDB.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -47,7 +46,7 @@ class TestTimelinePoint:
     def test_timeline_point_creation(self):
         """Test création d'un TimelinePoint valide"""
         usd = Currency(code="USD", name="US Dollar", symbol="$")
-        timestamp = datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc)
+        timestamp = datetime(2024, 1, 15, 10, 30, tzinfo=UTC)
 
         point = TimelinePoint(
             timestamp=timestamp,
@@ -73,7 +72,7 @@ class TestTimelinePoint:
         """Test que TimelinePoint est immutable"""
         usd = Currency(code="USD", name="US Dollar", symbol="$")
         point = TimelinePoint(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             open_price=Money(Decimal("100"), usd),
             high_price=Money(Decimal("101"), usd),
             low_price=Money(Decimal("99"), usd),
@@ -83,7 +82,7 @@ class TestTimelinePoint:
             interval_type=IntervalType.ONE_DAY,
             source=DataSource.YFINANCE,
             precision_level=PrecisionLevel.HIGH,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         # Les dataclasses frozen sont immutables
@@ -113,7 +112,7 @@ class TestMarketDataTimeline:
 
         # Créer un point inline pour éviter _create_sample_point
         point = TimelinePoint(
-            timestamp=datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc),
+            timestamp=datetime(2024, 1, 15, 10, 30, tzinfo=UTC),
             open_price=Money(Decimal("100.50"), usd),
             high_price=Money(Decimal("101.25"), usd),
             low_price=Money(Decimal("99.75"), usd),
@@ -123,7 +122,7 @@ class TestMarketDataTimeline:
             interval_type=IntervalType.ONE_DAY,
             source=DataSource.YFINANCE,
             precision_level=PrecisionLevel.HIGH,
-            created_at=datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc),
+            created_at=datetime(2024, 1, 15, 10, 30, tzinfo=UTC),
         )
         timeline.add_points([point])
 
@@ -146,7 +145,7 @@ class TestSqlAlchemyMarketDataTimelineRepository:
         # Mock des données DB
         mock_db_point = Mock()
         mock_db_point.symbol = "AAPL"
-        mock_db_point.time = datetime(2024, 1, 15, tzinfo=timezone.utc)
+        mock_db_point.time = datetime(2024, 1, 15, tzinfo=UTC)
         mock_db_point.open_price = Decimal("100.50")
         mock_db_point.high_price = Decimal("101.25")
         mock_db_point.low_price = Decimal("99.75")
@@ -155,7 +154,7 @@ class TestSqlAlchemyMarketDataTimelineRepository:
         mock_db_point.volume = 1500000
         mock_db_point.interval_type = "1d"
         mock_db_point.source = "yfinance"
-        mock_db_point.created_at = datetime(2024, 1, 15, tzinfo=timezone.utc)
+        mock_db_point.created_at = datetime(2024, 1, 15, tzinfo=UTC)
 
         # Mock de la réponse SQL
         mock_result = Mock()
@@ -217,8 +216,8 @@ class TestSqlAlchemyMarketDataTimelineRepository:
     @pytest.mark.unit
     async def test_get_points_in_range(self):
         """Test récupération de points dans une plage"""
-        start_time = datetime(2024, 1, 10, tzinfo=timezone.utc)
-        end_time = datetime(2024, 1, 20, tzinfo=timezone.utc)
+        start_time = datetime(2024, 1, 10, tzinfo=UTC)
+        end_time = datetime(2024, 1, 20, tzinfo=UTC)
 
         mock_db_point = create_mock_db_point()
         mock_result = Mock()
@@ -236,8 +235,8 @@ class TestSqlAlchemyMarketDataTimelineRepository:
     @pytest.mark.unit
     async def test_get_points_in_range_no_interval(self):
         """Test récupération sans filtre d'intervalle"""
-        start_time = datetime(2024, 1, 10, tzinfo=timezone.utc)
-        end_time = datetime(2024, 1, 20, tzinfo=timezone.utc)
+        start_time = datetime(2024, 1, 10, tzinfo=UTC)
+        end_time = datetime(2024, 1, 20, tzinfo=UTC)
 
         mock_result = Mock()
         mock_result.scalars().all.return_value = []
@@ -331,7 +330,7 @@ class TestSqlAlchemyMarketDataTimelineRepository:
     @pytest.mark.unit
     async def test_delete_old_points(self):
         """Test suppression des anciens points"""
-        older_than = datetime.now(timezone.utc) - timedelta(days=30)
+        older_than = datetime.now(UTC) - timedelta(days=30)
 
         mock_result = Mock()
         mock_result.rowcount = 150
@@ -345,7 +344,7 @@ class TestSqlAlchemyMarketDataTimelineRepository:
     @pytest.mark.unit
     async def test_delete_old_points_no_rowcount(self):
         """Test suppression - pas de rowcount"""
-        older_than = datetime.now(timezone.utc) - timedelta(days=30)
+        older_than = datetime.now(UTC) - timedelta(days=30)
 
         mock_result = Mock()
         mock_result.rowcount = None
@@ -361,8 +360,8 @@ class TestSqlAlchemyMarketDataTimelineRepository:
         """Test statistiques de timeline"""
         mock_stats = Mock()
         mock_stats.total_points = 1500
-        mock_stats.oldest_point = datetime(2023, 1, 1, tzinfo=timezone.utc)
-        mock_stats.newest_point = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        mock_stats.oldest_point = datetime(2023, 1, 1, tzinfo=UTC)
+        mock_stats.newest_point = datetime(2024, 1, 1, tzinfo=UTC)
         mock_stats.interval_types = 3
 
         mock_result = Mock()
@@ -373,8 +372,8 @@ class TestSqlAlchemyMarketDataTimelineRepository:
 
         expected = {
             "total_points": 1500,
-            "oldest_point": datetime(2023, 1, 1, tzinfo=timezone.utc),
-            "newest_point": datetime(2024, 1, 1, tzinfo=timezone.utc),
+            "oldest_point": datetime(2023, 1, 1, tzinfo=UTC),
+            "newest_point": datetime(2024, 1, 1, tzinfo=UTC),
             "interval_types_count": 3,
         }
         assert stats == expected
@@ -411,7 +410,7 @@ class TestSqlAlchemyMarketDataTimelineRepository:
     @pytest.mark.unit
     async def test_get_symbols_with_data_since_filter(self):
         """Test récupération des symboles avec filtre temporel"""
-        since = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        since = datetime(2024, 1, 1, tzinfo=UTC)
         mock_result = Mock()
         mock_result.fetchall.return_value = [("AAPL",)]
         self.mock_session.execute.return_value = mock_result
@@ -511,7 +510,7 @@ class TestSqlAlchemyMarketDataTimelineRepository:
     @pytest.mark.unit
     def test_determine_precision_level_ultra_high(self):
         """Test niveau de précision ULTRA_HIGH"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         timestamp = now - timedelta(hours=12)
 
         precision = self.repository._determine_precision_level(timestamp)
@@ -521,7 +520,7 @@ class TestSqlAlchemyMarketDataTimelineRepository:
     @pytest.mark.unit
     def test_determine_precision_level_high(self):
         """Test niveau de précision HIGH"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         timestamp = now - timedelta(days=3)
 
         precision = self.repository._determine_precision_level(timestamp)
@@ -531,7 +530,7 @@ class TestSqlAlchemyMarketDataTimelineRepository:
     @pytest.mark.unit
     def test_determine_precision_level_medium(self):
         """Test niveau de précision MEDIUM"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         timestamp = now - timedelta(days=20)
 
         precision = self.repository._determine_precision_level(timestamp)
@@ -541,7 +540,7 @@ class TestSqlAlchemyMarketDataTimelineRepository:
     @pytest.mark.unit
     def test_determine_precision_level_low(self):
         """Test niveau de précision LOW"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         timestamp = now - timedelta(days=200)
 
         precision = self.repository._determine_precision_level(timestamp)
@@ -551,7 +550,7 @@ class TestSqlAlchemyMarketDataTimelineRepository:
     @pytest.mark.unit
     def test_determine_precision_level_very_low(self):
         """Test niveau de précision VERY_LOW"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         timestamp = now - timedelta(days=400)
 
         precision = self.repository._determine_precision_level(timestamp)
@@ -572,8 +571,8 @@ class TestMarketDataTimelineSpecification:
     @pytest.mark.unit
     def test_time_range(self):
         """Test spécification plage temporelle"""
-        start = datetime(2024, 1, 1, tzinfo=timezone.utc)
-        end = datetime(2024, 1, 31, tzinfo=timezone.utc)
+        start = datetime(2024, 1, 1, tzinfo=UTC)
+        end = datetime(2024, 1, 31, tzinfo=UTC)
 
         # Test que la fonction peut être appelée sans exception
         try:
@@ -754,7 +753,7 @@ class TestRepositoryEdgeCases:
     @pytest.mark.unit
     def test_precision_level_edge_boundaries(self):
         """Test frontières exactes des niveaux de précision"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Test exactement 24h
         timestamp_24h = now - timedelta(hours=24)
@@ -770,7 +769,7 @@ class TestRepositoryEdgeCases:
         """Crée un point d'exemple pour les tests"""
         usd = Currency(code="USD", name="US Dollar", symbol="$")
         return TimelinePoint(
-            timestamp=datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc),
+            timestamp=datetime(2024, 1, 15, 10, 30, tzinfo=UTC),
             open_price=Money(Decimal("100.50"), usd),
             high_price=Money(Decimal("101.25"), usd),
             low_price=Money(Decimal("99.75"), usd),
@@ -780,14 +779,14 @@ class TestRepositoryEdgeCases:
             interval_type=IntervalType.ONE_DAY,
             source=DataSource.YFINANCE,
             precision_level=PrecisionLevel.HIGH,
-            created_at=datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc),
+            created_at=datetime(2024, 1, 15, 10, 30, tzinfo=UTC),
         )
 
     def _create_mock_db_point(self):
         """Crée un mock de point DB pour les tests"""
         mock_point = Mock()
         mock_point.symbol = "AAPL"
-        mock_point.time = datetime(2024, 1, 15, tzinfo=timezone.utc)
+        mock_point.time = datetime(2024, 1, 15, tzinfo=UTC)
         mock_point.open_price = Decimal("100.50")
         mock_point.high_price = Decimal("101.25")
         mock_point.low_price = Decimal("99.75")
@@ -796,7 +795,7 @@ class TestRepositoryEdgeCases:
         mock_point.volume = 1500000
         mock_point.interval_type = "1d"
         mock_point.source = "yfinance"
-        mock_point.created_at = datetime(2024, 1, 15, tzinfo=timezone.utc)
+        mock_point.created_at = datetime(2024, 1, 15, tzinfo=UTC)
         return mock_point
 
 
@@ -805,7 +804,7 @@ def create_sample_point() -> TimelinePoint:
     """Crée un point d'exemple pour les tests"""
     usd = Currency(code="USD", name="US Dollar", symbol="$")
     return TimelinePoint(
-        timestamp=datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc),
+        timestamp=datetime(2024, 1, 15, 10, 30, tzinfo=UTC),
         open_price=Money(Decimal("100.50"), usd),
         high_price=Money(Decimal("101.25"), usd),
         low_price=Money(Decimal("99.75"), usd),
@@ -815,7 +814,7 @@ def create_sample_point() -> TimelinePoint:
         interval_type=IntervalType.ONE_DAY,
         source=DataSource.YFINANCE,
         precision_level=PrecisionLevel.HIGH,
-        created_at=datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc),
+        created_at=datetime(2024, 1, 15, 10, 30, tzinfo=UTC),
     )
 
 
@@ -823,7 +822,7 @@ def create_mock_db_point():
     """Crée un mock de point DB pour les tests"""
     mock_point = Mock()
     mock_point.symbol = "AAPL"
-    mock_point.time = datetime(2024, 1, 15, tzinfo=timezone.utc)
+    mock_point.time = datetime(2024, 1, 15, tzinfo=UTC)
     mock_point.open_price = Decimal("100.50")
     mock_point.high_price = Decimal("101.25")
     mock_point.low_price = Decimal("99.75")
@@ -832,5 +831,5 @@ def create_mock_db_point():
     mock_point.volume = 1500000
     mock_point.interval_type = "1d"
     mock_point.source = "yfinance"
-    mock_point.created_at = datetime(2024, 1, 15, tzinfo=timezone.utc)
+    mock_point.created_at = datetime(2024, 1, 15, tzinfo=UTC)
     return mock_point

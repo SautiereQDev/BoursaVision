@@ -7,6 +7,7 @@ Create Date: 2025-01-13 10:00:00.000000
 Crée les tables optimisées pour le cache intelligent des données YFinance
 avec gestion de la précision temporelle et TimescaleDB.
 """
+
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 

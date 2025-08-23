@@ -5,7 +5,7 @@ Tests pour MarketDataTimelineRepository - Version Simplifiée
 Tests unitaires avec mocks SQLAlchemy simplifiés pour éviter les conflits d'importation.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -29,7 +29,7 @@ class TestMarketDataTimelineRepositorySimple:
     def test_create_timeline_point(self):
         """Test création d'un TimelinePoint"""
         usd = Currency(code="USD", name="US Dollar", symbol="$")
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
 
         point = TimelinePoint(
             timestamp=timestamp,
@@ -109,7 +109,7 @@ class TestTimelinePointValueObject:
     def test_timeline_point_creation(self):
         """Test création d'un TimelinePoint valide"""
         usd = Currency(code="USD", name="US Dollar", symbol="$")
-        timestamp = datetime(2024, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
+        timestamp = datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
 
         point = TimelinePoint(
             timestamp=timestamp,
@@ -139,7 +139,7 @@ class TestTimelinePointValueObject:
         """Test que TimelinePoint est immutable"""
         usd = Currency(code="USD", name="US Dollar", symbol="$")
         point = TimelinePoint(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             open_price=Money(Decimal("100"), usd),
             high_price=Money(Decimal("101"), usd),
             low_price=Money(Decimal("99"), usd),
@@ -149,7 +149,7 @@ class TestTimelinePointValueObject:
             interval_type=IntervalType.ONE_DAY,
             source=DataSource.YFINANCE,
             precision_level=PrecisionLevel.HIGH,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         # Les dataclasses frozen sont immutables
@@ -229,8 +229,8 @@ class TestRepositorySpecifications:
 
     def test_time_range_specification(self):
         """Test spécification de plage temporelle"""
-        start_time = datetime(2024, 1, 1, tzinfo=timezone.utc)
-        end_time = datetime(2024, 1, 31, tzinfo=timezone.utc)
+        start_time = datetime(2024, 1, 1, tzinfo=UTC)
+        end_time = datetime(2024, 1, 31, tzinfo=UTC)
 
         spec = {"start_time": start_time, "end_time": end_time}
 

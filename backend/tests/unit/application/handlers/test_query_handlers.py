@@ -8,7 +8,7 @@ Test des opérations de lecture, transformation et gestion d'erreurs.
 
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
@@ -595,7 +595,7 @@ class TestQueryHandlersIntegration:
         ]
 
         for handler_class in handlers:
-            handle_method = getattr(handler_class, "handle")
+            handle_method = handler_class.handle
             assert inspect.iscoroutinefunction(
                 handle_method
             ), f"{handler_class.__name__}.handle must be async"

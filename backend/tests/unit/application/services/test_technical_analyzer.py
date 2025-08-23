@@ -6,7 +6,7 @@ Tests unitaires complets pour le service d'analyse technique.
 """
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 

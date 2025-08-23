@@ -5,9 +5,7 @@ Tests conformes à l'architecture définie dans TESTS.md.
 Focus sur la structure et les méthodes du repository d'archives.
 """
 
-from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -41,7 +39,7 @@ class TestArchivedMarketDataRepositoryModuleStructure:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "Archive-based Market Data Repository" in content
@@ -74,7 +72,7 @@ class TestArchivedMarketDataRepositoryImports:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "import psycopg2" in content
@@ -98,7 +96,7 @@ class TestArchivedMarketDataRepositoryUtilityFunctions:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "def execute_sql_query(" in content
@@ -118,7 +116,7 @@ class TestArchivedMarketDataRepositoryUtilityFunctions:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "Execute SQL query and return results as list of dictionaries" in content
@@ -134,7 +132,7 @@ class TestArchivedMarketDataRepositoryUtilityFunctions:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "try:" in content
@@ -157,7 +155,7 @@ class TestArchivedMarketDataRepositoryClass:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "class ArchivedMarketDataRepository:" in content
@@ -175,7 +173,7 @@ class TestArchivedMarketDataRepositoryClass:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "def __init__(self, database_url: str):" in content
@@ -192,7 +190,7 @@ class TestArchivedMarketDataRepositoryClass:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "def get_connection(self):" in content
@@ -215,7 +213,7 @@ class TestArchivedMarketDataRepositoryQueryMethods:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "def get_available_symbols(self) -> List[str]:" in content
@@ -235,7 +233,7 @@ class TestArchivedMarketDataRepositoryQueryMethods:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "def get_symbol_data(" in content
@@ -255,7 +253,7 @@ class TestArchivedMarketDataRepositoryQueryMethods:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert (
@@ -279,7 +277,7 @@ class TestArchivedMarketDataRepositoryDataTransformation:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "df = pd.DataFrame(rows)" in content
@@ -298,7 +296,7 @@ class TestArchivedMarketDataRepositoryDataTransformation:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "df.rename(" in content
@@ -325,7 +323,7 @@ class TestArchivedMarketDataRepositorySQL:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "interval_type = 'archiver'" in content
@@ -343,7 +341,7 @@ class TestArchivedMarketDataRepositorySQL:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "md.time" in content
@@ -372,7 +370,7 @@ class TestArchivedMarketDataRepositoryLogging:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "logger = logging.getLogger(__name__)" in content
@@ -388,7 +386,7 @@ class TestArchivedMarketDataRepositoryLogging:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert (
@@ -415,7 +413,7 @@ class TestArchivedMarketDataRepositoryErrorHandling:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "if not rows:" in content
@@ -432,7 +430,7 @@ class TestArchivedMarketDataRepositoryErrorHandling:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "try:" in content
@@ -455,7 +453,7 @@ class TestArchivedMarketDataRepositoryDataTypes:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "List[str]" in content
@@ -474,7 +472,7 @@ class TestArchivedMarketDataRepositoryDataTypes:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "from typing import Any, Dict, List, Optional" in content
@@ -495,7 +493,7 @@ class TestArchivedMarketDataRepositoryPerformance:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "days_back: int = 252" in content  # ~1 année de trading
@@ -511,7 +509,7 @@ class TestArchivedMarketDataRepositoryPerformance:
             / "repositories"
             / "archived_market_data_repository.py"
         )
-        with open(repo_path, "r") as f:
+        with open(repo_path) as f:
             content = f.read()
 
         assert "LIMIT %s" in content

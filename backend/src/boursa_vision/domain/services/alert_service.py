@@ -10,10 +10,9 @@ Classes:
     AlertProcessor: Domain service for processing alerts.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
 from uuid import UUID
 
 from ..entities.market_data import MarketData
@@ -45,8 +44,8 @@ class AlertProcessor:
         ]
 
     def process_market_data_alerts(
-        self, market_data: MarketData, active_alerts: List[Alert]
-    ) -> List[Alert]:
+        self, market_data: MarketData, active_alerts: list[Alert]
+    ) -> list[Alert]:
         """
         Process alerts against new market data.
 
@@ -71,8 +70,8 @@ class AlertProcessor:
         return triggered_alerts
 
     def process_volume_alerts(
-        self, market_data: MarketData, active_alerts: List[Alert], average_volume: int
-    ) -> List[Alert]:
+        self, market_data: MarketData, active_alerts: list[Alert], average_volume: int
+    ) -> list[Alert]:
         """Process volume-based alerts"""
         triggered_alerts = []
         current_time = market_data.timestamp
@@ -103,9 +102,9 @@ class AlertProcessor:
     def process_percentage_change_alerts(
         self,
         market_data: MarketData,
-        active_alerts: List[Alert],
+        active_alerts: list[Alert],
         previous_close: Decimal,
-    ) -> List[Alert]:
+    ) -> list[Alert]:
         """Process percentage change alerts"""
         triggered_alerts = []
         current_time = market_data.timestamp
@@ -134,7 +133,7 @@ class AlertProcessor:
 
         return triggered_alerts
 
-    def validate_alert_creation(self, alert: Alert) -> List[str]:
+    def validate_alert_creation(self, alert: Alert) -> list[str]:
         """
         Validate alert parameters for creation.
 
@@ -173,7 +172,7 @@ class AlertProcessor:
         self,
         alert: Alert,
         current_value: Decimal,
-        market_volatility: Optional[Decimal] = None,
+        market_volatility: Decimal | None = None,
     ) -> Decimal:
         """
         Calculate priority score for alert notification.
@@ -199,9 +198,7 @@ class AlertProcessor:
 
         # Time-based urgency (newer alerts get slight boost)
         if alert.created_at:
-            hours_old = (
-                datetime.now(timezone.utc) - alert.created_at
-            ).total_seconds() / 3600
+            hours_old = (datetime.now(UTC) - alert.created_at).total_seconds() / 3600
             freshness_score = max(
                 Decimal("0"), Decimal("1") - Decimal(hours_old) / Decimal("24")
             )
@@ -209,7 +206,7 @@ class AlertProcessor:
 
         return base_score
 
-    def group_alerts_by_symbol(self, alerts: List[Alert]) -> Dict[str, List[Alert]]:
+    def group_alerts_by_symbol(self, alerts: list[Alert]) -> dict[str, list[Alert]]:
         """Group alerts by symbol for batch processing"""
         grouped = {}
         for alert in alerts:
@@ -220,7 +217,7 @@ class AlertProcessor:
         return grouped
 
     def filter_duplicate_alerts(
-        self, user_id: UUID, new_alert: Alert, existing_alerts: List[Alert]
+        self, user_id: UUID, new_alert: Alert, existing_alerts: list[Alert]
     ) -> bool:
         """
         Check if similar alert already exists for user.

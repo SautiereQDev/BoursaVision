@@ -12,14 +12,12 @@ Design Patterns Utilisés:
 - Factory Pattern: Création des analyseurs
 """
 
-import asyncio
-import json
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 from .market_scanner import MarketScannerService, ScanConfig, ScanResult, ScanStrategy
 
@@ -62,13 +60,13 @@ class InvestmentRecommendation:
     name: str
     recommendation: RecommendationType
     confidence_score: float  # 0-100
-    target_price: Optional[float]
+    target_price: float | None
     current_price: float
     potential_return: float  # Pourcentage
     risk_level: RiskLevel
     investment_horizon: InvestmentHorizon
-    sector: Optional[str]
-    market_cap: Optional[float]
+    sector: str | None
+    market_cap: float | None
 
     # Scores détaillés
     fundamental_score: float
@@ -78,21 +76,21 @@ class InvestmentRecommendation:
     quality_score: float
 
     # Ratios clés
-    pe_ratio: Optional[float]
-    pb_ratio: Optional[float]
-    roe: Optional[float]
-    debt_to_equity: Optional[float]
+    pe_ratio: float | None
+    pb_ratio: float | None
+    roe: float | None
+    debt_to_equity: float | None
 
     # Analyse technique
-    rsi: Optional[float]
-    macd_signal: Optional[str]
+    rsi: float | None
+    macd_signal: str | None
 
     # Métadonnées
-    reasons: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    last_updated: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    reasons: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    last_updated: datetime = field(default_factory=lambda: datetime.now(UTC))
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convertir en dictionnaire"""
         return {
             "symbol": self.symbol,
@@ -129,8 +127,8 @@ class AnalysisConfig:
 
     min_confidence_score: float = 70.0
     max_recommendations: int = 50
-    include_sectors: Optional[Set[str]] = None
-    exclude_sectors: Optional[Set[str]] = None
+    include_sectors: set[str] | None = None
+    exclude_sectors: set[str] | None = None
     min_market_cap: float = 1e9  # 1 milliard
     max_risk_level: RiskLevel = RiskLevel.HIGH
     preferred_horizon: InvestmentHorizon = InvestmentHorizon.MEDIUM_TERM
@@ -143,7 +141,7 @@ class RecommendationStrategy(ABC):
     @abstractmethod
     def analyze_opportunity(
         self, scan_result: ScanResult
-    ) -> Optional[InvestmentRecommendation]:
+    ) -> InvestmentRecommendation | None:
         """Analyse une opportunité et génère une recommandation"""
         pass
 
@@ -158,7 +156,7 @@ class ValueInvestingStrategy(RecommendationStrategy):
 
     def analyze_opportunity(
         self, scan_result: ScanResult
-    ) -> Optional[InvestmentRecommendation]:
+    ) -> InvestmentRecommendation | None:
         """Analyse selon les critères de value investing"""
 
         # Critères de value investing
@@ -237,7 +235,7 @@ class ValueInvestingStrategy(RecommendationStrategy):
 
         return max(0, min(100, score))
 
-    def _score_pe_ratio(self, pe_ratio: Optional[float]) -> float:
+    def _score_pe_ratio(self, pe_ratio: float | None) -> float:
         """Score P/E ratio component"""
         if not pe_ratio or pe_ratio <= 0:
             return 0
@@ -250,7 +248,7 @@ class ValueInvestingStrategy(RecommendationStrategy):
         else:
             return -10
 
-    def _score_pb_ratio(self, pb_ratio: Optional[float]) -> float:
+    def _score_pb_ratio(self, pb_ratio: float | None) -> float:
         """Score P/B ratio component"""
         if not pb_ratio or pb_ratio <= 0:
             return 0
@@ -263,7 +261,7 @@ class ValueInvestingStrategy(RecommendationStrategy):
         else:
             return -10
 
-    def _score_dividend_yield(self, dividend_yield: Optional[float]) -> float:
+    def _score_dividend_yield(self, dividend_yield: float | None) -> float:
         """Score dividend yield component"""
         if not dividend_yield:
             return 0
@@ -315,7 +313,7 @@ class ValueInvestingStrategy(RecommendationStrategy):
         else:
             return RecommendationType.SELL
 
-    def _calculate_target_price(self, scan_result: ScanResult) -> Optional[float]:
+    def _calculate_target_price(self, scan_result: ScanResult) -> float | None:
         """Calcule le prix cible conservateur"""
         if not scan_result.pe_ratio or scan_result.pe_ratio <= 0:
             return None
@@ -339,7 +337,7 @@ class GrowthInvestingStrategy(RecommendationStrategy):
 
     def analyze_opportunity(
         self, scan_result: ScanResult
-    ) -> Optional[InvestmentRecommendation]:
+    ) -> InvestmentRecommendation | None:
         """Analyse selon les critères de growth investing"""
 
         # Critères de growth investing
@@ -458,7 +456,7 @@ class GrowthInvestingStrategy(RecommendationStrategy):
         else:
             return RecommendationType.SELL
 
-    def _calculate_target_price(self, scan_result: ScanResult) -> Optional[float]:
+    def _calculate_target_price(self, scan_result: ScanResult) -> float | None:
         """Calcule le prix cible plus agressif"""
         # Pour les actions growth, on accepte des P/E plus élevés
         return scan_result.price * 1.25  # 25% upside potentiel
@@ -472,20 +470,20 @@ class InvestmentIntelligenceService:
 
     def __init__(self, market_scanner: MarketScannerService):
         self.market_scanner = market_scanner
-        self.strategies: List[RecommendationStrategy] = [
+        self.strategies: list[RecommendationStrategy] = [
             ValueInvestingStrategy(),
             GrowthInvestingStrategy(),
         ]
-        self.last_analysis: Optional[datetime] = None
-        self.cached_recommendations: List[InvestmentRecommendation] = []
+        self.last_analysis: datetime | None = None
+        self.cached_recommendations: list[InvestmentRecommendation] = []
 
     async def generate_investment_recommendations(
         self, config: AnalysisConfig
-    ) -> List[InvestmentRecommendation]:
+    ) -> list[InvestmentRecommendation]:
         """Génère des recommandations d'investissement complètes"""
 
         logger.info("Starting investment analysis...")
-        start_time = datetime.now(timezone.utc)
+        start_time = datetime.now(UTC)
 
         # Configuration du scan de marché
         scan_config = ScanConfig(
@@ -535,9 +533,9 @@ class InvestmentIntelligenceService:
 
         # Mise à jour du cache
         self.cached_recommendations = recommendations
-        self.last_analysis = datetime.now(timezone.utc)
+        self.last_analysis = datetime.now(UTC)
 
-        analysis_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+        analysis_time = (datetime.now(UTC) - start_time).total_seconds()
         logger.info(
             f"Investment analysis completed: {len(recommendations)} final recommendations in {analysis_time:.2f}s"
         )
@@ -545,8 +543,8 @@ class InvestmentIntelligenceService:
         return recommendations
 
     def _deduplicate_recommendations(
-        self, recommendations: List[InvestmentRecommendation]
-    ) -> List[InvestmentRecommendation]:
+        self, recommendations: list[InvestmentRecommendation]
+    ) -> list[InvestmentRecommendation]:
         """Déduplique les recommandations par symbole en gardant la meilleure"""
         best_recommendations = {}
 
@@ -564,8 +562,8 @@ class InvestmentIntelligenceService:
         return list(best_recommendations.values())
 
     def _filter_and_rank_recommendations(
-        self, recommendations: List[InvestmentRecommendation], config: AnalysisConfig
-    ) -> List[InvestmentRecommendation]:
+        self, recommendations: list[InvestmentRecommendation], config: AnalysisConfig
+    ) -> list[InvestmentRecommendation]:
         """Filtre et classe les recommandations"""
 
         # Filtrer selon les critères
@@ -603,7 +601,7 @@ class InvestmentIntelligenceService:
 
         return filtered
 
-    def get_top_opportunities(self, limit: int = 20) -> List[InvestmentRecommendation]:
+    def get_top_opportunities(self, limit: int = 20) -> list[InvestmentRecommendation]:
         """Récupère les meilleures opportunités"""
         strong_buys = [
             r
@@ -620,7 +618,7 @@ class InvestmentIntelligenceService:
         top_opportunities = strong_buys + buys
         return top_opportunities[:limit]
 
-    def get_sector_recommendations(self) -> Dict[str, List[InvestmentRecommendation]]:
+    def get_sector_recommendations(self) -> dict[str, list[InvestmentRecommendation]]:
         """Récupère les recommandations par secteur"""
         sector_recommendations = {}
 
@@ -646,7 +644,7 @@ class InvestmentIntelligenceService:
 
     def get_portfolio_suggestions(
         self, portfolio_size: float = 100000.0
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Génère des suggestions de portefeuille diversifié"""
         top_recommendations = self.get_top_opportunities(50)
 
@@ -701,10 +699,10 @@ class InvestmentIntelligenceService:
         if not self.last_analysis:
             return True
 
-        time_since_last = datetime.now(timezone.utc) - self.last_analysis
+        time_since_last = datetime.now(UTC) - self.last_analysis
         return time_since_last.total_seconds() > config.update_frequency_hours * 3600
 
-    def get_analysis_summary(self) -> Dict[str, Any]:
+    def get_analysis_summary(self) -> dict[str, Any]:
         """Résumé de la dernière analyse"""
         if not self.cached_recommendations:
             return {"error": "Aucune analyse disponible"}
@@ -756,7 +754,7 @@ class InvestmentIntelligenceService:
             "top_sector": self._get_top_sector(),
         }
 
-    def _get_top_sector(self) -> Optional[str]:
+    def _get_top_sector(self) -> str | None:
         """Identifie le secteur avec le plus de recommandations d'achat"""
         if not self.cached_recommendations:
             return None

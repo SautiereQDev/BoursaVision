@@ -68,7 +68,7 @@ class TestCeleryAppImport:
 
         assert os.path.exists(celery_file)
 
-        with open(celery_file, "r") as f:
+        with open(celery_file) as f:
             content = f.read()
 
         assert len(content) > 0
@@ -80,7 +80,7 @@ class TestCeleryAppImport:
         # Act & Assert
         celery_file = get_celery_app_path()
 
-        with open(celery_file, "r") as f:
+        with open(celery_file) as f:
             content = f.read()
 
         # Vérifier la présence des classes/fonctions principales qui existent vraiment
@@ -95,7 +95,7 @@ class TestCeleryAppImport:
 
         celery_file = get_celery_app_path()
 
-        with open(celery_file, "r") as f:
+        with open(celery_file) as f:
             content = f.read()
 
         try:
@@ -113,7 +113,7 @@ class TestCeleryAppStructure:
         # Act & Assert
         celery_file = get_celery_app_path()
 
-        with open(celery_file, "r") as f:
+        with open(celery_file) as f:
             content = f.read()
 
         # Vérifier les imports de base
@@ -128,7 +128,7 @@ class TestCeleryAppStructure:
 
         celery_file = get_celery_app_path()
 
-        with open(celery_file, "r") as f:
+        with open(celery_file) as f:
             content = f.read()
 
         tree = ast.parse(content)
@@ -151,7 +151,7 @@ class TestCeleryAppStructure:
 
         celery_file = get_celery_app_path()
 
-        with open(celery_file, "r") as f:
+        with open(celery_file) as f:
             content = f.read()
 
         tree = ast.parse(content)

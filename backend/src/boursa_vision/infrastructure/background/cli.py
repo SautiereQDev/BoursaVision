@@ -10,7 +10,6 @@ import asyncio
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import click
 
@@ -95,8 +94,8 @@ def archive(interval: str, period: str):
             sys.exit(1)
 
     except Exception as e:
-        logger.error(f"Archival failed: {str(e)}")
-        click.echo(f"❌ Archival failed: {str(e)}")
+        logger.error(f"Archival failed: {e!s}")
+        click.echo(f"❌ Archival failed: {e!s}")
         sys.exit(1)
 
 
@@ -129,9 +128,9 @@ def archive_symbols(symbols: tuple, interval: str):
                     click.echo(f"✅ {symbol}")
                 except Exception as e:
                     failed += 1
-                    error_msg = f"{symbol}: {str(e)}"
+                    error_msg = f"{symbol}: {e!s}"
                     errors.append(error_msg)
-                    click.echo(f"❌ {symbol}: {str(e)}")
+                    click.echo(f"❌ {symbol}: {e!s}")
 
                 # Délai entre symboles
                 await asyncio.sleep(0.2)
@@ -145,7 +144,7 @@ def archive_symbols(symbols: tuple, interval: str):
 
         report = asyncio.run(archive_specific())
 
-        click.echo(f"\n📊 Manual Archive Report")
+        click.echo("\n📊 Manual Archive Report")
         click.echo("=" * 30)
         click.echo(f"Total symbols: {len(symbol_list)}")
         click.echo(f"Successful: {report['successful']}")
@@ -157,8 +156,8 @@ def archive_symbols(symbols: tuple, interval: str):
             click.echo(f"\n⚠️ {report['failed']} symbols failed")
 
     except Exception as e:
-        logger.error(f"Manual archival failed: {str(e)}")
-        click.echo(f"❌ Manual archival failed: {str(e)}")
+        logger.error(f"Manual archival failed: {e!s}")
+        click.echo(f"❌ Manual archival failed: {e!s}")
         sys.exit(1)
 
 
@@ -182,17 +181,17 @@ def status():
         if "total_records" in status_report:
             click.echo(f"Total records: {status_report['total_records']:,}")
 
-        if "latest_data" in status_report and status_report["latest_data"]:
+        if status_report.get("latest_data"):
             click.echo(f"Latest data: {status_report['latest_data']}")
 
-        if "oldest_data" in status_report and status_report["oldest_data"]:
+        if status_report.get("oldest_data"):
             click.echo(f"Oldest data: {status_report['oldest_data']}")
 
         if "coverage_days" in status_report:
             click.echo(f"Coverage: {status_report['coverage_days']} days")
 
         if "indices" in status_report:
-            click.echo(f"\n📈 Configured Indices:")
+            click.echo("\n📈 Configured Indices:")
             for index_name, stats in status_report["indices"].items():
                 click.echo(f"  {index_name}: {stats['symbols']} symbols")
 
@@ -204,8 +203,8 @@ def status():
                 click.echo(f"Error: {status_report['error']}")
 
     except Exception as e:
-        logger.error(f"Status check failed: {str(e)}")
-        click.echo(f"❌ Status check failed: {str(e)}")
+        logger.error(f"Status check failed: {e!s}")
+        click.echo(f"❌ Status check failed: {e!s}")
         sys.exit(1)
 
 
@@ -237,8 +236,8 @@ def worker():
     except KeyboardInterrupt:
         click.echo("\n✅ Worker stopped by user")
     except Exception as e:
-        logger.error(f"Worker failed: {str(e)}")
-        click.echo(f"❌ Worker failed: {str(e)}")
+        logger.error(f"Worker failed: {e!s}")
+        click.echo(f"❌ Worker failed: {e!s}")
         sys.exit(1)
 
 
@@ -262,8 +261,8 @@ def beat():
     except KeyboardInterrupt:
         click.echo("\n✅ Beat scheduler stopped by user")
     except Exception as e:
-        logger.error(f"Beat scheduler failed: {str(e)}")
-        click.echo(f"❌ Beat scheduler failed: {str(e)}")
+        logger.error(f"Beat scheduler failed: {e!s}")
+        click.echo(f"❌ Beat scheduler failed: {e!s}")
         sys.exit(1)
 
 
@@ -275,11 +274,11 @@ def test_connection():
     # Test configuration
     try:
         settings = get_settings()
-        click.echo(f"✅ Configuration loaded")
+        click.echo("✅ Configuration loaded")
         click.echo(f"  Database: {settings.postgres_host}:{settings.postgres_port}")
         click.echo(f"  Redis: {settings.redis_host}:{settings.redis_port}")
     except Exception as e:
-        click.echo(f"❌ Configuration error: {str(e)}")
+        click.echo(f"❌ Configuration error: {e!s}")
         return
 
     # Test YFinance
@@ -293,7 +292,7 @@ def test_connection():
         else:
             click.echo("⚠️ YFinance connection limited")
     except Exception as e:
-        click.echo(f"❌ YFinance error: {str(e)}")
+        click.echo(f"❌ YFinance error: {e!s}")
 
     # Test archiver initialization
     try:
@@ -303,7 +302,7 @@ def test_connection():
         )
         click.echo(f"✅ Archiver initialized ({indices_count} symbols configured)")
     except Exception as e:
-        click.echo(f"❌ Archiver initialization error: {str(e)}")
+        click.echo(f"❌ Archiver initialization error: {e!s}")
 
 
 if __name__ == "__main__":

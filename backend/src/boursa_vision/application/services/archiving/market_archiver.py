@@ -8,9 +8,7 @@ and duplicates using design patterns and data validation.
 import os
 import sys
 import time
-from datetime import datetime, timezone
-from decimal import Decimal
-from typing import Dict, List, Optional
+from datetime import datetime
 
 # Add the src directory to Python path for imports
 sys.path.insert(0, "/app/src")
@@ -180,7 +178,7 @@ class EnhancedMarketDataArchiver:
     ]
 
     def __init__(
-        self, database_url: Optional[str] = None, use_fuzzy_detection: bool = True
+        self, database_url: str | None = None, use_fuzzy_detection: bool = True
     ):
         """Initialize the enhanced archiver."""
         self.database_url = database_url or os.getenv(
@@ -219,7 +217,7 @@ class EnhancedMarketDataArchiver:
 
     def fetch_and_process_symbol_data(
         self, symbol: str, interval: str = "1d", period: str = "7d"
-    ) -> Dict:
+    ) -> dict:
         """
         Fetch and process data for a single symbol using pattern-based processing.
 
@@ -322,7 +320,7 @@ class EnhancedMarketDataArchiver:
 
         except Exception as e:
             self.stats["errors"] += 1
-            print(f"❌ Error processing {symbol}: {str(e)}")
+            print(f"❌ Error processing {symbol}: {e!s}")
             return {
                 "symbol": symbol,
                 "status": "error",
@@ -334,7 +332,7 @@ class EnhancedMarketDataArchiver:
 
     def archive_all_symbols(
         self, interval: str = "1d", period: str = "7d", delay: float = 0.5
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Archive data for all configured symbols with enhanced processing.
 
@@ -379,7 +377,7 @@ class EnhancedMarketDataArchiver:
 
         return results
 
-    def _print_final_statistics(self, results: List[Dict], total_time: float):
+    def _print_final_statistics(self, results: list[dict], total_time: float):
         """Print comprehensive statistics."""
         # Variables used for future statistics - pylint disable
         _ = sum(r["records_added"] for r in results)  # total_added
@@ -402,7 +400,7 @@ class EnhancedMarketDataArchiver:
         print(f"   Symbols in memory: {processor_stats['symbols']}")
         print(f"   Intervals processed: {processor_stats['intervals']}")
 
-    def get_archive_stats(self) -> Dict:
+    def get_archive_stats(self) -> dict:
         """Get database archive statistics."""
         session = self.session_local()
 
@@ -412,22 +410,15 @@ class EnhancedMarketDataArchiver:
 
             # Records by symbol with quality metrics (no source column in this table)
             from sqlalchemy import (  # pylint: disable=import-outside-toplevel
-                distinct,
                 func,
             )
 
             symbol_stats = (
                 session.query(
                     MarketDataArchive.symbol,
-                    func.count(MarketDataArchive.id).label(
-                        "count"
-                    ),  # pylint: disable=not-callable
-                    func.min(MarketDataArchive.timestamp).label(
-                        "oldest"
-                    ),  # pylint: disable=not-callable
-                    func.max(MarketDataArchive.timestamp).label(
-                        "newest"
-                    ),  # pylint: disable=not-callable
+                    func.count(MarketDataArchive.id).label("count"),  # pylint: disable=not-callable
+                    func.min(MarketDataArchive.timestamp).label("oldest"),  # pylint: disable=not-callable
+                    func.max(MarketDataArchive.timestamp).label("newest"),  # pylint: disable=not-callable
                 )
                 .group_by(MarketDataArchive.symbol)
                 .all()
@@ -450,34 +441,27 @@ class EnhancedMarketDataArchiver:
         finally:
             session.close()
 
-    def detect_potential_duplicates(self) -> List[Dict]:
+    def detect_potential_duplicates(self) -> list[dict]:
         """Detect potential data quality issues in the database."""
         session = self.session_local()
 
         try:
             # Find records with identical timestamps but different prices
-            from sqlalchemy import and_  # pylint: disable=import-outside-toplevel
 
             duplicates_query = (
                 session.query(
                     MarketDataArchive.symbol,
                     MarketDataArchive.timestamp,
                     MarketDataArchive.interval_type,
-                    func.count(MarketDataArchive.id).label(
-                        "count"
-                    ),  # pylint: disable=not-callable
-                    func.array_agg(MarketDataArchive.close_price).label(
-                        "prices"
-                    ),  # pylint: disable=not-callable
+                    func.count(MarketDataArchive.id).label("count"),  # pylint: disable=not-callable
+                    func.array_agg(MarketDataArchive.close_price).label("prices"),  # pylint: disable=not-callable
                 )
                 .group_by(
                     MarketDataArchive.symbol,
                     MarketDataArchive.timestamp,
                     MarketDataArchive.interval_type,
                 )
-                .having(
-                    func.count(MarketDataArchive.id) > 1
-                )  # pylint: disable=not-callable
+                .having(func.count(MarketDataArchive.id) > 1)  # pylint: disable=not-callable
             )
 
             potential_issues = []

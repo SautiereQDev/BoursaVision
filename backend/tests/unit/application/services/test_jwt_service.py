@@ -5,7 +5,7 @@ Test suite for JWT Service
 Comprehensive unit tests for JWT token generation, validation, and management.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import jwt
@@ -305,7 +305,7 @@ class TestVerifyAccessToken:
         payload = {
             "sub": str(uuid4()),
             "token_type": "refresh",  # Wrong type
-            "exp": datetime.now(timezone.utc) + timedelta(minutes=30),
+            "exp": datetime.now(UTC) + timedelta(minutes=30),
         }
         wrong_token = jwt.encode(
             payload, jwt_service.secret_key, algorithm=jwt_service.algorithm

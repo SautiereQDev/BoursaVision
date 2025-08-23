@@ -7,17 +7,14 @@ et sources de données pour analyser les risques d'investissement.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 import yfinance as yf
 
 from ..dtos import (
-    FundamentalRiskDTO,
-    GeopoliticalRiskDTO,
     RiskAssessmentDTO,
     RiskFactorDTO,
 )
@@ -73,7 +70,7 @@ class IRiskAnalyzer(ABC):
     """Interface pour les analyseurs de risques"""
 
     @abstractmethod
-    async def analyze(self, symbol: str, market_data: Dict) -> List[RiskFactor]:
+    async def analyze(self, symbol: str, market_data: dict) -> list[RiskFactor]:
         """Analyser les risques pour un symbole donné"""
         pass
 
@@ -89,7 +86,7 @@ class MarketRiskAnalyzer(IRiskAnalyzer):
     def get_category(self) -> RiskCategory:
         return RiskCategory.MARKET
 
-    async def analyze(self, symbol: str, market_data: Dict) -> List[RiskFactor]:
+    async def analyze(self, symbol: str, market_data: dict) -> list[RiskFactor]:
         """Analyser les risques de marché"""
         risks = []
 
@@ -132,7 +129,7 @@ class MarketRiskAnalyzer(IRiskAnalyzer):
                     category=RiskCategory.MARKET,
                     level=RiskLevel.MODERATE,
                     score=50.0,
-                    description=f"Impossible d'obtenir les données de marché: {str(e)}",
+                    description=f"Impossible d'obtenir les données de marché: {e!s}",
                     impact="MEDIUM",
                     probability="HIGH",
                     timeframe="SHORT",
@@ -281,7 +278,7 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
     def get_category(self) -> RiskCategory:
         return RiskCategory.FUNDAMENTAL
 
-    async def analyze(self, symbol: str, market_data: Dict) -> List[RiskFactor]:
+    async def analyze(self, symbol: str, market_data: dict) -> list[RiskFactor]:
         """Analyser les risques fondamentaux"""
         risks = []
 
@@ -328,7 +325,7 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
                     category=RiskCategory.FUNDAMENTAL,
                     level=RiskLevel.MODERATE,
                     score=50.0,
-                    description=f"Données fondamentales indisponibles: {str(e)}",
+                    description=f"Données fondamentales indisponibles: {e!s}",
                     impact="MEDIUM",
                     probability="HIGH",
                     timeframe="SHORT",
@@ -339,7 +336,7 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
 
         return risks
 
-    def _assess_debt_risk(self, info: Dict) -> Optional[RiskFactor]:
+    def _assess_debt_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer le risque d'endettement"""
         debt_to_equity = info.get("debtToEquity")
         total_debt = info.get("totalDebt")
@@ -376,7 +373,7 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
             last_updated=datetime.now(),
         )
 
-    def _assess_liquidity_risk(self, info: Dict) -> Optional[RiskFactor]:
+    def _assess_liquidity_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer le risque de liquidité"""
         current_ratio = info.get("currentRatio")
         quick_ratio = info.get("quickRatio")
@@ -413,7 +410,7 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
             last_updated=datetime.now(),
         )
 
-    def _assess_profitability_risk(self, info: Dict) -> Optional[RiskFactor]:
+    def _assess_profitability_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer le risque de rentabilité"""
         roe = info.get("returnOnEquity")
         profit_margin = info.get("profitMargins")
@@ -449,7 +446,7 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
             last_updated=datetime.now(),
         )
 
-    def _assess_valuation_risk(self, info: Dict) -> Optional[RiskFactor]:
+    def _assess_valuation_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer le risque de valorisation"""
         pe_ratio = info.get("trailingPE")
         pb_ratio = info.get("priceToBook")
@@ -486,7 +483,7 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
             last_updated=datetime.now(),
         )
 
-    def _assess_growth_risk(self, info: Dict) -> Optional[RiskFactor]:
+    def _assess_growth_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer le risque de croissance"""
         revenue_growth = info.get("revenueGrowth")
         earnings_growth = info.get("earningsGrowth")
@@ -525,8 +522,8 @@ class FundamentalRiskAnalyzer(IRiskAnalyzer):
         )
 
     def _assess_revenue_quality_risk(
-        self, info: Dict, financials: pd.DataFrame
-    ) -> Optional[RiskFactor]:
+        self, info: dict, financials: pd.DataFrame
+    ) -> RiskFactor | None:
         """Évaluer la qualité des revenus"""
         try:
             if financials.empty:
@@ -584,7 +581,7 @@ class GeopoliticalRiskAnalyzer(IRiskAnalyzer):
     def get_category(self) -> RiskCategory:
         return RiskCategory.GEOPOLITICAL
 
-    async def analyze(self, symbol: str, market_data: Dict) -> List[RiskFactor]:
+    async def analyze(self, symbol: str, market_data: dict) -> list[RiskFactor]:
         """Analyser les risques géopolitiques"""
         risks = []
 
@@ -614,7 +611,7 @@ class GeopoliticalRiskAnalyzer(IRiskAnalyzer):
                     category=RiskCategory.GEOPOLITICAL,
                     level=RiskLevel.MODERATE,
                     score=50.0,
-                    description=f"Erreur d'analyse géopolitique: {str(e)}",
+                    description=f"Erreur d'analyse géopolitique: {e!s}",
                     impact="MEDIUM",
                     probability="MEDIUM",
                     timeframe="MEDIUM",
@@ -625,7 +622,7 @@ class GeopoliticalRiskAnalyzer(IRiskAnalyzer):
 
         return risks
 
-    def _assess_country_risk(self, info: Dict) -> Optional[RiskFactor]:
+    def _assess_country_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer le risque pays"""
         country = info.get("country", "")
 
@@ -671,7 +668,7 @@ class GeopoliticalRiskAnalyzer(IRiskAnalyzer):
             last_updated=datetime.now(),
         )
 
-    def _assess_sector_geopolitical_risk(self, info: Dict) -> Optional[RiskFactor]:
+    def _assess_sector_geopolitical_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer le risque géopolitique par secteur"""
         sector = info.get("sector", "")
         industry = info.get("industry", "")
@@ -738,7 +735,7 @@ class GeopoliticalRiskAnalyzer(IRiskAnalyzer):
             last_updated=datetime.now(),
         )
 
-    def _assess_international_exposure_risk(self, info: Dict) -> Optional[RiskFactor]:
+    def _assess_international_exposure_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer le risque d'exposition internationale"""
         # Simulation basée sur la taille de l'entreprise et le secteur
         market_cap = info.get("marketCap", 0)
@@ -783,7 +780,7 @@ class ESGRiskAnalyzer(IRiskAnalyzer):
     def get_category(self) -> RiskCategory:
         return RiskCategory.ESG
 
-    async def analyze(self, symbol: str, market_data: Dict) -> List[RiskFactor]:
+    async def analyze(self, symbol: str, market_data: dict) -> list[RiskFactor]:
         """Analyser les risques ESG"""
         risks = []
 
@@ -813,7 +810,7 @@ class ESGRiskAnalyzer(IRiskAnalyzer):
                     category=RiskCategory.ESG,
                     level=RiskLevel.MODERATE,
                     score=50.0,
-                    description=f"Erreur d'analyse ESG: {str(e)}",
+                    description=f"Erreur d'analyse ESG: {e!s}",
                     impact="MEDIUM",
                     probability="MEDIUM",
                     timeframe="LONG",
@@ -824,7 +821,7 @@ class ESGRiskAnalyzer(IRiskAnalyzer):
 
         return risks
 
-    def _assess_environmental_risk(self, info: Dict) -> Optional[RiskFactor]:
+    def _assess_environmental_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer les risques environnementaux"""
         sector = info.get("sector", "")
         industry = info.get("industry", "")
@@ -877,7 +874,7 @@ class ESGRiskAnalyzer(IRiskAnalyzer):
             last_updated=datetime.now(),
         )
 
-    def _assess_governance_risk(self, info: Dict) -> Optional[RiskFactor]:
+    def _assess_governance_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer les risques de gouvernance"""
         # Indicateurs basés sur les données disponibles
         insider_ownership = info.get("heldByInsiders", 0) * 100
@@ -909,7 +906,7 @@ class ESGRiskAnalyzer(IRiskAnalyzer):
             last_updated=datetime.now(),
         )
 
-    def _assess_social_risk(self, info: Dict) -> Optional[RiskFactor]:
+    def _assess_social_risk(self, info: dict) -> RiskFactor | None:
         """Évaluer les risques sociaux"""
         sector = info.get("sector", "")
         employees = info.get("fullTimeEmployees", 0)
@@ -970,7 +967,7 @@ class RiskAssessmentService:
 
     def __init__(self):
         """Initialiser le service avec tous les analyseurs"""
-        self._analyzers: List[IRiskAnalyzer] = [
+        self._analyzers: list[IRiskAnalyzer] = [
             MarketRiskAnalyzer(),
             FundamentalRiskAnalyzer(),
             GeopoliticalRiskAnalyzer(),
@@ -978,7 +975,7 @@ class RiskAssessmentService:
         ]
 
     async def assess_comprehensive_risk(
-        self, symbol: str, market_data: Optional[Dict] = None
+        self, symbol: str, market_data: dict | None = None
     ) -> RiskAssessmentDTO:
         """
         Effectuer une évaluation complète des risques pour un symbole.
@@ -1031,7 +1028,7 @@ class RiskAssessmentService:
             summary=self._generate_risk_summary(all_risks, overall_level),
         )
 
-    def _calculate_overall_risk_score(self, risks: List[RiskFactor]) -> float:
+    def _calculate_overall_risk_score(self, risks: list[RiskFactor]) -> float:
         """Calculer le score de risque global pondéré"""
         if not risks:
             return 50.0
@@ -1070,10 +1067,10 @@ class RiskAssessmentService:
             return RiskLevel.VERY_LOW
 
     def _group_risks_by_category(
-        self, risks: List[RiskFactor]
-    ) -> Dict[str, List[RiskFactor]]:
+        self, risks: list[RiskFactor]
+    ) -> dict[str, list[RiskFactor]]:
         """Grouper les risques par catégorie"""
-        grouped: Dict[str, List[RiskFactor]] = {}
+        grouped: dict[str, list[RiskFactor]] = {}
         for risk in risks:
             category = risk.category.value
             if category not in grouped:
@@ -1097,10 +1094,10 @@ class RiskAssessmentService:
         )
 
     def _group_risks_by_category_as_dto(
-        self, risks: List[RiskFactor]
-    ) -> Dict[str, List[RiskFactorDTO]]:
+        self, risks: list[RiskFactor]
+    ) -> dict[str, list[RiskFactorDTO]]:
         """Grouper les risques par catégorie et convertir en DTOs"""
-        grouped: Dict[str, List[RiskFactorDTO]] = {}
+        grouped: dict[str, list[RiskFactorDTO]] = {}
         for risk in risks:
             category = risk.category.value
             if category not in grouped:
@@ -1109,7 +1106,7 @@ class RiskAssessmentService:
         return grouped
 
     def _generate_risk_summary(
-        self, risks: List[RiskFactor], overall_level: RiskLevel
+        self, risks: list[RiskFactor], overall_level: RiskLevel
     ) -> str:
         """Générer un résumé des risques"""
         if not risks:

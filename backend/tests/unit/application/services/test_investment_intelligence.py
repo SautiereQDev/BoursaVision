@@ -4,10 +4,8 @@ Couverture exhaustive des fonctionnalités critiques : stratégies d'investissem
 scoring, recommandations, analyses de portefeuille et optimisation.
 """
 
-from datetime import datetime, timedelta, timezone
-from decimal import Decimal
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from datetime import UTC, datetime, timedelta
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -23,9 +21,7 @@ from boursa_vision.application.services.investment_intelligence import (
 )
 from boursa_vision.application.services.market_scanner import (
     MarketScannerService,
-    ScanConfig,
     ScanResult,
-    ScanStrategy,
 )
 
 
@@ -163,7 +159,7 @@ class TestInvestmentRecommendation:
         assert rec.last_updated is not None
         assert isinstance(rec.last_updated, datetime)
         # Vérifie que le timestamp est récent (moins d'1 minute)
-        time_diff = datetime.now(timezone.utc) - rec.last_updated
+        time_diff = datetime.now(UTC) - rec.last_updated
         assert time_diff.total_seconds() < 60
 
 
@@ -619,11 +615,11 @@ class TestInvestmentIntelligenceService:
         assert self.service.should_update_analysis(self.test_config) is True
 
         # Given - Analyse récente
-        self.service.last_analysis = datetime.now(timezone.utc) - timedelta(hours=2)
+        self.service.last_analysis = datetime.now(UTC) - timedelta(hours=2)
         assert self.service.should_update_analysis(self.test_config) is False
 
         # Given - Analyse ancienne
-        self.service.last_analysis = datetime.now(timezone.utc) - timedelta(hours=8)
+        self.service.last_analysis = datetime.now(UTC) - timedelta(hours=8)
         assert self.service.should_update_analysis(self.test_config) is True
 
     def test_should_generate_analysis_summary(self):
@@ -638,7 +634,7 @@ class TestInvestmentIntelligenceService:
                 "C", RecommendationType.HOLD, 70.0, "Health"
             ),
         ]
-        self.service.last_analysis = datetime.now(timezone.utc)
+        self.service.last_analysis = datetime.now(UTC)
 
         # When
         summary = self.service.get_analysis_summary()
@@ -755,9 +751,9 @@ class TestPerformanceIntelligence:
         config = AnalysisConfig(max_recommendations=50)
 
         # When
-        start_time = datetime.now(timezone.utc)
+        start_time = datetime.now(UTC)
         await self.service.generate_investment_recommendations(config)
-        end_time = datetime.now(timezone.utc)
+        end_time = datetime.now(UTC)
 
         # Then
         analysis_time = (end_time - start_time).total_seconds()

@@ -1,8 +1,8 @@
 """
 Configuration for the API
 """
+
 from enum import Enum
-from typing import List
 
 from pydantic import Field
 from pydantic_settings import BaseSettings
@@ -35,12 +35,12 @@ class APISettings(BaseSettings):
     reload: bool = Field(default=True)
 
     # CORS settings
-    cors_origins: List[str] = Field(
+    cors_origins: list[str] = Field(
         default=["http://localhost:3000", "http://localhost:5173"],
         description="Allowed CORS origins",
     )
-    cors_methods: List[str] = Field(default=["*"])
-    cors_headers: List[str] = Field(default=["*"])
+    cors_methods: list[str] = Field(default=["*"])
+    cors_headers: list[str] = Field(default=["*"])
 
     # Rate limiting
     rate_limit_enabled: bool = Field(default=True)

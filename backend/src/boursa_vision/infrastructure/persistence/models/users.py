@@ -11,7 +11,7 @@ This module contains SQLAlchemy models for managing user-related data in the tra
 # ================================================================
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     TIMESTAMP,
@@ -63,12 +63,12 @@ class User(Base, DatabaseMixin):
     )
     created_at = Column(
         TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
     updated_at = Column(
         TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
     last_login_at = Column(
         TIMESTAMP(timezone=True),
@@ -133,11 +133,11 @@ class UserSession(Base, DatabaseMixin):
     expires_at = Column(TIMESTAMP(timezone=True), nullable=False)
     created_at = Column(
         TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
     last_activity_at = Column(
         TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
 
     user = relationship("User", back_populates="sessions")

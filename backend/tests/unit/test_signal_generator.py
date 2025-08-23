@@ -6,8 +6,7 @@ with comprehensive coverage of all methods and edge cases.
 """
 
 from datetime import datetime
-from typing import Any, Dict
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 

@@ -5,8 +5,7 @@ This module provides transaction management and coordination between
 multiple repositories following the Unit of Work pattern.
 """
 
-from typing import Any, Dict, Optional
-from uuid import UUID
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,7 +31,7 @@ class UnitOfWork:
 
     def __init__(self, session: AsyncSession):
         self._session = session
-        self._repositories: Dict[str, Any] = {}
+        self._repositories: dict[str, Any] = {}
         self._is_committed = False
 
     @property

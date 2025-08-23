@@ -6,7 +6,7 @@ SQLAlchemy models for refresh token management.
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import TIMESTAMP, Boolean, Column, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -31,12 +31,12 @@ class RefreshToken(Base, DatabaseMixin):
     expires_at = Column(TIMESTAMP(timezone=True), nullable=False, index=True)
     created_at = Column(
         TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
     )
     last_used_at = Column(
         TIMESTAMP(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
     )
     is_revoked = Column(Boolean, default=False, nullable=False, index=True)

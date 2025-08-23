@@ -1,8 +1,9 @@
 """
 Mixins for SQLAlchemy models.
 """
+
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import TIMESTAMP, Column, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
@@ -43,15 +44,15 @@ class TimestampMixin:
                              automatically on record modification.
     """
 
-    created_at = Column(TIMESTAMP, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(TIMESTAMP, default=lambda: datetime.now(UTC))
     updated_at = Column(
         TIMESTAMP,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     def touch(self):
         """
         Updates the `updated_at` timestamp to the current UTC time.
         """
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)

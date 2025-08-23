@@ -5,9 +5,8 @@ Tests the ArchiveBasedRecommendationService following AAA (Arrange-Act-Assert) p
 with comprehensive coverage of all methods and edge cases.
 """
 
-from datetime import datetime, timedelta
-from typing import Any, Dict, List
-from unittest.mock import MagicMock, Mock, patch
+from datetime import datetime
+from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest

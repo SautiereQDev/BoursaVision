@@ -1,7 +1,6 @@
 """Authentication DTOs for API requests and responses."""
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 

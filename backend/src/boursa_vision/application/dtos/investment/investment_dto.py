@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import Field
@@ -18,6 +17,6 @@ class InvestmentDTO(BaseDTO):
     market_cap: str = Field(..., description="Market capitalization category")
     currency: str = Field(..., description="Trading currency")
     exchange: str = Field(..., min_length=1, max_length=50, description="Exchange name")
-    current_price: Optional[MoneyDTO] = Field(None, description="Current market price")
+    current_price: MoneyDTO | None = Field(None, description="Current market price")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")

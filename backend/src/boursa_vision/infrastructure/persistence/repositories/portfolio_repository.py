@@ -3,12 +3,10 @@ SQLAlchemy repository implementations following the Repository pattern.
 Implements domain repository interfaces with async SQLAlchemy.
 """
 
-from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import and_, desc, func, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from boursa_vision.domain.entities.portfolio import Portfolio as DomainPortfolio
 from boursa_vision.domain.repositories.portfolio_repository import IPortfolioRepository
@@ -23,7 +21,7 @@ class SQLAlchemyPortfolioRepository(IPortfolioRepository):
     # Class-level mapper for test mocking compatibility
     _mapper = PortfolioMapper()
 
-    def __init__(self, session: Optional[AsyncSession] = None):
+    def __init__(self, session: AsyncSession | None = None):
         self._mapper = PortfolioMapper()
         self._session = session  # Optional injected session for testing
 
@@ -33,7 +31,7 @@ class SQLAlchemyPortfolioRepository(IPortfolioRepository):
             return self._session
         return get_db_session()
 
-    async def find_by_id(self, portfolio_id: UUID) -> Optional[DomainPortfolio]:
+    async def find_by_id(self, portfolio_id: UUID) -> DomainPortfolio | None:
         """Find portfolio by ID."""
         if self._session:
             # Use injected session (testing mode)
@@ -57,7 +55,7 @@ class SQLAlchemyPortfolioRepository(IPortfolioRepository):
 
                 return self._mapper.to_domain(portfolio_model)
 
-    async def find_by_user_id(self, user_id: UUID) -> List[DomainPortfolio]:
+    async def find_by_user_id(self, user_id: UUID) -> list[DomainPortfolio]:
         """Find portfolios by user ID."""
         if self._session:
             # Use injected session (testing mode)
@@ -143,7 +141,7 @@ class SQLAlchemyPortfolioRepository(IPortfolioRepository):
 
                 return True
 
-    async def find_by_name(self, user_id: UUID, name: str) -> Optional[DomainPortfolio]:
+    async def find_by_name(self, user_id: UUID, name: str) -> DomainPortfolio | None:
         """Find portfolio by user and name."""
         async with get_db_session() as session:
             query = select(Portfolio).where(
@@ -184,7 +182,7 @@ class SQLAlchemyPortfolioRepository(IPortfolioRepository):
 
     async def find_all(
         self, offset: int = 0, limit: int = 100
-    ) -> List[DomainPortfolio]:
+    ) -> list[DomainPortfolio]:
         """Find all portfolios with pagination."""
         async with get_db_session() as session:
             query = select(Portfolio).offset(offset).limit(limit)

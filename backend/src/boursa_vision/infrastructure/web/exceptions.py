@@ -1,7 +1,8 @@
 """
 Custom exceptions for the API
 """
-from typing import Any, Dict, Optional
+
+from typing import Any
 
 from fastapi import HTTPException, status
 
@@ -13,7 +14,7 @@ class APIException(HTTPException):
         self,
         status_code: int,
         detail: str,
-        headers: Optional[Dict[str, Any]] = None,
+        headers: dict[str, Any] | None = None,
     ):
         super().__init__(status_code=status_code, detail=detail, headers=headers)
 
@@ -21,7 +22,7 @@ class APIException(HTTPException):
 class ValidationError(APIException):
     """Validation error exception."""
 
-    def __init__(self, detail: str, field: Optional[str] = None):
+    def __init__(self, detail: str, field: str | None = None):
         if field:
             detail = f"Validation error for field '{field}': {detail}"
         super().__init__(

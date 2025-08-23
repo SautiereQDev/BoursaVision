@@ -1,7 +1,6 @@
 """Find investments query module."""
 
 from dataclasses import dataclass
-from typing import List, Optional
 
 from ...common import IQuery
 
@@ -10,12 +9,12 @@ from ...common import IQuery
 class FindInvestmentsQuery(IQuery):
     """Query to find investments based on criteria"""
 
-    sectors: Optional[List[str]] = None
-    investment_types: Optional[List[str]] = None
-    market_caps: Optional[List[str]] = None
-    currency: Optional[str] = None
-    min_price: Optional[float] = None
-    max_price: Optional[float] = None
-    search_term: Optional[str] = None
+    sectors: list[str] | None = None
+    investment_types: list[str] | None = None
+    market_caps: list[str] | None = None
+    currency: str | None = None
+    min_price: float | None = None
+    max_price: float | None = None
+    search_term: str | None = None
     limit: int = 50
     offset: int = 0

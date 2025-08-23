@@ -6,11 +6,9 @@ Tests complets pour le repository d'investissements avec SQLAlchemy,
 incluant CRUD, mapper, recherches complexes et gestion d'erreurs.
 """
 
-from typing import List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
-from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 

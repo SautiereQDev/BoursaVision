@@ -7,7 +7,6 @@ isolating the application layer from domain implementation details.
 """
 
 from datetime import datetime
-from typing import List, Optional
 from uuid import UUID
 
 from .dtos import (
@@ -49,15 +48,14 @@ class InvestmentMapper:
             exchange=str(safe_getattr(investment, "exchange", "UNKNOWN")),
             isin=safe_getattr(investment, "isin", None),
             current_price=MoneyMapper.to_dto(getattr(investment, "current_price", None))
-            if hasattr(investment, "current_price")
-            and getattr(investment, "current_price")
+            if hasattr(investment, "current_price") and investment.current_price
             else None,
             created_at=safe_getattr(investment, "created_at", datetime.now()),
             updated_at=safe_getattr(investment, "updated_at", datetime.now()),
         )
 
     @staticmethod
-    def to_dto_list(investments: List) -> List[InvestmentDTO]:
+    def to_dto_list(investments: list) -> list[InvestmentDTO]:
         """Convert list of Investment entities to DTOs"""
         return [InvestmentMapper.to_dto(inv) for inv in investments]
 
@@ -66,7 +64,7 @@ class MoneyMapper:
     """Mapper for Money value object to/from DTO"""
 
     @staticmethod
-    def to_dto(money) -> Optional[MoneyDTO]:
+    def to_dto(money) -> MoneyDTO | None:
         """Convert Money value object to DTO"""
         if not money:
             return None
@@ -110,7 +108,7 @@ class PositionMapper:
         )
 
     @staticmethod
-    def to_dto_list(positions: List) -> List[PositionDTO]:
+    def to_dto_list(positions: list) -> list[PositionDTO]:
         """Convert list of Position entities to DTOs"""
         return [PositionMapper.to_dto(pos) for pos in positions]
 

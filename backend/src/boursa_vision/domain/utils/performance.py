@@ -1,10 +1,9 @@
 """
 Performance utility functions for domain services.
 """
-from typing import List
 
 
-def calculate_max_drawdown(returns: List[float]) -> float:
+def calculate_max_drawdown(returns: list[float]) -> float:
     """Calculate maximum drawdown from a list of returns."""
     if not returns:
         return 0.0

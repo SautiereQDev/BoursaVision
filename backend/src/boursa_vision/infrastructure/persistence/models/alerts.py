@@ -7,7 +7,7 @@ SQLAlchemy models for alerts and notifications.
 # ================================================================
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     Boolean,
@@ -158,8 +158,8 @@ class Notification(Base, DatabaseMixin):
     channels = Column(JSONB)
     is_read = Column(Boolean, default=False)
     read_at = Column(TIMESTAMP)
-    sent_at = Column(TIMESTAMP, default=lambda: datetime.now(timezone.utc))
-    created_at = Column(TIMESTAMP, default=lambda: datetime.now(timezone.utc))
+    sent_at = Column(TIMESTAMP, default=lambda: datetime.now(UTC))
+    created_at = Column(TIMESTAMP, default=lambda: datetime.now(UTC))
 
     # Relations
     user = relationship("User", back_populates="notifications")

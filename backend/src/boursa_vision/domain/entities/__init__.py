@@ -24,11 +24,9 @@ __all__ = [
     "DataSource",
 ]
 
-from .base import AggregateRoot, DomainEvent
 from .investment import (
     AnalysisDataMissingException,
     FundamentalData,
-    Investment,
     InvestmentSector,
     InvestmentType,
     InvestmentValidationException,
@@ -38,8 +36,6 @@ from .investment import (
 from .portfolio import (
     InsufficientFundsException,
     PerformanceMetrics,
-    Portfolio,
-    Position,
     PositionLimitExceededException,
     RiskLimits,
 )

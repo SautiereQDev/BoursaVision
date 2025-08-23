@@ -13,8 +13,7 @@ Couvre :
 
 import json
 from datetime import datetime
-from typing import Any, Dict
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -23,7 +22,6 @@ from boursa_vision.infrastructure.external.cache_strategy import (
     AdaptiveCacheStrategy,
     CacheConfig,
     CacheKeyBuilder,
-    CacheStrategy,
     DataFrequency,
     RedisCache,
 )

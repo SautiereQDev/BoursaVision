@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from ...common import IQuery
@@ -13,7 +12,7 @@ class AnalyzePortfolioQuery(IQuery):
     """Query to analyze portfolio performance and risk"""
 
     portfolio_id: UUID
-    benchmark_symbol: Optional[str] = None
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
+    benchmark_symbol: str | None = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None
     include_technical_analysis: bool = True

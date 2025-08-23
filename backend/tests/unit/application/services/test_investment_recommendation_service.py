@@ -6,10 +6,8 @@ Tests unitaires complets pour le service de recommandations d'investissement.
 Ce service utilise l'analyse avancée pour générer des recommandations de portfolio optimisées.
 """
 
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
-from typing import List
-from unittest.mock import AsyncMock, Mock, patch
+from datetime import datetime
+from unittest.mock import Mock, patch
 
 import pytest
 

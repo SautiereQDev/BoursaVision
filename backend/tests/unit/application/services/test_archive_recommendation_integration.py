@@ -152,14 +152,13 @@ class TestArchiveServiceRealImports:
                 with patch("pandas.DataFrame") as mock_df_class:
                     mock_df = Mock()
                     mock_df_class.return_value = mock_df
-                    
+
                     # Mock get_market_data_for_symbol to return the expected format
-                    with patch.object(provider, 'get_market_data_for_symbol') as mock_method:
+                    with patch.object(
+                        provider, "get_market_data_for_symbol"
+                    ) as mock_method:
                         mock_method.return_value = {
-                            "info": {
-                                "symbol": "AAPL",
-                                "currentPrice": 132.0
-                            }
+                            "info": {"symbol": "AAPL", "currentPrice": 132.0}
                         }
 
                         # Act

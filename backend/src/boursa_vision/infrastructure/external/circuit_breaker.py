@@ -6,10 +6,11 @@ Circuit breaker to prevent cascading failures and provide fail-fast behavior.
 """
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from threading import Lock
-from typing import Callable, Optional, TypeVar
+from typing import TypeVar
 
 T = TypeVar("T")
 
@@ -60,7 +61,7 @@ class CircuitBreaker:
         self.state = CircuitState.CLOSED
         self.failure_count = 0
         self.success_count = 0
-        self.last_failure_time: Optional[float] = None
+        self.last_failure_time: float | None = None
         self._lock = Lock()
 
     def call(self, func: Callable[..., T], *args, **kwargs) -> T:
@@ -181,7 +182,7 @@ class CircuitBreakerRegistry:
                 self._breakers[name] = CircuitBreaker(config)
             return self._breakers[name]
 
-    def get(self, name: str) -> Optional[CircuitBreaker]:
+    def get(self, name: str) -> CircuitBreaker | None:
         """
         Retrieve an existing circuit breaker by its name.
 

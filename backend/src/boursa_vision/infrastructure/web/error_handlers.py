@@ -1,6 +1,7 @@
 """
 Global error handlers for the API
 """
+
 import traceback
 
 import structlog

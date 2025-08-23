@@ -1,6 +1,7 @@
 """
 Tests API market_api.py - Version finale pour >90% de couverture
 """
+
 from unittest.mock import Mock, patch
 
 import pytest

@@ -16,7 +16,6 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Optional
 
 from .money import Currency
 from .price import Price
@@ -167,15 +166,15 @@ class Signal:
     action: SignalAction
     confidence_score: ConfidenceScore
     generated_at: datetime
-    price_target: Optional[Price] = None
-    stop_loss: Optional[Price] = None
-    reasoning: Optional[str] = None
-    technical_score: Optional[Decimal] = None
-    fundamental_score: Optional[Decimal] = None
-    market_context_score: Optional[Decimal] = None
-    indicators_used: Optional[List[str]] = None
-    metadata: Optional[Dict] = None
-    expires_at: Optional[datetime] = None
+    price_target: Price | None = None
+    stop_loss: Price | None = None
+    reasoning: str | None = None
+    technical_score: Decimal | None = None
+    fundamental_score: Decimal | None = None
+    market_context_score: Decimal | None = None
+    indicators_used: list[str] | None = None
+    metadata: dict | None = None
+    expires_at: datetime | None = None
 
     def __post_init__(self):
         """Validate the signal"""
@@ -208,7 +207,7 @@ class Signal:
         return self.confidence_score
 
     @property
-    def target_price(self) -> Optional[Price]:
+    def target_price(self) -> Price | None:
         """Alias for price_target to support legacy attribute name"""
         return self.price_target
 
@@ -243,7 +242,7 @@ class Signal:
         """Check if the signal justifies an action"""
         return self.confidence_score.is_reliable() and self.is_valid()
 
-    def calculate_risk_reward_ratio(self, current_price: Price) -> Optional[Decimal]:
+    def calculate_risk_reward_ratio(self, current_price: Price) -> Decimal | None:
         """Calculate the risk/reward ratio"""
         if not (self.price_target and self.stop_loss):
             return None
@@ -259,9 +258,7 @@ class Signal:
             return None
         return gain / loss
 
-    def get_potential_return_percentage(
-        self, current_price: Price
-    ) -> Optional[Decimal]:
+    def get_potential_return_percentage(self, current_price: Price) -> Decimal | None:
         """Potential return percentage"""
         if not self.price_target or current_price.value == 0:
             return None
@@ -285,7 +282,7 @@ class Signal:
         new_meta[key] = value
         return replace(self, metadata=new_meta)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Serialization for storage/API"""
         return {
             "symbol": self.symbol,
@@ -311,7 +308,7 @@ class Signal:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict) -> "Signal":
+    def from_dict(cls, data: dict) -> "Signal":
         """Deserialization from a dict"""
         return cls(
             symbol=data["symbol"],

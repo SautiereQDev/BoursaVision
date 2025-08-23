@@ -5,8 +5,7 @@ SQLAlchemy RefreshToken Repository Implementation
 Repository implementation for RefreshToken entity using SQLAlchemy.
 """
 
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import and_, select
@@ -33,7 +32,7 @@ class SQLAlchemyRefreshTokenRepository(IRefreshTokenRepository):
         """
         self.session = session
 
-    async def find_by_id(self, entity_id: UUID) -> Optional[DomainRefreshToken]:
+    async def find_by_id(self, entity_id: UUID) -> DomainRefreshToken | None:
         """Find refresh token by ID"""
         result = await self.session.execute(
             select(RefreshToken).where(RefreshToken.id == entity_id)
@@ -83,7 +82,7 @@ class SQLAlchemyRefreshTokenRepository(IRefreshTokenRepository):
 
         return False
 
-    async def find_by_token(self, token: str) -> Optional[DomainRefreshToken]:
+    async def find_by_token(self, token: str) -> DomainRefreshToken | None:
         """Find refresh token by token string"""
         result = await self.session.execute(
             select(RefreshToken).where(RefreshToken.token == token)
@@ -91,7 +90,7 @@ class SQLAlchemyRefreshTokenRepository(IRefreshTokenRepository):
         model = result.scalar_one_or_none()
         return self._to_domain(model) if model else None
 
-    async def find_by_user_id(self, user_id: UUID) -> List[DomainRefreshToken]:
+    async def find_by_user_id(self, user_id: UUID) -> list[DomainRefreshToken]:
         """Find all refresh tokens for a user"""
         result = await self.session.execute(
             select(RefreshToken)
@@ -101,15 +100,15 @@ class SQLAlchemyRefreshTokenRepository(IRefreshTokenRepository):
         models = result.scalars().all()
         return [self._to_domain(model) for model in models]
 
-    async def find_active_by_user_id(self, user_id: UUID) -> List[DomainRefreshToken]:
+    async def find_active_by_user_id(self, user_id: UUID) -> list[DomainRefreshToken]:
         """Find all active (non-revoked, non-expired) refresh tokens for a user"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = await self.session.execute(
             select(RefreshToken)
             .where(
                 and_(
                     RefreshToken.user_id == user_id,
-                    RefreshToken.is_revoked is False,  # noqa: E712
+                    RefreshToken.is_revoked is False,
                     RefreshToken.expires_at > now,
                 )
             )
@@ -126,7 +125,7 @@ class SQLAlchemyRefreshTokenRepository(IRefreshTokenRepository):
             select(RefreshToken).where(
                 and_(
                     RefreshToken.user_id == user_id,
-                    RefreshToken.is_revoked is False,  # noqa: E712
+                    RefreshToken.is_revoked is False,
                 )
             )
         )
@@ -157,12 +156,12 @@ class SQLAlchemyRefreshTokenRepository(IRefreshTokenRepository):
 
     async def count_active_sessions(self, user_id: UUID) -> int:
         """Count active sessions (valid refresh tokens) for a user"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = await self.session.execute(
             select(RefreshToken).where(
                 and_(
                     RefreshToken.user_id == user_id,
-                    RefreshToken.is_revoked is False,  # noqa: E712
+                    RefreshToken.is_revoked is False,
                     RefreshToken.expires_at > now,
                 )
             )

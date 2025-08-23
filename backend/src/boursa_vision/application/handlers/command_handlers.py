@@ -6,7 +6,7 @@ Handlers for processing commands following CQRS pattern.
 Each handler is responsible for executing a specific command.
 """
 
-from typing import Any, Dict
+from typing import Any
 from uuid import UUID
 
 from ..commands import (
@@ -169,14 +169,14 @@ class AddInvestmentToPortfolioCommandHandler(
 
 
 class GenerateSignalCommandHandler(
-    ICommandHandler[GenerateSignalCommand, Dict[str, Any]]
+    ICommandHandler[GenerateSignalCommand, dict[str, Any]]
 ):
     """Handler for generating trading signals"""
 
     def __init__(self, signal_generator):
         self._signal_generator = signal_generator
 
-    async def handle(self, command: GenerateSignalCommand) -> Dict[str, Any]:
+    async def handle(self, command: GenerateSignalCommand) -> dict[str, Any]:
         """
         Handle the generate signal command.
 

@@ -11,9 +11,8 @@ Classes:
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import List, Optional
 from uuid import UUID, uuid4
 
 from ..events.user_events import UserCreatedEvent, UserDeactivatedEvent
@@ -30,7 +29,7 @@ class UserRole(str, Enum):
     VIEWER = "viewer"
 
     @property
-    def permissions(self) -> List[str]:
+    def permissions(self) -> list[str]:
         """Get permissions for this role"""
         permissions_map = {
             self.ADMIN: [
@@ -75,8 +74,8 @@ class User(AggregateRoot):
     is_active: bool = field(default=True)
     email_verified: bool = field(default=False)
     two_factor_enabled: bool = field(default=False)
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    last_login: Optional[datetime] = field(default=None)
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    last_login: datetime | None = field(default=None)
 
     def __post_init__(self):
         """Initialize aggregate root and validate user data"""
@@ -163,7 +162,7 @@ class User(AggregateRoot):
 
     def update_last_login(self) -> None:
         """Update last login timestamp"""
-        self.last_login = datetime.now(timezone.utc)
+        self.last_login = datetime.now(UTC)
 
     def change_role(self, new_role: UserRole) -> None:
         """Change user role (admin operation)"""
@@ -174,9 +173,9 @@ class User(AggregateRoot):
 
     def update_profile(
         self,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None,
-        preferred_currency: Optional[Currency] = None,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        preferred_currency: Currency | None = None,
     ) -> None:
         """Update user profile information"""
         if first_name is not None:

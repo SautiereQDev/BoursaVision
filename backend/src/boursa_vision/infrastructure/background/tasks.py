@@ -6,8 +6,8 @@ l'archive des données financières à jour.
 """
 
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 try:
     from celery import Task
@@ -56,7 +56,7 @@ class CallbackTask(Task):
     autoretry_for=(Exception,),
     retry_kwargs={"countdown": 60},
 )
-def archive_market_data_task(self, interval: str = "1d") -> Dict[str, Any]:
+def archive_market_data_task(self, interval: str = "1d") -> dict[str, Any]:
     """
     Tâche d'archivage des données de marché.
 
@@ -78,7 +78,6 @@ def archive_market_data_task(self, interval: str = "1d") -> Dict[str, Any]:
             if loop.is_running():
                 # Créer un nouveau thread pour éviter les conflits
                 import concurrent.futures
-                import threading
 
                 def run_archival():
                     new_loop = asyncio.new_event_loop()
@@ -120,7 +119,7 @@ def archive_market_data_task(self, interval: str = "1d") -> Dict[str, Any]:
         return report
 
     except Exception as exc:
-        logger.error(f"Archive task failed: {str(exc)}")
+        logger.error(f"Archive task failed: {exc!s}")
 
         # Retry automatique pour certaines erreurs
         if self.request.retries < self.max_retries:
@@ -131,13 +130,13 @@ def archive_market_data_task(self, interval: str = "1d") -> Dict[str, Any]:
         return {
             "status": "failed",
             "error": str(exc),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "retries": self.request.retries,
         }
 
 
 @celery_app.task(bind=True, base=CallbackTask, name=HEALTH_TASK_NAME, max_retries=2)
-def health_check_task(self) -> Dict[str, Any]:
+def health_check_task(self) -> dict[str, Any]:
     """
     Tâche de vérification de santé du système d'archivage.
 
@@ -180,7 +179,7 @@ def health_check_task(self) -> Dict[str, Any]:
             {
                 "celery_worker_status": "active",
                 "task_id": self.request.id,
-                "task_timestamp": datetime.now(timezone.utc).isoformat(),
+                "task_timestamp": datetime.now(UTC).isoformat(),
             }
         )
 
@@ -188,12 +187,12 @@ def health_check_task(self) -> Dict[str, Any]:
         return status
 
     except Exception as exc:
-        logger.error(f"Health check failed: {str(exc)}")
+        logger.error(f"Health check failed: {exc!s}")
 
         return {
             "status": "unhealthy",
             "error": str(exc),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "celery_worker_status": "error",
         }
 
@@ -203,7 +202,7 @@ def health_check_task(self) -> Dict[str, Any]:
 )
 def manual_archive_task(
     self, symbols: list, interval: str = "1d", period: str = "1d"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Tâche d'archivage manuel pour des symboles spécifiques.
 
@@ -235,7 +234,7 @@ def manual_archive_task(
                     logger.debug(f"Successfully archived {symbol}")
                 except Exception as e:
                     failed += 1
-                    error_msg = f"Failed to archive {symbol}: {str(e)}"
+                    error_msg = f"Failed to archive {symbol}: {e!s}"
                     errors.append(error_msg)
                     logger.error(error_msg)
 
@@ -244,7 +243,7 @@ def manual_archive_task(
 
             return {
                 "status": "completed",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "symbols": symbols,
                 "interval": interval,
                 "period": period,
@@ -276,18 +275,18 @@ def manual_archive_task(
             return asyncio.run(archive_specific_symbols())
 
     except Exception as exc:
-        logger.error(f"Manual archive task failed: {str(exc)}")
+        logger.error(f"Manual archive task failed: {exc!s}")
         return {
             "status": "failed",
             "error": str(exc),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
 
 @celery_app.task(
     bind=True, name="src.infrastructure.background.tasks.cleanup_old_data_task"
 )
-def cleanup_old_data_task(self, days_to_keep: int = 365) -> Dict[str, Any]:
+def cleanup_old_data_task(self, days_to_keep: int = 365) -> dict[str, Any]:
     """
     Tâche de nettoyage des anciennes données.
 
@@ -303,11 +302,11 @@ def cleanup_old_data_task(self, days_to_keep: int = 365) -> Dict[str, Any]:
         # Cette tâche sera implémentée selon les besoins de rétention
         # Pour l'instant, on retourne un rapport basique
 
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_to_keep)
+        cutoff_date = datetime.now(UTC) - timedelta(days=days_to_keep)
 
         return {
             "status": "completed",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "cutoff_date": cutoff_date.isoformat(),
             "days_kept": days_to_keep,
             "records_deleted": 0,  # À implémenter
@@ -315,17 +314,17 @@ def cleanup_old_data_task(self, days_to_keep: int = 365) -> Dict[str, Any]:
         }
 
     except Exception as exc:
-        logger.error(f"Cleanup task failed: {str(exc)}")
+        logger.error(f"Cleanup task failed: {exc!s}")
         return {
             "status": "failed",
             "error": str(exc),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
 
 # Tâche de démarrage pour vérifier la connectivité
 @celery_app.task(name="src.infrastructure.background.tasks.startup_check_task")
-def startup_check_task() -> Dict[str, Any]:
+def startup_check_task() -> dict[str, Any]:
     """
     Tâche de vérification au démarrage.
 
@@ -337,15 +336,15 @@ def startup_check_task() -> Dict[str, Any]:
 
         return {
             "status": "healthy",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "message": "Background tasks system is operational",
             "version": "1.0.0",
         }
 
     except Exception as exc:
-        logger.error(f"Startup check failed: {str(exc)}")
+        logger.error(f"Startup check failed: {exc!s}")
         return {
             "status": "failed",
             "error": str(exc),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }

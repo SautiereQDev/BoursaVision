@@ -10,8 +10,6 @@ Classes:
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import List, Optional
-from uuid import UUID
 
 from ..entities.market_data import DataSource, MarketData, Timeframe
 from .base_repository import IBaseRepository
@@ -28,7 +26,7 @@ class IMarketDataRepository(IBaseRepository[MarketData], ABC):
     @abstractmethod
     async def find_by_symbol_and_timestamp(
         self, symbol: str, timestamp: datetime, timeframe: Timeframe = Timeframe.DAY_1
-    ) -> Optional[MarketData]:
+    ) -> MarketData | None:
         """Find market data by symbol and timestamp"""
         pass
 
@@ -36,26 +34,26 @@ class IMarketDataRepository(IBaseRepository[MarketData], ABC):
     async def find_by_symbol(
         self,
         symbol: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         timeframe: Timeframe = Timeframe.DAY_1,
-        source: Optional[DataSource] = None,
+        source: DataSource | None = None,
         limit: int = 1000,
-    ) -> List[MarketData]:
+    ) -> list[MarketData]:
         """Find market data for symbol within date range"""
         pass
 
     @abstractmethod
     async def find_latest_by_symbol(
         self, symbol: str, timeframe: Timeframe = Timeframe.DAY_1
-    ) -> Optional[MarketData]:
+    ) -> MarketData | None:
         """Find latest market data for symbol"""
         pass
 
     @abstractmethod
     async def find_latest_by_symbols(
-        self, symbols: List[str], timeframe: Timeframe = Timeframe.DAY_1
-    ) -> List[MarketData]:
+        self, symbols: list[str], timeframe: Timeframe = Timeframe.DAY_1
+    ) -> list[MarketData]:
         """Find latest market data for multiple symbols"""
         pass
 
@@ -71,14 +69,14 @@ class IMarketDataRepository(IBaseRepository[MarketData], ABC):
         pass
 
     @abstractmethod
-    async def get_available_symbols(self) -> List[str]:
+    async def get_available_symbols(self) -> list[str]:
         """Get list of all available symbols"""
         pass
 
     @abstractmethod
     async def get_date_range_for_symbol(
         self, symbol: str, timeframe: Timeframe = Timeframe.DAY_1
-    ) -> Optional[tuple[datetime, datetime]]:
+    ) -> tuple[datetime, datetime] | None:
         """Get earliest and latest dates for symbol"""
         pass
 
@@ -103,7 +101,7 @@ class IMarketDataRepository(IBaseRepository[MarketData], ABC):
         start_date: datetime,
         end_date: datetime,
         timeframe: Timeframe = Timeframe.DAY_1,
-    ) -> List[datetime]:
+    ) -> list[datetime]:
         """Find missing dates in market data for symbol"""
         pass
 

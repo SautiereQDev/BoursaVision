@@ -6,10 +6,9 @@ Couvre les requêtes async, les opérations en lot, les agrégations temporelles
 """
 
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
 
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
@@ -189,8 +188,8 @@ class TestFindBySymbolAndTimerange:
             domain_entity = MagicMock()
             repository._mapper.to_domain.return_value = domain_entity
 
-            start_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
-            end_date = datetime(2024, 1, 31, tzinfo=timezone.utc)
+            start_date = datetime(2024, 1, 1, tzinfo=UTC)
+            end_date = datetime(2024, 1, 31, tzinfo=UTC)
 
             response = await repository.find_by_symbol_and_timerange(
                 "AAPL", start_date, end_date
@@ -212,8 +211,8 @@ class TestFindBySymbolAndTimerange:
             result.scalars.return_value.all.return_value = []
             session.execute.return_value = result
 
-            start_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
-            end_date = datetime(2024, 1, 31, tzinfo=timezone.utc)
+            start_date = datetime(2024, 1, 1, tzinfo=UTC)
+            end_date = datetime(2024, 1, 31, tzinfo=UTC)
 
             response = await repository.find_by_symbol_and_timerange(
                 "UNKNOWN", start_date, end_date

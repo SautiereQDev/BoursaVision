@@ -6,9 +6,8 @@ et les fonctions utilitaires de gestion de session.
 """
 
 import sys
-from contextlib import asynccontextmanager
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
@@ -102,12 +101,14 @@ class TestDatabaseManager:
     @pytest.mark.asyncio
     async def test_database_manager_initialize(self, db_manager):
         """Test d'initialisation du DatabaseManager."""
-        with patch(
-            "boursa_vision.infrastructure.persistence.sqlalchemy.database.create_async_engine"
-        ) as mock_engine, patch(
-            "boursa_vision.infrastructure.persistence.sqlalchemy.database.async_sessionmaker"
-        ) as mock_sessionmaker, patch(
-            "boursa_vision.infrastructure.persistence.sqlalchemy.database.event"
+        with (
+            patch(
+                "boursa_vision.infrastructure.persistence.sqlalchemy.database.create_async_engine"
+            ) as mock_engine,
+            patch(
+                "boursa_vision.infrastructure.persistence.sqlalchemy.database.async_sessionmaker"
+            ) as mock_sessionmaker,
+            patch("boursa_vision.infrastructure.persistence.sqlalchemy.database.event"),
         ):
             mock_async_engine = AsyncMock(spec=AsyncEngine)
             mock_engine.return_value = mock_async_engine

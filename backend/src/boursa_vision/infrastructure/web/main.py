@@ -9,6 +9,7 @@ Comprehensive FastAPI application for Boursa Vision with:
 - OpenAPI documentation
 - WebSocket support
 """
+
 from contextlib import asynccontextmanager
 
 import structlog
@@ -28,7 +29,7 @@ from .middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
 )
-from .routers import auth, investments, market_data, portfolio, websocket
+from .routers import auth, investments, market_data, portfolio
 
 # Configure structured logging
 structlog.configure(

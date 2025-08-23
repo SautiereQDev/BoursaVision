@@ -4,7 +4,6 @@ Implements the Abstract Factory pattern for repository creation.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Type
 
 from boursa_vision.domain.repositories.market_data_repository import (
     IMarketDataRepository,
@@ -92,8 +91,8 @@ class RepositoryRegistry:
     """
 
     _instance = None
-    _repositories: Dict[Type, object] = {}
-    _factory: Optional[IRepositoryFactory] = None
+    _repositories: dict[type, object] = {}
+    _factory: IRepositoryFactory | None = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -118,9 +117,9 @@ class RepositoryRegistry:
         if IPortfolioRepository not in self._repositories:
             if self._factory is None:
                 self._factory = SQLAlchemyRepositoryFactory()
-            self._repositories[
-                IPortfolioRepository
-            ] = self._factory.create_portfolio_repository()
+            self._repositories[IPortfolioRepository] = (
+                self._factory.create_portfolio_repository()
+            )
         return self._repositories[IPortfolioRepository]  # type: ignore
 
     def get_market_data_repository(self) -> IMarketDataRepository:
@@ -128,9 +127,9 @@ class RepositoryRegistry:
         if IMarketDataRepository not in self._repositories:
             if self._factory is None:
                 self._factory = SQLAlchemyRepositoryFactory()
-            self._repositories[
-                IMarketDataRepository
-            ] = self._factory.create_market_data_repository()
+            self._repositories[IMarketDataRepository] = (
+                self._factory.create_market_data_repository()
+            )
         return self._repositories[IMarketDataRepository]  # type: ignore
 
     def clear_cache(self) -> None:

@@ -6,7 +6,7 @@ Entity representing a refresh token in the authentication system.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 from ..events.auth_events import RefreshTokenCreatedEvent, RefreshTokenRevokedEvent
@@ -25,10 +25,10 @@ class RefreshToken(AggregateRoot):
     token: str = field(default="")
     user_id: UUID = field(default_factory=uuid4)
     expires_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=30)
+        default_factory=lambda: datetime.now(UTC) + timedelta(days=30)
     )
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    last_used_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    last_used_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     is_revoked: bool = field(default=False)
     revoke_reason: str = field(default="")
     ip_address: str = field(default="")
@@ -52,7 +52,7 @@ class RefreshToken(AggregateRoot):
         if not user_id:
             raise ValueError("User ID is required")
 
-        if expires_at <= datetime.now(timezone.utc):
+        if expires_at <= datetime.now(UTC):
             raise ValueError("Expiration date must be in the future")
 
         refresh_token = cls(
@@ -77,11 +77,11 @@ class RefreshToken(AggregateRoot):
         """Check if the refresh token is still valid"""
         if self.is_revoked:
             return False
-        return datetime.now(timezone.utc) < self.expires_at
+        return datetime.now(UTC) < self.expires_at
 
     def is_expired(self) -> bool:
         """Check if the refresh token has expired"""
-        return datetime.now(timezone.utc) >= self.expires_at
+        return datetime.now(UTC) >= self.expires_at
 
     def revoke(self, reason: str = "manual") -> None:
         """Revoke the refresh token"""
@@ -90,7 +90,7 @@ class RefreshToken(AggregateRoot):
 
         self.is_revoked = True
         self.revoke_reason = reason
-        self.last_used_at = datetime.now(timezone.utc)  # Update timestamp
+        self.last_used_at = datetime.now(UTC)  # Update timestamp
 
         self._add_domain_event(
             RefreshTokenRevokedEvent(
@@ -105,7 +105,7 @@ class RefreshToken(AggregateRoot):
         if not self.is_valid():
             raise ValueError("Cannot use invalid or revoked token")
 
-        self.last_used_at = datetime.now(timezone.utc)
+        self.last_used_at = datetime.now(UTC)
 
     def __eq__(self, other) -> bool:
         """Equality based on ID"""
