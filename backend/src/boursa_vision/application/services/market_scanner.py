@@ -313,14 +313,14 @@ class FullMarketStrategy(MarketScannerStrategy):
     }
 
     async def get_symbols_to_scan(self, config: ScanConfig) -> list[str]:
-        """Récupère tous les symboles disponibles"""
+        """Get all available symbols"""
         symbols = []
 
-        # Ajouter les symboles par secteur
+        # Add symbols by sector
         for sector_symbols in self.SECTOR_SYMBOLS.values():
             symbols.extend(sector_symbols)
 
-        # Ajouter les indices majeurs
+        # Add major indices
         symbols.extend(
             ["SPY", "QQQ", "IWM", "DIA", "VTI", "VEA", "VWO", "AGG", "BND", "GLD"]
         )

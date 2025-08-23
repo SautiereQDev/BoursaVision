@@ -495,11 +495,11 @@ class InvestmentIntelligenceService:
             parallel_requests=100,
         )
 
-        # Scanner le marché
+        # Scan the market
         scan_results = await self.market_scanner.scan_market(scan_config)
         logger.info(f"Market scan completed: {len(scan_results)} symbols analyzed")
 
-        # Générer des recommandations avec chaque stratégie
+        # Generate recommendations with each strategy
         all_recommendations = []
 
         for strategy in self.strategies:

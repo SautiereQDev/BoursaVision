@@ -34,11 +34,11 @@ def setup_paths():
     current_dir = Path(__file__).parent.absolute()
     src_dir = current_dir / "src"
 
-    # Ajouter src au PYTHONPATH
+    # Add src to PYTHONPATH
     if str(src_dir) not in sys.path:
         sys.path.insert(0, str(src_dir))
 
-    # Ajouter le répertoire backend aussi
+    # Add backend directory as well
     if str(current_dir) not in sys.path:
         sys.path.insert(0, str(current_dir))
 

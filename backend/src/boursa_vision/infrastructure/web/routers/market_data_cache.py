@@ -1,9 +1,9 @@
 """
-API Router pour le Cache Intelligent YFinance
-============================================
+YFinance Intelligent Cache API Router
+=====================================
 
-Endpoints FastAPI pour interagir avec le système de cache intelligent
-des données de marché YFinance.
+FastAPI endpoints for interacting with the intelligent cache system
+for YFinance market data.
 """
 
 import logging
@@ -144,10 +144,10 @@ router = APIRouter(
 )
 
 
-# Dépendance pour injecter le service de cache
+# Dependency to inject cache service
 async def get_cache_service() -> MarketDataCacheService:
-    """Factory pour le service de cache - à remplacer par l'injection de dépendance"""
-    # TODO: Implémenter l'injection de dépendance propre
+    """Factory for cache service - to be replaced by dependency injection"""
+    # TODO: Implement proper dependency injection
     from ...domain.services.cache_strategies import CacheConfig
 
     config = CacheConfig()

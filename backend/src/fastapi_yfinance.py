@@ -8,7 +8,6 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# Import our advanced analysis services
 try:
     from src.application.services.investment_recommendation_service import (
         InvestmentRecommendationService,
@@ -21,7 +20,6 @@ except ImportError as e:
     ADVANCED_ANALYSIS_AVAILABLE = False
 
 
-# Pydantic models for API
 class HealthCheckResponse(BaseModel):
     """Health check response model."""
 
@@ -41,7 +39,6 @@ class TickerInfoResponse(BaseModel):
     last_updated: str
 
 
-# Initialize FastAPI app
 app = FastAPI(
     title="Boursa Vision - Advanced Investment Analysis API",
     description=(
@@ -59,17 +56,15 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:8080",
-    ],  # Specific origins only
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
-# Initialize recommendation service
 if ADVANCED_ANALYSIS_AVAILABLE:
     recommendation_service = InvestmentRecommendationService()
 
-# Financial indices registry
 FINANCIAL_INDICES = {
     "cac40": [
         "MC.PA",
@@ -271,7 +266,7 @@ FINANCIAL_INDICES = {
 
 def test_real_data_connection() -> dict[str, Any]:
     """Test real data connection with sample symbols."""
-    test_symbols = ["SHEL.L", "AMGN", "NVDA"]  # UK, US, US tech
+    test_symbols = ["SHEL.L", "AMGN", "NVDA"]
     test_results = {}
 
     for symbol in test_symbols:
@@ -337,7 +332,6 @@ def health_check():
     """Comprehensive health check with real data tests."""
     test_results = test_real_data_connection()
 
-    # Check if all tests passed
     all_tests_passed = all(
         result.get("success", False) for result in test_results.values()
     )

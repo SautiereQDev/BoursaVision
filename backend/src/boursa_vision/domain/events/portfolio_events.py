@@ -48,7 +48,7 @@ class InvestmentCreatedEvent(DomainEvent):
     sector: "InvestmentSector"
 
 
-@dataclass  # pylint: disable=too-many-instance-attributes
+@dataclass  # Complex analysis requires multiple result fields
 class InvestmentAnalyzedEvent(DomainEvent):
     """Event raised when an investment analysis is completed"""
 
@@ -93,8 +93,8 @@ class PositionUpdatedEvent(DomainEvent):
     update_reason: str  # "buy", "sell", "dividend", "split"
 
 
-@dataclass
-class PerformanceCalculatedEvent(DomainEvent):  # pylint: disable=too-many-instance-attributes
+@dataclass  # Performance tracking requires comprehensive metrics
+class PerformanceCalculatedEvent(DomainEvent):
     """Event raised when portfolio performance is calculated"""
 
     portfolio_id: UUID

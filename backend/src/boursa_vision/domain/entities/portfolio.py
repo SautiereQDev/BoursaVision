@@ -35,8 +35,7 @@ from ..value_objects import (
 from .base import AggregateRoot
 
 
-@dataclass
-# pylint: disable=too-many-instance-attributes
+@dataclass  # Financial position requires detailed attributes
 class Position:
     """Value object representing a position in an asset"""
 
@@ -98,8 +97,7 @@ class PerformanceMetrics:
     last_updated: datetime
 
 
-@dataclass
-# pylint: disable=too-many-instance-attributes
+@dataclass  # Portfolio domain model with comprehensive state tracking
 class Portfolio(AggregateRoot):
     """
     Portfolio Aggregate Root - Core business entity
