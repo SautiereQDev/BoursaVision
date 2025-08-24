@@ -24,19 +24,17 @@ class SimpleUserMapper:
             id=model.id,
             email=model.email,
             username=model.username,
-            password_hash=model.password_hash,  # Model uses password_hash
+            password_hash=model.password_hash,
             first_name=model.first_name or "",
             last_name=model.last_name or "",
             role=UserRole(model.role.lower()) if model.role else UserRole.VIEWER,
-            preferred_currency=Currency(model.preferred_currency)
-            if hasattr(model, "preferred_currency") and model.preferred_currency
-            else Currency.USD,
+            preferred_currency=Currency.USD,  # Default for now
             is_active=getattr(model, "is_active", True),
-            email_verified=getattr(model, "email_verified", False),
-            two_factor_enabled=getattr(model, "two_factor_enabled", False),
+            email_verified=getattr(model, "email_verified", False),  # Use email_verified from actual DB
+            two_factor_enabled=False,  # Not in actual DB, default to False
             created_at=model.created_at,
             updated_at=model.updated_at,
-            last_login=getattr(model, "last_login", None),
+            last_login=None,  # Not in actual DB, default to None
         )
 
     @staticmethod
@@ -45,21 +43,44 @@ class SimpleUserMapper:
         if domain_user is None:
             return None
 
-        return UserModel(
+        # Create model with only the basic fields that exist in both DB and model
+        model = UserModel(
             id=domain_user.id,
             email=domain_user.email,
             username=domain_user.username,
-            password_hash=domain_user.password_hash,  # Domain uses password_hash too
-            first_name=domain_user.first_name,
-            last_name=domain_user.last_name,
+            password_hash=domain_user.password_hash,
             role=domain_user.role.value.upper(),
             is_active=domain_user.is_active,
-            email_verified=domain_user.email_verified,
-            two_factor_enabled=domain_user.two_factor_enabled,
-            created_at=domain_user.created_at,
-            updated_at=domain_user.updated_at,
-            last_login=domain_user.last_login,
         )
+        
+        # Set optional fields that might exist
+        if hasattr(model, 'first_name'):
+            model.first_name = domain_user.first_name
+        if hasattr(model, 'last_name'):
+            model.last_name = domain_user.last_name
+        if hasattr(model, 'email_verified'):
+            model.email_verified = domain_user.email_verified
+        elif hasattr(model, 'is_verified'):
+            model.is_verified = domain_user.email_verified
+        if hasattr(model, 'created_at'):
+            model.created_at = domain_user.created_at
+        if hasattr(model, 'updated_at'):
+            model.updated_at = domain_user.updated_at
+            
+        return model
+
+    @staticmethod
+    def update_model(model: UserModel, domain_user: DomainUser) -> None:
+        """Update existing SQLAlchemy model with domain entity data."""
+        model.email = domain_user.email
+        model.username = domain_user.username
+        model.password_hash = domain_user.password_hash
+        model.first_name = domain_user.first_name
+        model.last_name = domain_user.last_name
+        model.role = domain_user.role.value.upper()
+        model.is_active = domain_user.is_active
+        model.email_verified = domain_user.email_verified  # Use actual DB field name
+        # Note: Don't update created_at, but updated_at will be updated automatically
 
     @classmethod
     def to_model(cls, domain_user: DomainUser | None) -> UserModel | None:

@@ -19,7 +19,7 @@ from ...domain.repositories.investment_repository import IInvestmentRepository
 from ...domain.repositories.market_data_repository import IMarketDataRepository
 from ...domain.repositories.portfolio_repository import IPortfolioRepository
 from ...domain.repositories.user_repository import IUserRepository
-from .mappers_new import InvestmentMapper, MarketDataMapper, PortfolioMapper, UserMapper
+from .mappers import MarketDataMapper, PortfolioMapper, UserMapper
 from .models import Instrument, MarketData, Portfolio, User
 
 
