@@ -67,10 +67,9 @@ def core_container():
         pytest.skip("CoreContainer not available")
     
     container = CoreContainer()
-    # Don't wire the container to avoid module resolution issues
-    # Just provide the container for manual dependency resolution
+    container.wire(modules=["tests"])
     yield container
-    # No unwiring needed since we didn't wire
+    container.unwire()
 
 
 @pytest.fixture(scope="session")
@@ -97,9 +96,9 @@ def database_container(core_container):
         # For now, just provide the basic structure
     
     container = TestDatabaseContainer()
-    # Don't wire to avoid module resolution issues
+    container.wire(modules=["tests"])
     yield container
-    # No unwiring needed
+    container.unwire()
 
 
 # =====================================
@@ -162,21 +161,6 @@ def test_config():
         "redis_url": "redis://localhost:6379/1",
         "testing": True,
         "log_level": "DEBUG",
-    }
-
-
-@pytest.fixture
-def sample_user_data():
-    """
-    Sample user data fixture for testing.
-    
-    Provides test data for user-related tests.
-    """
-    return {
-        "id": "test-user-123",
-        "username": "testuser",
-        "email": "test@example.com",
-        "is_active": True,
     }
 
 

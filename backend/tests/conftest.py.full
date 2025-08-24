@@ -1,0 +1,320 @@
+"""
+Modern pytest configuration with Dependency Injection integration.
+
+This conftest.py provides fixtures for Clean Architecture testing with
+pytest 8.4.1 features and dependency injection using the main container.
+"""
+
+import asyncio
+import sys
+from pathlib import Path
+from typing import AsyncGenerator
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
+# Add src to Python path for imports
+backend_dir = Path(__file__).parent.parent
+src_dir = backend_dir / "src"
+if str(src_dir) not in sys.path:
+    sys.path.insert(0, str(src_dir))
+
+# Import main container after path setup
+from boursa_vision.containers.main_clean import MainContainer
+
+
+# =====================================
+# SESSION SCOPE FIXTURES (Global Setup)
+# =====================================
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """
+    Event loop fixture for the entire test session.
+    
+    This ensures we have a single event loop for all async tests,
+    which is required for session-scoped async fixtures.
+    """
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    yield loop
+    loop.close()
+
+
+@pytest.fixture(scope="session")
+def base_container():
+    """
+    Base DI container for all tests with test-specific configuration.
+    
+    This container is configured once per session and provides the
+    foundation for all test containers with overrides.
+    """
+    container = MainContainer()
+    
+    # Override configuration for test environment
+    container.core.config.override({
+        "environment": "testing",
+        "debug": True,
+        "database": {
+            "url": "sqlite+aiosqlite:///:memory:",
+            "echo": False,
+            "pool_pre_ping": True,
+            "pool_recycle": 300,
+        },
+        "redis": {
+            "url": "redis://localhost:6379/15",  # Test database
+            "decode_responses": True,
+        },
+        "celery": {
+            "broker_url": "memory://",
+            "backend_url": "cache+memory://",
+            "task_always_eager": True,  # Execute tasks synchronously in tests
+        }
+    })
+    
+    return container
+
+
+# =====================================
+# TEST TYPE SPECIFIC CONTAINERS
+# =====================================
+
+@pytest.fixture(scope="class")
+def test_container(base_container):
+    """
+    Test container with external service mocks for integration tests.
+    
+    This fixture provides a container suitable for integration tests
+    where we want real internal components but mock external services.
+    """
+    container = base_container
+    
+    # Import mock services (will be created in next step)
+    try:
+        from tests.mocks.external_services import (
+            MockYFinanceClient,
+            MockEmailService,
+            MockCeleryApp,
+        )
+        
+        # Override external services with mocks
+        container.infrastructure.yfinance_client.override(MockYFinanceClient())
+        container.infrastructure.email_service.override(MockEmailService())
+        container.infrastructure.celery_app.override(MockCeleryApp())
+    except ImportError:
+        # Fallback to simple mocks if external_services not yet created
+        container.infrastructure.yfinance_client.override(MagicMock())
+        container.infrastructure.email_service.override(MagicMock())
+        container.infrastructure.celery_app.override(MagicMock())
+    
+    yield container
+    
+    # Cleanup overrides
+    try:
+        container.infrastructure.yfinance_client.reset_override()
+        container.infrastructure.email_service.reset_override()
+        container.infrastructure.celery_app.reset_override()
+    except:
+        pass  # Ignore cleanup errors during migration
+
+
+@pytest.fixture
+def unit_container(test_container):
+    """
+    Container for pure unit tests with all dependencies mocked.
+    
+    This fixture provides complete isolation for unit tests by
+    mocking all repositories and external dependencies.
+    """
+    container = test_container
+    
+    # Create repository mocks
+    mock_portfolio_repo = AsyncMock()
+    mock_investment_repo = AsyncMock()
+    mock_user_repo = AsyncMock()
+    mock_market_data_repo = AsyncMock()
+    
+    # Override repositories with mocks
+    try:
+        container.repositories.portfolio_repository.override(mock_portfolio_repo)
+        container.repositories.investment_repository.override(mock_investment_repo)
+        container.repositories.user_repository.override(mock_user_repo)
+        container.repositories.market_data_repository.override(mock_market_data_repo)
+    except:
+        pass  # Ignore errors during migration
+    
+    # Create service mocks
+    mock_portfolio_service = MagicMock()
+    mock_scoring_service = MagicMock()
+    mock_risk_service = MagicMock()
+    
+    # Override services with mocks
+    try:
+        container.services.portfolio_service.override(mock_portfolio_service)
+        container.services.scoring_service.override(mock_scoring_service)
+        container.services.risk_assessment_service.override(mock_risk_service)
+    except:
+        pass  # Ignore errors during migration
+    
+    yield container
+    
+    # Cleanup all overrides
+    try:
+        container.repositories.portfolio_repository.reset_override()
+        container.repositories.investment_repository.reset_override()
+        container.repositories.user_repository.reset_override()
+        container.repositories.market_data_repository.reset_override()
+        
+        container.services.portfolio_service.reset_override()
+        container.services.scoring_service.reset_override()
+        container.services.risk_assessment_service.reset_override()
+    except:
+        pass  # Ignore cleanup errors during migration
+
+
+@pytest.fixture
+async def e2e_container(test_container) -> AsyncGenerator[tuple, None]:
+    """
+    Container for end-to-end tests with FastAPI TestClient.
+    
+    This fixture provides a complete application setup for E2E testing
+    with HTTP client and full dependency injection.
+    """
+    try:
+        # Create FastAPI application from container
+        app = test_container.app()
+        
+        # Create async HTTP client
+        from httpx import AsyncClient
+        
+        async with AsyncClient(app=app, base_url="http://testserver") as client:
+            yield client, test_container
+    except:
+        # Fallback for migration phase
+        yield None, test_container
+
+
+# =====================================
+# DATA FIXTURES AND FACTORIES
+# =====================================
+
+@pytest.fixture
+def sample_user_data():
+    """Sample user data for tests."""
+    return {
+        "id": "test-user-123",
+        "email": "test@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "is_active": True,
+    }
+
+
+@pytest.fixture
+def sample_portfolio_data(sample_user_data):
+    """Sample portfolio data for tests."""
+    return {
+        "name": "Tech Portfolio",
+        "description": "Technology investments portfolio for testing",
+        "user_id": sample_user_data["id"],
+    }
+
+
+@pytest.fixture  
+def sample_investment_data():
+    """Sample investment data for tests."""
+    return {
+        "symbol": "AAPL",
+        "name": "Apple Inc.",
+        "investment_type": "STOCK",
+        "sector": "TECHNOLOGY",
+        "market_cap": "LARGE",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "quantity": 10,
+        "purchase_price": 150.0,
+        "current_price": 160.0,
+    }
+
+
+@pytest.fixture
+def sample_market_data():
+    """Sample market data for tests."""
+    return {
+        "symbol": "AAPL",
+        "price": 160.0,
+        "volume": 1000000,
+        "change": 10.0,
+        "change_percent": 6.67,
+        "timestamp": "2024-12-01T10:00:00Z",
+    }
+
+
+# =====================================
+# AUTHENTICATION & AUTHORIZATION
+# =====================================
+
+@pytest.fixture
+def authenticated_user_headers(sample_user_data):
+    """Headers for authenticated requests in API tests."""
+    return {
+        "Authorization": "Bearer test-jwt-token",
+        "Content-Type": "application/json",
+    }
+
+
+@pytest.fixture
+def mock_current_user(sample_user_data):
+    """Mock current user for dependency injection in FastAPI."""
+    return sample_user_data
+
+
+# =====================================
+# PYTEST HOOKS AND CONFIGURATION
+# =====================================
+
+def pytest_configure(config):
+    """Configure pytest settings and register markers dynamically."""
+    config.addinivalue_line(
+        "markers", "wip: Work in progress tests (use during development)"
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Modify test collection for optimization and organization."""
+    # Sort tests to run fast ones first
+    items.sort(key=lambda item: "fast" not in item.keywords)
+    
+    # Add markers based on test location for automatic categorization
+    for item in items:
+        # Automatically mark tests based on file path
+        test_path = str(item.fspath)
+        
+        if "/unit/domain/" in test_path:
+            item.add_marker(pytest.mark.domain)
+            item.add_marker(pytest.mark.unit)
+            item.add_marker(pytest.mark.fast)
+            
+        elif "/unit/application/" in test_path:
+            item.add_marker(pytest.mark.application)
+            item.add_marker(pytest.mark.unit)
+            item.add_marker(pytest.mark.fast)
+            
+        elif "/unit/infrastructure/" in test_path:
+            item.add_marker(pytest.mark.infrastructure)
+            item.add_marker(pytest.mark.unit)
+            item.add_marker(pytest.mark.medium)
+            
+        elif "/integration/" in test_path:
+            item.add_marker(pytest.mark.integration)
+            item.add_marker(pytest.mark.medium)
+            
+        elif "/e2e/" in test_path:
+            item.add_marker(pytest.mark.e2e)
+            item.add_marker(pytest.mark.slow)
+
+@pytest.fixture(autouse=True)
+async def reset_test_state():
+    """Reset test state before each test."""
+    yield
+    # Cleanup happens automatically with container overrides
