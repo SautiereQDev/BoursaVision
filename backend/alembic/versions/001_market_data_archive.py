@@ -25,27 +25,24 @@ def upgrade() -> None:
     # Enable TimescaleDB extension
     op.execute("CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;")
 
-    # Create market_data_archive table
+    # Create market_data_archive table with composite primary key including timestamp
     op.create_table(
         "market_data_archive",
-        sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
         sa.Column("symbol", sa.String(20), nullable=False),
         sa.Column("timestamp", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("interval_type", sa.String(10), nullable=False, server_default="1d"),
         sa.Column("open_price", sa.Numeric(20, 8), nullable=True),
         sa.Column("high_price", sa.Numeric(20, 8), nullable=True),
         sa.Column("low_price", sa.Numeric(20, 8), nullable=True),
         sa.Column("close_price", sa.Numeric(20, 8), nullable=True),
         sa.Column("volume", sa.BigInteger(), nullable=True),
-        sa.Column("interval_type", sa.String(10), nullable=False, server_default="1d"),
         sa.Column(
             "created_at", sa.DateTime(timezone=True), server_default=sa.func.now()
         ),
-        sa.UniqueConstraint(
-            "symbol", "timestamp", "interval_type", name="uix_symbol_timestamp_interval"
-        ),
+        sa.PrimaryKeyConstraint("symbol", "timestamp", "interval_type")
     )
 
-    # Create indexes
+    # Create indexes BEFORE creating hypertable
     op.create_index("idx_market_data_archive_symbol", "market_data_archive", ["symbol"])
     op.create_index(
         "idx_market_data_archive_timestamp", "market_data_archive", ["timestamp"]
