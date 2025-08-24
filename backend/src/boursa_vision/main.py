@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-🚀 Point d'entrée unifié pour Boursa Vision FastAPI - Architecture Clean
+🚀 Boursa Vision FastAPI - Clean Architecture with Dependency Injection
 
-✨ ARCHITECTURE CLEAN ✨
+✨ ARCHITECTURE CLEAN + DEPENDENCY INJECTION ✨
 • Clean Architecture avec séparation des couches
-• Domain-Driven Design (DDD)
+• Domain-Driven Design (DDD) + CQRS
+• Dependency Injection avec containers modulaires
 • Configuration unifiée pour tous les environnements
 • API versionnée et modulaire
 
@@ -24,8 +25,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Core imports
-from pathlib import Path
-
 import uvicorn
 
 
@@ -71,26 +70,55 @@ def detect_environment() -> dict:
 
 
 def create_app():
-    """Crée et configure l'application FastAPI"""
+    """Crée et configure l'application FastAPI avec Dependency Injection"""
     try:
         # Configuration des chemins
         setup_paths()
 
-        # Import de l'application
-        from fastapi_yfinance import app
+        print("🏗️ Initialisation des containers DI...")
 
-        print("✅ Application FastAPI chargée avec succès")
+        # Import du MainContainer pour dependency injection
+        from boursa_vision.containers.main import MainContainer
+
+        # Initialiser le container principal
+        container = MainContainer()
+
+        # Wire the container for dependency injection
+        container.wire(modules=["__main__"])
+
+        print("✅ Containers DI initialisés")
+
+        # Créer l'application FastAPI depuis le container
+        app = container.app()
+
+        print("✅ Application FastAPI créée avec Clean Architecture + DI")
+        print("🏛️ Containers actifs: Core → Database → Repository → Services → Application → Infrastructure → Web")
+
         return app
 
     except ImportError as e:
-        print(f"❌ Erreur d'import FastAPI: {e}")
-        print("💡 Vérifiez que le fichier src/fastapi_yfinance.py existe")
+        print(f"❌ Erreur d'import container: {e}")
+        print("💡 Fallback vers l'ancienne implémentation...")
+        
+        try:
+            # Fallback vers l'ancienne implémentation
+            from fastapi_yfinance import app
+            print("✅ Application FastAPI chargée (mode legacy)")
+            return app
+        except ImportError:
+            print("❌ Impossible de charger l'application")
+            print("💡 Vérifiez que les containers sont correctement configurés")
+            sys.exit(1)
+
+    except Exception as e:
+        print(f"❌ Erreur de création d'application: {e}")
+        print("💡 Vérification des containers en cours...")
         sys.exit(1)
 
 
 def main():
     """Point d'entrée principal"""
-    print("🚀 Démarrage Boursa Vision FastAPI")
+    print("🚀 Démarrage Boursa Vision FastAPI - Clean Architecture + DI")
 
     try:
         # Configuration automatique
@@ -114,7 +142,8 @@ def main():
             if is_docker:
                 # Dans Docker, on surveille /app/src
                 uvicorn.run(
-                    "src.fastapi_yfinance:app",
+                    "main:create_app",
+                    factory=True,
                     host=config["host"],
                     port=config["port"],
                     reload=True,
@@ -124,7 +153,8 @@ def main():
             else:
                 # Localement, on surveille src/
                 uvicorn.run(
-                    "src.fastapi_yfinance:app",
+                    "main:create_app",
+                    factory=True,
                     host=config["host"],
                     port=config["port"],
                     reload=True,
